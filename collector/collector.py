@@ -18,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+import warnings
+warnings.filterwarnings("ignore", message=".*HMAC key.*")  # 업비트 키 길이 안내 문구 숨김
 
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parent
@@ -121,6 +123,35 @@ class Toss:
     def holdings(self):
         return self.get("/api/v1/holdings", account=True)
 
+    def fx_history(self, weeks=104):
+        """과거 환율(주 1회, 최근 2년) — 환율 온도계용. 처음 한 번만 채움"""
+        out, now = [], now_kst()
+        for i in range(weeks, 0, -1):
+            t = (now - timedelta(days=7 * i)).replace(hour=15, minute=30, second=0, microsecond=0)
+            try:
+                r = self.get("/api/v1/exchange-rate", {"baseCurrency": "USD", "quoteCurrency": "KRW",
+                                                      "dateTime": t.isoformat()})
+                out.append({"d": t.date().isoformat(), "r": round(f(r.get("rate")), 2)})
+            except Exception:
+                pass
+            time.sleep(0.4)  # MARKET_INFO 초당 3회 제한
+        return [x for x in out if x["r"]]
+
+    def bench(self):
+        """비교용 시장 지표: KOSPI(지수), SPY(S&P500 추종 ETF, 달러)"""
+        out = {}
+        try:
+            for x in self.get("/api/v1/market-indicators/prices", {"symbols": "KOSPI"}):
+                out[x["symbol"]] = f(x.get("lastPrice"))
+        except Exception as e:
+            print(f"  ! KOSPI 조회 실패({e})", file=sys.stderr)
+        try:
+            for x in self.get("/api/v1/prices", {"symbols": "SPY"}):
+                out["SPY"] = f(x.get("lastPrice"))
+        except Exception as e:
+            print(f"  ! SPY 조회 실패({e})", file=sys.stderr)
+        return {k: v for k, v in out.items() if v}
+
     def cash(self):
         out = {}
         for c in ("KRW", "USD"):
@@ -153,17 +184,29 @@ class Upbit:
     def ticker(markets):
         if not markets:
             return {}
+        # 상장폐지·원화마켓 없는 코인이 하나라도 섞이면 업비트가 404를 주므로 먼저 걸러냄
+        try:
+            live = {m["market"] for m in requests.get(f"{UPBIT}/v1/market/all", timeout=15).json()}
+            markets = [m for m in markets if m in live]
+        except Exception:
+            pass
+        if not markets:
+            return {}
         r = requests.get(f"{UPBIT}/v1/ticker", params={"markets": ",".join(markets)}, timeout=15)
         r.raise_for_status()
         return {x["market"]: x for x in r.json()}
 
 
 # ───────────────────────── 수집 ─────────────────────────
-def collect_live(cfg):
+def collect_live(cfg, state):
     toss = Toss(os.environ["TOSS_CLIENT_ID"], os.environ["TOSS_CLIENT_SECRET"])
     up = Upbit(os.environ["UPBIT_ACCESS_KEY"], os.environ["UPBIT_SECRET_KEY"])
 
     fx = toss.fx()
+    if not state.get("fx_hist_done"):
+        print("  · 환율 기록 2년치 처음 채우는 중(약 1분, 한 번만)…")
+        state["fx_hist"] = toss.fx_history()
+        state["fx_hist_done"] = True
     H = toss.holdings()
     cash = toss.cash()
     rows = []
@@ -199,7 +242,7 @@ def collect_live(cfg):
 
     ov = cfg.get("cash_override") or {}
     return {
-        "fx": fx, "rows": rows,
+        "fx": fx, "rows": rows, "bench": toss.bench(),
         "cash": {
             "toss_krw": cash["KRW"] if cash["KRW"] is not None else f(ov.get("toss_krw")),
             "toss_usd": cash["USD"] if cash["USD"] is not None else f(ov.get("toss_usd")),
@@ -231,7 +274,8 @@ def collect_mock(cfg, state):
         dr = px[s] / base[s] - 1
         rows.append({"sym": s, "name": s, "broker": "upbit", "ccy": "KRW", "qty": qty[s], "price": px[s],
                      "avg": avg[s], "day_rate": dr, "day_pl": qty[s] * (px[s] - base[s])})
-    return {"fx": {"rate": fx0, "mid": fx0, "bp": 0, "dir": "FLAT"}, "rows": rows,
+    state["mock_b"] = {k: v * (1 + rnd.gauss(0, .006)) for k, v in (state.get("mock_b") or {"KOSPI": 3420.0, "SPY": 668.0}).items()}
+    return {"fx": {"rate": fx0, "mid": fx0, "bp": 0, "dir": "FLAT"}, "rows": rows, "bench": state["mock_b"],
             "cash": {"toss_krw": 412_000, "toss_usd": 318.4, "upbit_krw": 96_500}}
 
 
@@ -337,6 +381,8 @@ def compute(raw, cfg, state, ts):
     d = ts.date().isoformat()
     pt = {"d": d, "v": round(total), "u": round(unit, 4), "fx": round(fx, 2),
           "w": {h["sym"]: h["value_krw"] for h in holds}, "cash": round(cash_krw)}
+    if raw.get("bench"):
+        pt["b"] = {k: round(v, 2) for k, v in raw["bench"].items()}
     if hist and hist[-1]["d"] == d:
         f_prev = hist[-1].get("f", 0)
         pt["f"] = f_prev + round(flow)
@@ -344,6 +390,26 @@ def compute(raw, cfg, state, ts):
     else:
         pt["f"] = round(flow)
         hist.append(pt)
+
+    # ── 매수·매도 기록: 종목 수량이 늘면 그날 매수로 기록 (농부 레벨·매수 영수증용)
+    px_krw = {h["sym"]: h["price_krw"] for h in holds}
+    curq = {h["sym"]: h["qty"] for h in holds}
+    prevq = state.get("qty")
+    trades = state.setdefault("trades", {})
+    if prevq is not None:
+        for sym in set(curq) | set(prevq):
+            dq = curq.get(sym, 0) - prevq.get(sym, 0)
+            if abs(dq) > 1e-9:
+                day = trades.setdefault(d, {})
+                q0, k0 = day.get(sym, [0, 0])
+                day[sym] = [round(q0 + dq, 8), round(k0 + dq * px_krw.get(sym, 0))]
+    state["qty"] = curq
+    for k in sorted(trades)[:-400]:
+        trades.pop(k)
+
+    # ── 원금 기준선(적립 vs 시장 분해용): 시작 시점의 매입원가+현금, 이후 입출금은 flows로 더함
+    if "principal0" not in nav:
+        nav["principal0"] = round(sum(h["cost_krw"] for h in holds) + cash_krw - sum(x["a"] for x in state.get("flows", [])))
 
     intr = state.setdefault("intraday", [])
     intr.append({"t": ts.isoformat(timespec="minutes"), "v": round(total), "u": round(unit, 4)})
@@ -364,12 +430,15 @@ def compute(raw, cfg, state, ts):
         "cost_krw": round(sum(h["cost_krw"] for h in holds)),
         "day_pl_krw": round(sum(h["day_pl_krw"] for h in holds)),
         "nav": {"unit": round(unit, 4), "units": nav["units"], "base_date": nav.get("base_date"),
-                "peak": round(peak, 4), "peak_date": peak_d, "dd": unit / peak - 1 if peak else 0},
-        "flows": state.get("flows", [])[-60:],
+                "peak": round(peak, 4), "peak_date": peak_d, "dd": unit / peak - 1 if peak else 0,
+                "principal0": nav.get("principal0")},
+        "trades": {k: trades[k] for k in sorted(trades)[-180:]},
+        "fx_hist": state.get("fx_hist", []),
+        "flows": state.get("flows", [])[-400:],
         "history": hist,
         "intraday": state["intraday"],
         "config": {k: cfg.get(k) for k in ("targets", "band_rel", "goal", "monthly_dca", "dd_limit",
-                                           "under_weight_mult", "scenarios")},
+                                           "under_weight_mult", "scenarios", "daily_dca", "dca_days")},
     }
 
 
@@ -425,7 +494,7 @@ def main():
         print("✅ 연결 OK")
         return
 
-    raw = collect_mock(cfg, state) if a.mock else collect_live(cfg)
+    raw = collect_mock(cfg, state) if a.mock else collect_live(cfg, state)
     snap = compute(raw, cfg, state, ts)
     jsave(state_path, state)
     os.chmod(state_path, 0o600)
