@@ -1,0 +1,27 @@
+{
+  "_설명": "config.json 으로 복사해서 쓰세요. 대시보드에서도 일부 값은 슬라이더로 바꿀 수 있어요.",
+
+  "targets": { "QQQM": 42.5, "SCHD": 17, "TLT": 12.75, "IAU": 8.5, "MCHI": 4.25, "BTC": 13.5, "ETH": 1.5 },
+  "band_rel": 0.25,
+  "under_weight_mult": 2,
+  "monthly_dca": 1500000,
+
+  "goal": { "amount": 300000000, "date": "2030-01-01", "label": "2030 이사 자금" },
+  "scenarios": { "보수": 0.04, "기본": 0.07, "낙관": 0.10 },
+  "dd_limit": -0.30,
+
+  "_krw_cost_seed_설명": "미국 ETF별 '원화 기준' 투입 원금. 토스 앱 > 종목 > 내 투자 > 원화 기준에서 보이는 금액. 첫 실행 전에 넣어야 환율 분해가 정확해요. 비워두면 첫 실행일 환율을 매입 환율로 가정.",
+  "krw_cost_seed": {
+    "QQQM": 0,
+    "SCHD": 0,
+    "TLT": 0,
+    "IAU": 0,
+    "MCHI": 0
+  },
+
+  "nav_peak_seed": 0,
+  "flow_threshold_krw": 3000,
+  "dust_krw": 5000,
+
+  "cash_override": { "toss_krw": 0, "toss_usd": 0 }
+}
