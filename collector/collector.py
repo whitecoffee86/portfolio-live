@@ -221,24 +221,32 @@ def collect_live(cfg, state):
 
     accts = up.accounts()
     upbit_krw = 0.0
-    coins = []
+    coins = {}
     for a in accts:
         bal = f(a["balance"]) + f(a.get("locked"))
         if a["currency"] == "KRW":
             upbit_krw = bal
         elif a.get("unit_currency") == "KRW" and bal > 0:
-            coins.append((a["currency"], bal, f(a.get("avg_buy_price"))))
-    tick = Upbit.ticker([f"KRW-{c}" for c, _, _ in coins])
-    for c, bal, avg in coins:
+            coins[a["currency"]] = [bal, f(a.get("avg_buy_price"))]
+    # 스테이킹 중인 코인은 업비트 잔고 API에 안 잡혀서 config.json의 staked 수량을 더함
+    staked = {k: (v if isinstance(v, dict) else {"qty": v}) for k, v in (cfg.get("staked") or {}).items()}
+    for c in staked:
+        coins.setdefault(c, [0.0, 0.0])
+    tick = Upbit.ticker([f"KRW-{c}" for c in coins])
+    for c, (bal, avg) in coins.items():
         t = tick.get(f"KRW-{c}")
         if not t:
             continue  # 원화마켓 상장폐지/에어드랍 잔여물 등
         price = f(t["trade_price"])
-        if bal * price < cfg.get("dust_krw", 5000):
+        sq = f(staked.get(c, {}).get("qty"))
+        sa = f(staked.get(c, {}).get("avg")) or avg or price   # 평단 모르면 현재가로(손익 0으로 시작)
+        q = bal + sq
+        if q * price < cfg.get("dust_krw", 5000):
             continue
-        rows.append({"sym": c, "name": c, "broker": "upbit", "ccy": "KRW", "qty": bal, "price": price,
-                     "avg": avg, "day_rate": f(t.get("signed_change_rate")),
-                     "day_pl": bal * f(t.get("signed_change_price"))})
+        avg_all = (bal * (avg or price) + sq * sa) / q if q else avg
+        rows.append({"sym": c, "name": c, "broker": "upbit", "ccy": "KRW", "qty": q, "price": price,
+                     "avg": avg_all, "stk": sq, "day_rate": f(t.get("signed_change_rate")),
+                     "day_pl": q * f(t.get("signed_change_price"))})
 
     ov = cfg.get("cash_override") or {}
     return {
@@ -336,6 +344,7 @@ def compute(raw, cfg, state, ts):
             "price_eff": round(price_eff), "fx_eff": round(fx_eff),
             "buy_fx": round(buy_fx, 2) if buy_fx else None, "fx_seeded": seeded,
             "day_rate": r["day_rate"], "day_pl_krw": round(day_pl_krw),
+            "stk": r.get("stk", 0),
         })
     # 사라진 종목(전량 매도) 정리
     for s in list(lots):
@@ -393,17 +402,21 @@ def compute(raw, cfg, state, ts):
 
     # ── 매수·매도 기록: 종목 수량이 늘면 그날 매수로 기록 (농부 레벨·매수 영수증용)
     px_krw = {h["sym"]: h["price_krw"] for h in holds}
-    curq = {h["sym"]: h["qty"] for h in holds}
-    prevq = state.get("qty")
+    curq = {h["sym"]: round(h["qty"] - (h.get("stk") or 0), 8) for h in holds}  # 스테이킹분은 매수 기록에서 제외
+    curs = {h["sym"]: float(h.get("stk") or 0) for h in holds if h.get("stk")}
+    prevq, prevs = state.get("qty"), state.get("stk_q", {})
     trades = state.setdefault("trades", {})
     if prevq is not None:
         for sym in set(curq) | set(prevq):
             dq = curq.get(sym, 0) - prevq.get(sym, 0)
+            ds = curs.get(sym, 0) - prevs.get(sym, 0)
+            if dq < 0 and ds > 0:            # 현물 → 스테이킹으로 옮긴 건 매도가 아님
+                dq += min(ds, -dq)
             if abs(dq) > 1e-9:
                 day = trades.setdefault(d, {})
                 q0, k0 = day.get(sym, [0, 0])
                 day[sym] = [round(q0 + dq, 8), round(k0 + dq * px_krw.get(sym, 0))]
-    state["qty"] = curq
+    state["qty"], state["stk_q"] = curq, curs
     for k in sorted(trades)[:-400]:
         trades.pop(k)
 
