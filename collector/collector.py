@@ -12,6 +12,8 @@ API 키는 이 서버(.env)에만 있고, 대시보드에는 암호화된 결과
   python3 collector.py --no-push  # 수집만 (로컬 data/ 에 저장)
   python3 collector.py --mock     # API 없이 샘플 데이터로 테스트
   python3 collector.py --check    # 키·IP 연결만 점검
+
+과거 월별 기록: collector/history.csv (서버에만 둠) → 대시보드가 2025-04부터 이어서 보여줌
 """
 import argparse, base64, hashlib, json, os, sys, time, uuid
 from datetime import datetime, timedelta, timezone
@@ -361,7 +363,7 @@ def compute(raw, cfg, state, ts):
     nav = state.setdefault("nav", {})
     flow = 0.0
     if not prev or not nav.get("units"):
-        nav.update(units=total / 1000.0, base_date=ts.date().isoformat())
+        nav.update(units=total / 1000.0, base_date=ts.date().isoformat(), start_total=round(total))
         unit = 1000.0
     else:
         mkt = 0.0
@@ -452,7 +454,68 @@ def compute(raw, cfg, state, ts):
         "intraday": state["intraday"],
         "config": {k: cfg.get(k) for k in ("targets", "band_rel", "goal", "monthly_dca", "dd_limit",
                                            "under_weight_mult", "scenarios", "daily_dca", "dca_days")},
+        **load_past(cfg, state),
     }
+
+
+# ───────────────────────── 과거 월별 기록 (history.csv) ─────────────────────────
+def _num(x):
+    x = str(x).replace(",", "").replace("원", "").strip()
+    return float(x) if x not in ("", "-") else 0.0
+
+
+def load_past(cfg, state):
+    """라이브 수집 전 월말 기록을 읽어 같은 기준가(좌수법)로 이어 붙임.
+    history.csv 는 서버에만 두고(깃허브에 안 올라감) 결과는 다른 데이터와 같이 암호화돼요.
+    열: 월(YYYY-MM), 기말자산, 입출금, 코스피, S&P500  — 첫 달 입출금 = 시작 원금"""
+    p = ROOT / cfg.get("history_file", "history.csv")
+    if not p.exists():
+        return {}
+    import csv
+    rows = []
+    for r in csv.reader(p.read_text(encoding="utf-8-sig").splitlines()):
+        if not r or not r[0].strip()[:4].isdigit():
+            continue  # 머리글·빈 줄 건너뜀
+        m = r[0].strip().replace(".", "-").replace("/", "-")[:7]
+        rows.append((m, _num(r[1]), _num(r[2]), _num(r[3]) if len(r) > 3 else 0, _num(r[4]) if len(r) > 4 else 0))
+    rows.sort()
+    if len(rows) < 2:
+        return {}
+    import calendar
+    past, units, nav, cum = [], 0.0, 1000.0, 0.0
+    for i, (m, v, fl, k, sp) in enumerate(rows):
+        if i == 0:
+            units, nav = v / 1000.0, 1000.0
+        else:
+            units += fl / nav          # 그달 입출금은 전월말 기준가로 좌수 매입 (원래 표와 같은 방식)
+            nav = v / units
+        cum += fl
+        y, mo = int(m[:4]), int(m[5:7])
+        b = {k2: v2 for k2, v2 in (("KOSPI", k), ("SPX", sp)) if v2}
+        past.append({"m": m, "d": f"{m}-{calendar.monthrange(y, mo)[1]:02d}", "v": round(v), "f": round(fl),
+                     "p": round(cum), "u": round(nav, 4), "b": b})
+
+    # 연결점: 라이브 첫 총액과 마지막 월말 사이(며칠) 움직임을 기준가에 반영
+    navst = state.get("nav", {})
+    t0 = navst.get("start_total")
+    if not t0:
+        base = navst.get("base_date")
+        first = next((x for x in state.get("intraday", []) if x["t"][:10] == base), None)
+        h0 = (state.get("history") or [None])[0]
+        t0 = first["v"] if first else (h0["v"] * 1000.0 / h0["u"] if h0 and h0.get("u") else None)
+        if t0:
+            navst["start_total"] = round(t0)
+    if not t0:
+        return {}
+    gap_flow = f(cfg.get("history_gap_flow"), 0.0)   # 마지막 월말 ~ 라이브 시작 사이에 넣은 돈(선택)
+    last = past[-1]
+    g = (t0 - gap_flow) / last["v"] if last["v"] else 1.0
+    if abs(g - 1) > 0.05:
+        print(f"  ! 과거 기록 연결 확인: 마지막 월말 {last['v']:,} → 라이브 시작 {round(t0):,} ({(g-1)*100:+.1f}%). "
+              f"그 사이 입출금이 있었다면 config.json 의 history_gap_flow 에 넣어주세요.", file=sys.stderr)
+    return {"past": past, "long": {"scale": last["u"] * g / 1000.0, "start": past[0]["d"],
+                                   "gap": round(g - 1, 5), "gap_flow": round(gap_flow),
+                                   "principal": last["p"] + round(gap_flow), "live_start_total": round(t0)}}
 
 
 # ───────────────────────── 암호화 & 업로드 ─────────────────────────
@@ -523,7 +586,8 @@ def main():
         jsave(OUT / name.replace(".enc", ".plain"), snap)
 
     print(f"[{ts:%m-%d %H:%M}] 총 {snap['total_krw']:,}원 | 기준가 {snap['nav']['unit']:.2f} "
-          f"| 낙폭 {snap['nav']['dd']*100:.1f}% | 환율 {snap['fx']['rate']:.1f}")
+          f"| 낙폭 {snap['nav']['dd']*100:.1f}% | 환율 {snap['fx']['rate']:.1f}"
+          + (f" | 과거 {len(snap['past'])}개월 연결(누적 기준가 {snap['nav']['unit']*snap['long']['scale']:.1f})" if snap.get('past') else ""))
 
     if not a.no_push and not a.mock:
         gh_put("data/portfolio.enc.json", json.dumps(enc).encode(), f"data: {ts:%m-%d %H:%M}")
