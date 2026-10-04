@@ -361,7 +361,8 @@ def compute(raw, cfg, state, ts):
     # ── NAV(좌수법): 입금·추가매수는 좌수 증가, 시장 움직임만 기준가에 반영
     prev = state.get("nav_prev")
     nav = state.setdefault("nav", {})
-    flow = 0.0
+    flow, div = 0.0, 0.0
+    krw_cash = f(c["toss_krw"]) + f(c["upbit_krw"])
     if not prev or not nav.get("units"):
         nav.update(units=total / 1000.0, base_date=ts.date().isoformat(), start_total=round(total))
         unit = 1000.0
@@ -375,12 +376,24 @@ def compute(raw, cfg, state, ts):
         flow = (total - prev["total"]) - mkt
         if abs(flow) < cfg.get("flow_threshold_krw", 3000):
             flow = 0.0  # 수수료·반올림 수준은 성과로 처리
+        # 배당: 원화 입금 없이 달러 예수금만 늘었으면 입금이 아니라 배당(=수익)으로 봄 → 기준가에 반영
+        if flow > 0 and prev.get("krw_cash") is not None:
+            d_krw = krw_cash - prev["krw_cash"]
+            d_usd = (f(c["toss_usd"]) - prev.get("usd_cash", 0)) * fx
+            if d_krw <= 1000 and d_usd >= 0.8 * flow:
+                div, flow = flow, 0.0
         pre_unit = (total - flow) / nav["units"] if nav["units"] else 1000.0
         if flow:
             nav["units"] += flow / pre_unit
         unit = total / nav["units"] if nav["units"] else 1000.0
-    state["nav_prev"] = {"total": total, "fx": fx, "usd_cash": f(c["toss_usd"]),
+    state["nav_prev"] = {"total": total, "fx": fx, "usd_cash": f(c["toss_usd"]), "krw_cash": krw_cash,
                          "px": {h["sym"]: [h["qty"], h["price_krw"]] for h in holds}}
+
+    if div:
+        dv = state.setdefault("divs", [])
+        dv.append({"t": ts.isoformat(timespec="minutes"), "a": round(div), "usd": round(div / fx, 2)})
+        state["divs"] = dv[-500:]
+        print(f"  💵 배당 감지 {round(div):,}원 (${div / fx:,.2f})")
 
     if flow:
         fl = state.setdefault("flows", [])
@@ -451,10 +464,12 @@ def compute(raw, cfg, state, ts):
         "trades": {k: trades[k] for k in sorted(trades)[-180:]},
         "fx_hist": state.get("fx_hist", []),
         "flows": state.get("flows", [])[-400:],
+        "divs": state.get("divs", []) + [x for x in (cfg.get("dividends_extra") or []) if isinstance(x, dict) and x.get("t")],
         "history": hist,
         "intraday": state["intraday"],
         "config": {k: cfg.get(k) for k in ("targets", "band_rel", "goal", "monthly_dca", "dd_limit",
-                                           "under_weight_mult", "scenarios", "daily_dca", "dca_days")},
+                                           "under_weight_mult", "scenarios", "daily_dca", "dca_days",
+                                           "div_yield", "div_months", "div_tax")},
         **load_past(cfg, state),
     }
 
