@@ -427,7 +427,8 @@ def compute(raw, cfg, state, ts):
         nav["principal0"] = round(sum(h["cost_krw"] for h in holds) + cash_krw - sum(x["a"] for x in state.get("flows", [])))
 
     intr = state.setdefault("intraday", [])
-    intr.append({"t": ts.isoformat(timespec="minutes"), "v": round(total), "u": round(unit, 4)})
+    intr.append({"t": ts.isoformat(timespec="minutes"), "v": round(total), "u": round(unit, 4), "fx": round(fx, 2),
+                 "p": {h["sym"]: (round(h["price"], 2) if h["ccy"] == "USD" else round(h["price"])) for h in holds}})  # 시세 보드 48시간 그래프용
     cutoff = (ts - timedelta(hours=48)).isoformat()
     state["intraday"] = [x for x in intr if x["t"] >= cutoff[:16]]
 
