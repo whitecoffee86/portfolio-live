@@ -1173,15 +1173,15 @@ function segSel(id, attr, val){ $$('#'+id+' [role=tab]').forEach(b=>b.setAttribu
 
 /* ── 요약 ── */
 function renderHome(anim){
-  const s=S, plTot=s.invest_krw-s.cost_krw, navRet=s.nav.unit/1000-1, dayRate=s.day_pl_krw/((s.invest_krw-s.day_pl_krw)||1);
+  const s=S, plTot=s.invest_krw-s.cost_krw, navRet=s.nav.unit/1000-1, DC=dayChg(), dayRate=DC.r, dayAmt=DC.a;
   const tot=$('#total');
   if(CAST){ tot._v=undefined; tot.textContent=pct(navRet); }
   else { const prev=tot._v; countUp(tot, s.total_krw, won, anim?1300:600, prev==null?Math.round(s.total_krw*.88):undefined); if(prev!=null&&!anim) flash(tot, s.total_krw-prev); }
   $('#totalSub').innerHTML = CAST?'🎥 방송모드 · 금액은 숨겨요':'≈ <b>'+short(s.total_krw)+'</b> · 투자 '+short(s.invest_krw)+' · 현금 '+short(s.cash.total_krw);
   const u0=SER[0]?.u||1000, cum=s.nav.unit/u0-1, rg=raceGap(), W=weights(), {dd,lim,room}=ddInfo(), gp=Math.min(s.total_krw/goalTotal(),1);
   const dday=Math.ceil((new Date((s.config.goal?.date||'2030-01-01')+'T00:00:00+09:00')-new Date(s.asof))/864e5);
-  const td=$('#today'); td.className='today '+(s.day_pl_krw<0?'neg':'');
-  td.innerHTML=`<span>${s.day_pl_krw>=0?'☀️':'🌧️'} 오늘</span><span class="num">${CAST?pct(dayRate,2):signShort(s.day_pl_krw)}</span>${CAST?'':`<span class="num">${pct(dayRate,2)}</span>`}<small>· 평가손익 ${CAST?pct(plTot/s.cost_krw):signShort(plTot)} (${pct(plTot/s.cost_krw)})</small>`;
+  const td=$('#today'); td.className='today '+(dayAmt<0?'neg':''); td.title='어제 마지막 기록 대비 총자산 변화 (입출금 제외)';
+  td.innerHTML=`<span>${dayAmt>=0?'☀️':'🌧️'} 오늘</span><span class="num">${CAST?pct(dayRate,2):signShort(dayAmt)}</span>${CAST?'':`<span class="num">${pct(dayRate,2)}</span>`}<small>· 평가손익 ${CAST?pct(plTot/s.cost_krw):signShort(plTot)} (${pct(plTot/s.cost_krw)})</small>`;
   const T=(go,tone,k,v,n)=>`<button class="tile lift" data-go="${go}" data-tone="${tone}"><span class="k">${k}</span><b class="v">${v}</b><span class="s">${n}</span></button>`;
   $('#heroKv').innerHTML=[
     T('log', cum>=0?'up':'dn', '🌳 누적 수익률', `<span class="${sgn(cum)}" data-cu="${cum}" data-f="p"></span>`, ymd(startD())+'부터 · '+durTxt()+(yrsSince()>=.5?' · 연 '+pct(cagr()):'')),
@@ -1256,6 +1256,16 @@ function drawSpark(anim){
 }
 /* ── 공통 ── */
 const kday = t => new Date(new Date(t).getTime()+9*36e5).toISOString().slice(0,10);   // KST 날짜
+/* 오늘 = 어제(KST) 마지막 기록 대비 총자산 변화. 오늘 입출금은 빼고, %는 기준가(좌수법) 변화 */
+function dayChg(){
+  const s=S, today=kday(s.asof), h=s.history||[];
+  const base=[...h].reverse().find(x=>x.d<today && x.v && x.u);
+  const flowT=(h.at(-1)?.d===today ? (h.at(-1).f||0) : 0);
+  if(base) return {a:Math.round(s.total_krw-flowT-base.v), r:s.nav.unit/base.u-1};
+  const i0=(s.intraday||[]).find(x=>kday(x.t)===today && x.v && x.u);   // 첫날: 오늘 첫 수집 대비
+  if(i0) return {a:Math.round(s.total_krw-flowT-i0.v), r:s.nav.unit/i0.u-1};
+  return {a:s.day_pl_krw||0, r:(s.day_pl_krw||0)/((s.invest_krw-(s.day_pl_krw||0))||1)};
+}
 const addDay = (d,n) => new Date(Date.parse(d+'T12:00:00Z')+n*864e5).toISOString().slice(0,10);
 const wday = d => new Date(d+'T12:00:00Z').getUTCDay();
 const WD = ['일','월','화','수','목','금','토'];
@@ -1371,7 +1381,7 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(WS){
 /* ── 🐹 쿼카 한마디: 오늘 분위기에 맞는 표정과 말 ── */
 function quokkaSays(){
   const s=S, day=kday(s.asof), seed=[...day].reduce((a,c)=>a+c.charCodeAt(0),0), pick=a=>a[seed%a.length];
-  const r=s.day_pl_krw/((s.invest_krw-s.day_pl_krw)||1), amt=CAST?pct(r,2):signShort(s.day_pl_krw), {room,dd}=ddInfo();
+  const DC=dayChg(), r=DC.r, amt=CAST?pct(r,2):signShort(DC.a), {room,dd}=ddInfo();
   const stale=!DEMO && (Date.now()-new Date(s.asof))/60000>45, f=farmerInfo();
   if(stale) return ['papers','수집기가 쉬는 중이에요… 📄', ago(s.asof)+' 이후 새 데이터가 없어요. 서버를 확인해 주세요'];
   const dvT=(s.divs||[]).filter(x=>x.t.slice(0,10)===day).reduce((a,x)=>a+x.a,0);
@@ -1873,6 +1883,7 @@ function renderLog(anim){
     ['🏡 이사 플랜 계산 가정','전체 목표 = 이사자금 + 이사 후 남길 금융자산이에요. 매일 적립 금액을 월로 바꿀 때 미국 ETF는 미국 영업일 월 21일, 코인은 월 30.4일로 계산해요. 지금 총자산에서 시작해 연 수익률을 월 복리로 나눠 붙이고, 세금·수수료·환율 변동은 빠진 참고치예요.'],
     ['🏁 시장과 대결은 어떻게 계산해요?','비교 시작일을 0%로 맞추고 각자의 누적 수익률을 그려요. 내 포트는 기준가(좌수법)라 적립한 돈은 수익률에 섞이지 않아요. S&P500은 과거 구간은 월말 지수, 실시간 구간은 SPY ETF 가격(배당 제외)을 이어 붙였고, 원화로 보기는 그날 환율을 곱해요. 두 구간을 잇는 며칠 동안의 S&P500 움직임은 0%로 봐요.'],
     ['🎲 이사 성공 확률은 어떻게 계산해요?','매달 적립을 이어간다고 보고, 수익률이 평균 주변에서 무작위로 흔들리는 미래를 1,000번 만들어요. 연 기대수익률과 변동성은 가정이라 바꿔가며 보세요. 「내 실적」 버튼은 지금까지 완료된 월 수익률로 두 값을 채우는데, 기간이 짧으면 과하게 낙관적일 수 있어요.'],
+    ['☀️ \'오늘\'은 언제 기준이에요?','어제(한국 시간) 마지막 수집값 대비 지금 총자산이 얼마나 변했는지예요. 오늘 들어온 입금·출금은 빼고, %는 기준가(좌수법) 변화라 현금까지 포함한 전체 기준이에요. 그래서 미국장이 쉬는 오전엔 코인과 환율 움직임만 잡혀요. 보유 종목 카드의 \'오늘 손익\'은 증권사가 주는 값이라 기준이 달라요(미국 ETF는 직전 거래일, 코인은 업비트 오전 9시 대비).'],
     ['💵 배당은 어떻게 잡혀요?','토스 Open API에는 배당 내역 조회가 없어서, 15분마다 원화 입금 없이 달러 예수금만 늘어난 금액을 배당으로 봐요(3천 원 이상). 배당은 입금이 아니라 수익으로 처리해서 기준가에 반영돼요. 예상 배당은 지금 평가금액 × 종목별 대략 배당률 × (1 − 원천징수 15%)이고, 배당률·지급월은 config.json의 div_yield·div_months로 바꿀 수 있어요. 배당을 원화로 자동 환전받는 설정이면 입금으로 잡힐 수 있으니 dividends_extra에 직접 넣어주세요.'],
     ['📊 과거 월말 기록은 어떻게 이어 붙여요?','실시간 수집 전의 월말 자산·입출금 기록을 같은 좌수법으로 계산해요. 그달 입출금은 전월말 기준가로 좌수를 사고, 첫 달을 기준가 1,000으로 놓아요. 마지막 월말 자산과 실시간 첫 총액의 차이는 그 며칠의 운용 성과로 보고 이어 붙여요. 과거 구간은 월말 값만 있어서 그래프에서 점으로 표시되고, 월 중간에 있었던 낙폭은 보이지 않아요.'],
     ['🧮 원금 vs 시장은 무엇을 기준으로 해요?','넣은 돈은 첫 달 자산에 그 뒤 입출금을 모두 더한 금액이에요. 시장 몫은 지금 자산에서 넣은 돈을 뺀 값이라, 종목별 평단으로 계산하는 평가 손익과는 다를 수 있어요.'],
