@@ -21,6 +21,7 @@
 :root{
   --bg:#f2f4f7; --surface:#ffffff; --surface-lo:#fbfcfd; --sunk:#f2f4f7; --line:rgba(25,31,40,.08);
   --ink:#191f28; --muted:#6b7684; --faint:#98a1ac;
+  --cp:#7b6cf6; --cg:#0fb57c; --cl:#3b82f6; --tb:#3182f6; --n1:#06b6d4; --n2:#8b5cf6; --n3:#ec4899;
   --leaf:#20a95b; --leaf-soft:rgba(32,169,91,.12); --gold:#b9801b; --gold-deep:#d29a2e; --gold-soft:rgba(210,154,46,.14); --bark:#8a6a4a; --sky-bg:#e8f1fb;
   --up:#f04452; --up-soft:rgba(240,68,82,.1); --down:#3182f6; --down-soft:rgba(49,130,246,.1);
   --warn:#e07b1f; --warn-soft:rgba(224,123,31,.12); --sky:#2b8fd6; --sky-soft:rgba(43,143,214,.11); --violet:#7b61ff;
@@ -38,6 +39,7 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0d0f13; --surface:#1b1f27; --surface-lo:#13161c; --sunk:#232833; --line:rgba(255,255,255,.08);
   --ink:#eef1f6; --muted:#9aa3b2; --faint:#6b7484;
+  --cp:#a99cff; --cg:#34d399; --cl:#60a5fa; --tb:#4c9bff; --n1:#22d3ee; --n2:#a78bfa; --n3:#f472b6;
   --leaf:#63d07e; --leaf-soft:rgba(99,208,126,.15); --gold:#f2c75f; --gold-deep:#d4a23c; --gold-soft:rgba(212,162,60,.16); --bark:#a88763; --sky-bg:#162033;
   --up:#ff5f5f; --up-soft:rgba(255,95,95,.16); --down:#4f9dff; --down-soft:rgba(79,157,255,.16);
   --warn:#f0a04b; --warn-soft:rgba(240,160,75,.16); --sky:#5bb6e6; --sky-soft:rgba(91,182,230,.15); --violet:#8b7ae0;
@@ -50,6 +52,7 @@
 :root[data-theme="dark"]{
   --bg:#0d0f13; --surface:#1b1f27; --surface-lo:#13161c; --sunk:#232833; --line:rgba(255,255,255,.08);
   --ink:#eef1f6; --muted:#9aa3b2; --faint:#6b7484;
+  --cp:#a99cff; --cg:#34d399; --cl:#60a5fa; --tb:#4c9bff; --n1:#22d3ee; --n2:#a78bfa; --n3:#f472b6;
   --leaf:#63d07e; --leaf-soft:rgba(99,208,126,.15); --gold:#f2c75f; --gold-deep:#d4a23c; --gold-soft:rgba(212,162,60,.16); --bark:#a88763; --sky-bg:#162033;
   --up:#ff5f5f; --up-soft:rgba(255,95,95,.16); --down:#4f9dff; --down-soft:rgba(79,157,255,.16);
   --warn:#f0a04b; --warn-soft:rgba(240,160,75,.16); --sky:#5bb6e6; --sky-soft:rgba(91,182,230,.15); --violet:#8b7ae0;
@@ -800,7 +803,7 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
         <section class="card c6" id="raceCard">
           <div class="card-h"><h2><span class="hi">🏁</span>시장과 대결</h2><span class="note" id="raceNote"></span></div>
           <div class="race-ctl">
-            <div class="seg" role="tablist" id="raceRange"><button role="tab" data-r="90">3개월</button><button role="tab" data-r="365">1년</button><button role="tab" data-r="all">전체</button></div>
+            <div class="seg" role="tablist" id="raceRange"><button role="tab" data-r="30">1개월</button><button role="tab" data-r="90">3개월</button><button role="tab" data-r="180">6개월</button><button role="tab" data-r="365">1년</button><button role="tab" data-r="all">전체</button></div>
             <div class="seg" role="tablist" id="raceCcy"><button role="tab" data-c="krw">₩ 원화</button><button role="tab" data-c="usd">$ 달러</button></div>
           </div>
           <div class="podium" id="podium"></div>
@@ -810,8 +813,9 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
         <section class="card c6" id="contribCard" data-qk="piggy">
           <div class="card-h"><h2><span class="hi">🧮</span>원금 vs 시장</h2><span class="note" id="contribNote"></span></div>
           <div class="fxsum" id="csum"></div>
+          <div class="race-ctl"><div class="seg" role="tablist" id="contribRange"><button role="tab" data-r="30">1개월</button><button role="tab" data-r="90">3개월</button><button role="tab" data-r="180">6개월</button><button role="tab" data-r="365">1년</button><button role="tab" data-r="all">전체</button></div></div>
           <svg class="chart race" id="contribChart" viewBox="0 0 600 240" aria-label="누적 원금과 시장 수익"></svg>
-          <div class="legend"><span><i style="background:var(--gold)"></i>넣은 돈</span><span><i style="background:var(--leaf)"></i>시장이 불려준 돈</span><span><i style="background:var(--down)"></i>깎인 돈</span></div>
+          <div class="legend"><span><i class="lp"></i>넣은 돈</span><span><i class="lg"></i>시장이 불려준 돈</span><span><i class="ll"></i>깎인 돈</span></div>
           <div class="ins" id="contribLede"></div>
         </section>
         <div class="stack c6">
@@ -1012,7 +1016,7 @@ const VIEWS=['home','rebal','goal','lab','log'];
 let S=null, PW=null, DEMO=false, CAST=store.get('wc_cast')==='1';
 let VIEW = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : (VIEWS.includes(store.get('wc_view'))?store.get('wc_view'):'home');
 let CALM=null, CALD=null, THW=store.get('wc_thw')||'365';
-let RANGE=store.get('wc_range2')||'td', RACE=['90','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
+let RANGE=store.get('wc_range2')||'td', RACE=['30','90','180','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', CRNG=['30','90','180','365','all'].includes(store.get('wc_crange'))?store.get('wc_crange'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
 let UI={goal:null, keep:null, wi:null, mu:null, sig:null};
 
 /* ── 암호 해제 (수집기와 같은 PBKDF2-SHA256 → AES-256-GCM) ── */
@@ -1038,6 +1042,18 @@ const moneyShort = n => CAST?'•••':short(n);
 const ymd = d => d.slice(2).replace(/-/g,'.');
 const ago = iso => { const m=Math.round((Date.now()-new Date(iso))/60000); return m<1?'방금':m<60?m+'분 전':m<1440?Math.round(m/60)+'시간 전':Math.round(m/1440)+'일 전'; };
 function path(pts){ return pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(''); }
+// 부드러운 선: 단조 3차 보간(점 사이에서 값이 튀어 오르지 않음). rev=거꾸로 그리기, cont=M 대신 L로 이어 붙이기
+function spath(pts,o={}){ const n=pts.length, f=p=>p[0].toFixed(1)+' '+p[1].toFixed(1);
+  if(n<3){ const q=o.rev?[...pts].reverse():pts; return q.map((p,i)=>(i||o.cont?'L':'M')+f(p)).join(''); }
+  const h=[], sl=[], m=[];
+  for(let i=0;i<n-1;i++){ h[i]=pts[i+1][0]-pts[i][0]; sl[i]=h[i]>1e-6?(pts[i+1][1]-pts[i][1])/h[i]:0; }
+  for(let i=1;i<n-1;i++){ const a=sl[i-1], b=sl[i]; if(a*b<=0||h[i-1]<1e-6||h[i]<1e-6){ m[i]=0; continue; }
+    const pm=(a*h[i]+b*h[i-1])/(h[i-1]+h[i]); m[i]=Math.sign(a)*Math.min(Math.abs(a),Math.abs(b),.5*Math.abs(pm))*2; }
+  m[0]=sl[0]; m[n-1]=sl[n-2];
+  const seg=[]; for(let i=0;i<n-1;i++){ const d=h[i]/3, a=pts[i], b=pts[i+1];
+    seg.push(h[i]<1e-6?{a,b,c1:a,c2:b}:{a,b,c1:[a[0]+d,a[1]+m[i]*d],c2:[b[0]-d,b[1]-m[i+1]*d]}); }
+  if(o.rev) return (o.cont?'L':'M')+f(pts[n-1])+seg.reverse().map(g=>'C'+f(g.c2)+' '+f(g.c1)+' '+f(g.a)).join('');
+  return (o.cont?'L':'M')+f(pts[0])+seg.map(g=>'C'+f(g.c1)+' '+f(g.c2)+' '+f(g.b)).join(''); }
 
 /* ── 효과 도우미 ── */
 // 카운트업: 이전 값에서 새 값까지. 고정폭 숫자라 자리가 흔들리지 않음
@@ -1475,10 +1491,12 @@ function renderFarmer(anim){
 }
 
 /* ── 🧮 적립 vs 시장 ── */
+function winSlice(H, r){ if(r==='all') return H; const cut=addDay(kday(S.asof),-(+r)), i0=H.findIndex(x=>x.d>=cut); return i0<0?[]:H.slice(Math.max(i0-(i0>0&&H[i0-1].mon?1:0),0)); }
 function drawContrib(anim){
   const card=$('#contribCard'), H=SER.filter(x=>x.p>0); card.hidden = H.length<1; if(!H.length) return;
   const last=H.at(-1), gain=last.v-last.p, gr=gain/last.p;
-  $('#contribNote').textContent=ymd(H[0].d)+'~';
+  segSel('contribRange','r',CRNG); const HW=winSlice(H,CRNG);
+  $('#contribNote').textContent=(HW[0]?ymd(HW[0].d):ymd(H[0].d))+'~';
   $('#csum').innerHTML=[['💸 넣은 돈', CAST?'—':short(last.p),''],['🌱 시장 몫', CAST?pct(gr):(gain>=0?'+':'')+short(gain), sgn(gain)],['⚖️ 시장 비중', pct(gain/last.v), sgn(gain)]]
     .map(([k,v,c])=>`<div class="box lift"><span>${k}</span><b class="${c}">${v}</b></div>`).join('');
   const m0=kday(S.asof).slice(0,7), mN=+m0.slice(5), prevM=H.filter(x=>x.d.slice(0,7)<m0).at(-1)||H[0], inM=H.filter(x=>x.d.slice(0,7)===m0);
@@ -1490,21 +1508,64 @@ function drawContrib(anim){
     : CAST ? `<span class="chip">수익률 <b class="${sgn(gr)}">${pct(gr)}</b> (원금 대비)</span>`
     : `<span class="chip">💸 ${mN}월 넣은 돈 <b>${(mFlow>0?'+':'')+short(mFlow)}원</b></span><span class="chip ${mMkt>=0?'hl':'sky'}">🌱 ${mN}월 시장 몫 <b class="${sgn(mMkt)}">${(mMkt>=0?'+':'')+short(mMkt)}원</b></span>${mMkt>mFlow&&mFlow>0?'<span class="chip warn">💪 시장이 월급보다 더 일했어요</span>':''}
        <p class="lede cmonth">${md(prevM.d)} 기록 이후 ${mN}월 기준${parts.length?' · 넣은 돈 내역 '+parts.map(([k,v])=>`${k} <b>${(v>0?'+':'')+short(v)}</b>`).join(' · '):' · 이번 달 입출금 없음'}</p>`;
-  const el=$('#contribChart'), [W,Hh]=box(el,.45,200,280), L=46,R=12,T=12,B=22, n=H.length;
-  if(n<2){ el.innerHTML=`<text x="${W/2}" y="${Hh/2}" text-anchor="middle" style="fill:var(--faint);font-size:15px">🧮 내일부터 그래프가 그려져요</text>`; return; }
-  const tt=x=>Date.parse(x.d), t0=tt(H[0]), t1=tt(last);
-  const hi=Math.max(...H.map(x=>Math.max(x.p,x.v)))*1.06, X=x=>L+(tt(x)-t0)/((t1-t0)||1)*(W-L-R), Y=v=>T+(1-v/hi)*(Hh-T-B);
-  const pp=H.map(x=>[X(x),Y(x.p)]), vp=H.map(x=>[X(x),Y(x.v)]), bot=Y(0), rev=[...pp].reverse().map(p=>'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  // 고른 기간 동안의 변화
+  if(CRNG!=='all' && HW.length>=2){ const a=HW[0], z=HW.at(-1), pf=z.p-a.p, pm=(z.v-a.v)-pf, lb={'30':'1개월','90':'3개월','180':'6개월','365':'1년'}[CRNG];
+    $('#contribLede').insertAdjacentHTML('afterbegin', (CAST?'':`<span class="chip">🗓️ ${lb} 넣은 돈 <b>${(pf>0?'+':'')+short(pf)}원</b></span>`)+`<span class="chip ${pm>=0?'hl':'sky'}">🌿 ${lb} ${CAST?'수익률':'시장 몫'} <b class="${sgn(pm)}">${CAST?pct(z.u/a.u-1):(pm>=0?'+':'')+short(pm)+'원'}</b></span>`); }
+  const el=$('#contribChart'), [W,Hh]=box(el,.45,200,280), L=CRNG==='all'?46:54,R=12,T=12,B=22, D=HW, n=D.length;
+  if(n<2){ el.innerHTML=`<text x="${W/2}" y="${Hh/2}" text-anchor="middle" style="fill:var(--faint);font-size:15px">🧮 ${H.length<2?'내일부터 그래프가 그려져요':'이 기간엔 기록이 아직 부족해요'}</text>`; return; }
+  const tt=x=>Date.parse(x.d), t0=tt(D[0]), t1=tt(D.at(-1));
+  const mx=Math.max(...D.map(x=>Math.max(x.p,x.v))), mn=Math.min(...D.map(x=>Math.min(x.p,x.v)));
+  const lo=CRNG==='all'?0:Math.max(mn-(mx-mn)*.25-mx*.005,0), hi=CRNG==='all'?mx*1.06:mx+(mx-mn)*.12+mx*.003;
+  const X=x=>L+(tt(x)-t0)/((t1-t0)||1)*(W-L-R), Y=v=>T+(1-(v-lo)/(hi-lo))*(Hh-T-B), ek=v=>v>=1e8?(+(v/1e8).toFixed(2))+'억':eok(v);
+  const pp=D.map(x=>[X(x),Y(x.p)]), vp=D.map(x=>[X(x),Y(x.v)]), bot=Y(lo), rev=spath(pp,{rev:1,cont:1});
+  const fx=v=>v.toFixed(1), xL=fx(L), xR=fx(W-R), neon=a=>`<stop offset="0" style="stop-color:var(--n1);stop-opacity:${a}"/><stop offset=".55" style="stop-color:var(--n2);stop-opacity:${a}"/><stop offset="1" style="stop-color:var(--n3);stop-opacity:${a}"/>`;
   let g=`<defs><clipPath id="cAbove"><path d="M${L} ${T-5} L${W-R} ${T-5} L${pp.at(-1)[0]} ${pp.at(-1)[1]} ${rev} Z"/></clipPath>
     <clipPath id="cBelow"><path d="M${L} ${bot} L${W-R} ${bot} L${pp.at(-1)[0]} ${pp.at(-1)[1]} ${rev} Z"/></clipPath>
-    <clipPath id="cRev"><rect x="0" y="0" height="${Hh}" width="${anim&&!RM?0:W}">${anim&&!RM?`<animate attributeName="width" from="0" to="${W}" dur="1.5s" fill="freeze"/>`:''}</rect></clipPath></defs>`;
-  yticks(0,hi,4).forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)"/><text x="${L-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end">${CAST?'':eok(v)}</text>`);
-  const band=`M${vp.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')} L${[...pp].reverse().map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')} Z`;
-  g+=`<g clip-path="url(#cRev)"><path d="${path(pp)} L${pp.at(-1)[0].toFixed(1)} ${bot} L${L} ${bot} Z" fill="var(--gold)" fill-opacity=".22"/>
-    <path d="${band}" fill="var(--leaf)" fill-opacity=".45" clip-path="url(#cAbove)"/><path d="${band}" fill="var(--down)" fill-opacity=".4" clip-path="url(#cBelow)"/></g>
-    <path class="draw" d="${path(pp)}" fill="none" stroke="var(--gold)" stroke-width="2"/><path class="draw" d="${path(vp)}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
-  [0,n-1].forEach((i,k)=>g+=`<text x="${X(H[i]).toFixed(1)}" y="${Hh-5}" text-anchor="${k?'end':'start'}">${ymd(H[i].d)}</text>`);
+    <clipPath id="cRev"><rect x="0" y="0" height="${Hh}" width="${anim&&!RM?0:W}">${anim&&!RM?`<animate attributeName="width" from="0" to="${W}" dur="1.5s" fill="freeze"/>`:''}</rect></clipPath>
+    <linearGradient id="cvS" x1="${xL}" y1="0" x2="${xR}" y2="0" gradientUnits="userSpaceOnUse">${neon(1)}</linearGradient>
+    <linearGradient id="cgF" x1="${xL}" y1="0" x2="${xR}" y2="0" gradientUnits="userSpaceOnUse">${neon(.42)}</linearGradient>
+    <linearGradient id="cpF" x1="0" y1="${T}" x2="0" y2="${bot}" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--gold);stop-opacity:.12"/><stop offset="1" style="stop-color:var(--gold);stop-opacity:0"/></linearGradient>
+    <linearGradient id="cgV" x1="0" y1="${T}" x2="0" y2="${bot}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity=".35"/></linearGradient>
+    <mask id="cgM"><rect x="0" y="0" width="${W}" height="${Hh}" fill="url(#cgV)"/></mask>
+    <pattern id="cHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" style="fill:var(--cl);fill-opacity:.16"/><line x1="0" y1="0" x2="0" y2="7" style="stroke:var(--cl);stroke-opacity:.6" stroke-width="2.4"/></pattern>
+    <filter id="cGlow" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="4.5"/></filter></defs>`;
+  yticks(lo,hi,4).filter(v=>v>=lo&&v<=hi).forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" ${v===0?'':'stroke-dasharray="2 5" opacity=".7"'}/><text x="${L-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end">${CAST?'':ek(v)}</text>`);
+  const band=`${spath(vp)}${rev}Z`, vd=spath(vp), pd=spath(pp), ve=vp.at(-1), pe=pp.at(-1);
+  g+=`<g clip-path="url(#cRev)"><path d="${pd} L${fx(pe[0])} ${bot} L${L} ${bot} Z" fill="url(#cpF)"/>
+    <path d="${band}" fill="url(#cgF)" clip-path="url(#cAbove)" mask="url(#cgM)"/><path d="${band}" fill="url(#cHatch)" clip-path="url(#cBelow)"/></g>
+    <path class="draw" d="${pd}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path class="draw" d="${vd}" fill="none" stroke="url(#cvS)" stroke-width="7" stroke-opacity=".55" filter="url(#cGlow)" stroke-linejoin="round" stroke-linecap="round"/>
+    <path class="draw" d="${vd}" fill="none" stroke="url(#cvS)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+  // 최고점 표시 + 끝점 빛나는 점·라벨
+  let mi=0; D.forEach((x,i)=>{ if(x.v>D[mi].v) mi=i; });
+  if(n>8 && vp[mi][0]<ve[0]-(W-L-R)*.08){ const [mx_,my_]=vp[mi], lab=CAST?'🏔️ 최고':'🏔️ 최고 '+ek(D[mi].v), lw=lab.length*7+18, lx=Math.min(Math.max(mx_-lw/2,L),W-R-lw);
+    g+=`<circle cx="${fx(mx_)}" cy="${fx(my_)}" r="3.5" fill="var(--surface)" stroke="var(--n2)" stroke-width="2"/><rect x="${fx(lx)}" y="${fx(Math.max(my_-30,T-6))}" width="${fx(lw)}" height="20" rx="10" style="fill:var(--n2);fill-opacity:.18;stroke:var(--n2);stroke-opacity:.45"/><text x="${fx(lx+lw/2)}" y="${fx(Math.max(my_-30,T-6)+14)}" text-anchor="middle" style="font:700 11.5px var(--f-body);fill:var(--ink)">${lab}</text>`; }
+  g+=`<circle cx="${fx(pe[0])}" cy="${fx(pe[1])}" r="4" fill="var(--gold)" stroke="var(--surface)" stroke-width="2"/>
+    <circle cx="${fx(ve[0])}" cy="${fx(ve[1])}" r="9" style="fill:var(--n3);fill-opacity:.25">${RM?'':'<animate attributeName="r" values="6;12;6" dur="2.2s" repeatCount="indefinite"/><animate attributeName="fill-opacity" values=".35;0;.35" dur="2.2s" repeatCount="indefinite"/>'}</circle>
+    <circle cx="${fx(ve[0])}" cy="${fx(ve[1])}" r="5" style="fill:var(--n3)" stroke="var(--surface)" stroke-width="2"/>`;
+  // 날짜 눈금
+  const nt=W<480?3:5, days=(t1-t0)/864e5, md2=d=>days>200?d.slice(2,4)+'.'+d.slice(5,7):(+d.slice(5,7))+'/'+(+d.slice(8,10)), seen=new Set();
+  for(let k=0;k<nt;k++){ const tg=t0+(t1-t0)*k/(nt-1); let bi=0; for(let i=1;i<n;i++) if(Math.abs(tt(D[i])-tg)<Math.abs(tt(D[bi])-tg)) bi=i; if(seen.has(bi)) continue; seen.add(bi);
+    g+=`<text x="${X(D[bi]).toFixed(1)}" y="${Hh-5}" text-anchor="${k===0?'start':k===nt-1?'end':'middle'}">${k===0||k===nt-1?ymd(D[bi].d):md2(D[bi].d)}</text>`; }
+  // 짚어 보기
+  const rows=CAST?[['수익률','r']]:[['💰 평가액','v'],['💸 넣은 돈','p'],['🌱 시장 몫','g']], th=30+rows.length*19, tw=CAST?130:160;
+  g+=`<g id="cHov" style="display:none;pointer-events:none"><line y1="${T}" y2="${bot}" stroke="var(--muted)" stroke-dasharray="3 4"/><circle r="4.5" fill="var(--gold)" stroke="var(--surface)" stroke-width="2"/><circle r="4.5" fill="var(--n2)" stroke="var(--surface)" stroke-width="2"/>
+    <g class="tip"><rect width="${tw}" height="${th}" rx="10" fill="var(--surface)" stroke="var(--line)" style="filter:drop-shadow(0 6px 14px rgba(0,0,0,.28))"/><text class="d" x="12" y="21" style="font-weight:700;fill:var(--ink);font-size:12.5px"></text>${rows.map((r,k)=>`<text x="12" y="${42+k*19}" style="fill:var(--muted);font-size:12px">${r[0]}</text><text class="v" x="${tw-12}" y="${42+k*19}" text-anchor="end" style="font:700 12px var(--f-num);fill:var(--ink)"></text>`).join('')}</g></g>
+    <rect x="${L}" y="0" width="${W-L-R}" height="${Hh}" fill="transparent"/>`;
   el.innerHTML=g; if(anim) drawLines(el);
+  const lg=card.querySelector('.legend'); if(lg){ lg.querySelector('.lp').style.background='var(--gold)'; lg.querySelector('.lg').style.background='linear-gradient(90deg,var(--n1),var(--n2),var(--n3))'; lg.querySelector('.ll').style.background='repeating-linear-gradient(45deg,var(--cl) 0 2px,transparent 2px 4px)'; }
+  el.style.touchAction='pan-y';
+  const hov=el.querySelector('#cHov'), hl=hov.querySelector('line'), hc=hov.querySelectorAll('circle'), tip=hov.querySelector('.tip'), tv=tip.querySelectorAll('.v');
+  el.onpointermove=e=>{ const bx=el.getBoundingClientRect(), px=(e.clientX-bx.left)*W/bx.width; let bi=0;
+    for(let i=1;i<n;i++) if(Math.abs(X(D[i])-px)<Math.abs(X(D[bi])-px)) bi=i;
+    const x=D[bi], cx=X(x); hov.style.display=''; hl.setAttribute('x1',cx); hl.setAttribute('x2',cx);
+    hc[0].setAttribute('cx',cx); hc[0].setAttribute('cy',Y(x.p)); hc[1].setAttribute('cx',cx); hc[1].setAttribute('cy',Y(x.v));
+    tip.querySelector('.d').textContent=ymd(x.d); const gn=x.v-x.p;
+    if(CAST){ tv[0].textContent=pct(gn/x.p); tv[0].style.fill=gn>=0?'var(--up)':'var(--down)'; }
+    else { tv[0].textContent=short(x.v); tv[1].textContent=short(x.p); tv[2].textContent=(gn>=0?'+':'')+short(gn); tv[2].style.fill=gn>=0?'var(--up)':'var(--down)'; }
+    const tx=cx+14+tw>W-4?cx-14-tw:cx+14, ty=Y(x.v)<(T+bot)/2?bot-th-4:T;
+    tip.setAttribute('transform',`translate(${tx.toFixed(1)} ${ty.toFixed(1)})`); };
+  el.onpointerleave=()=>{ hov.style.display='none'; };
 }
 
 /* ── 🧾 오늘의 매수 영수증 ── */
@@ -1647,16 +1708,42 @@ function drawRace(anim){
   const all=ser.flatMap(r=>r.pts), lo=Math.min(0,...all), hi=Math.max(0,...all), pad=(hi-lo)*.12||.01, y0=lo-pad, y1=hi+pad;
   const tt=i=>Date.parse(H[i].d), t0=tt(0), t1=tt(n-1), X=i=>L+(tt(i)-t0)/((t1-t0)||1)*(W-L-R), Y=v=>T+(1-(v-y0)/(y1-y0))*(Hh-T-B);
   const span=y1-y0, step=[.01,.02,.05,.1,.2,.25,.5,1].find(s=>span/s<=5)||2;
-  let g='';
-  for(let v=Math.ceil(y0/step)*step; v<=y1+1e-9; v+=step){ g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" ${Math.abs(v)<1e-9?'stroke-width="1.6"':''}/><text x="${L-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end">${Math.round(v*100)}%</text>`; }
-  [0,n-1].forEach(i=>g+=`<text x="${X(i).toFixed(1)}" y="${Hh-6}" text-anchor="${i===0?'start':'end'}">${ymd(H[i].d)}</text>`);
-  [...ser].reverse().forEach(r=>{ g+=`<path class="draw" data-dur="1.6" d="${path(r.pts.map((v,i)=>[X(i),Y(v)]))}" fill="none" stroke="${r.col}" stroke-width="${r.w}" stroke-linejoin="round" stroke-linecap="round"/>`; });
+  const PB=Hh-B, ZY=Y(0), PT=ser.map(r=>r.pts.map((v,i)=>[X(i),Y(v)]));
+  let g=`<defs><linearGradient id="rcFill" x1="0" y1="${T}" x2="0" y2="${PB}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="var(--leaf)" stop-opacity=".30"/><stop offset="1" stop-color="var(--leaf)" stop-opacity="0"/></linearGradient>
+    <clipPath id="rcRev"><rect x="0" y="0" height="${Hh}" width="${anim&&!RM?0:W}">${anim&&!RM?`<animate attributeName="width" from="0" to="${W}" dur="1.6s" fill="freeze"/>`:''}</rect></clipPath></defs>`;
+  for(let v=Math.ceil(y0/step)*step; v<=y1+1e-9; v+=step){ const z=Math.abs(v)<1e-9, yy=Y(v).toFixed(1);
+    g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" ${z?'stroke-width="1.6"':'stroke-dasharray="2 5" opacity=".7"'}/><text x="${L-6}" y="${(+yy+4).toFixed(1)}" text-anchor="end" ${z?'style="fill:var(--muted);font-weight:600"':''}>${Math.round(v*100)}%</text>`; }
+  // 날짜 눈금: 처음·끝 + 가운데 몇 개
+  const nt=W<480?3:5, days=(t1-t0)/864e5, md=d=>days>200?d.slice(2,4)+'.'+d.slice(5,7):(+d.slice(5,7))+'/'+(+d.slice(8,10)), seen=new Set();
+  for(let k=0;k<nt;k++){ const tg=t0+(t1-t0)*k/(nt-1); let bi=0; for(let i=1;i<n;i++) if(Math.abs(tt(i)-tg)<Math.abs(tt(bi)-tg)) bi=i; if(seen.has(bi)) continue; seen.add(bi);
+    const ed=k===0||k===nt-1; g+=`<text x="${X(bi).toFixed(1)}" y="${Hh-6}" text-anchor="${k===0?'start':k===nt-1?'end':'middle'}">${ed?ymd(H[bi].d):md(H[bi].d)}</text>`; }
+  // 내 포트 아래 은은한 그라데이션
+  g+=`<g clip-path="url(#rcRev)"><path d="${spath(PT[0])}L${X(n-1).toFixed(1)} ${PB}L${L} ${PB}Z" fill="url(#rcFill)"/></g>`;
+  [...ser].map((r,k)=>[r,PT[k]]).reverse().forEach(([r,pts])=>{ const d=spath(pts), me=r.k==='me';
+    if(me) g+=`<path class="draw" data-dur="1.6" d="${d}" fill="none" stroke="${r.col}" stroke-width="9" stroke-opacity=".16" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g+=`<path class="draw" data-dur="1.6" d="${d}" fill="none" stroke="${r.col}" stroke-width="${me?3.2:2.2}" ${me?'':'stroke-opacity=".9"'} stroke-linejoin="round" stroke-linecap="round"/>`; });
+  // 끝 라벨(알약 모양)
   const ends=ser.map(r=>({r, y:Y(r.end)})).sort((a,b)=>a.y-b.y);
-  for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<15) ends[i].y=ends[i-1].y+15;
-  ends.forEach(({r,y})=>{ const ex=X(n-1), ey=Y(r.end);
-    g+=`<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${r.k==='me'?5:4}" fill="${r.col}" stroke="var(--surface)" stroke-width="1.5">${r.k==='me'&&!RM?'<animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/>':''}</circle>`;
-    g+=`<text x="${(ex+9).toFixed(1)}" y="${(y+5).toFixed(1)}" style="font:600 12px var(--f-num);fill:${r.col}">${pct(r.end)}</text>`; });
+  for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<20) ends[i].y=ends[i-1].y+20;
+  ends.forEach(({r,y})=>{ const ex=X(n-1), ey=Y(r.end), me=r.k==='me', tx=pct(r.end), pw=tx.length*7.4+12;
+    g+=`<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${me?5:4}" fill="${r.col}" stroke="var(--surface)" stroke-width="2">${me&&!RM?'<animate attributeName="r" values="5;7.5;5" dur="2s" repeatCount="indefinite"/>':''}</circle>`;
+    g+=`<rect x="${(ex+7).toFixed(1)}" y="${(y-10).toFixed(1)}" width="${pw.toFixed(1)}" height="20" rx="10" fill="${r.col}" fill-opacity="${me?.22:.13}"/><text x="${(ex+7+pw/2).toFixed(1)}" y="${(y+4.5).toFixed(1)}" text-anchor="middle" style="font:700 12px var(--f-num);fill:${r.col}">${tx}</text>`; });
+  // 마우스·손가락으로 짚으면 그날 순위
+  g+=`<g id="rcHov" style="display:none;pointer-events:none"><line y1="${T}" y2="${PB}" stroke="var(--muted)" stroke-dasharray="3 4"/>${ser.map(r=>`<circle r="${r.k==='me'?5.5:4.5}" fill="${r.col}" stroke="var(--surface)" stroke-width="2"/>`).join('')}
+    <g class="tip"><rect width="150" height="${30+ser.length*19}" rx="10" fill="var(--surface)" stroke="var(--line)" style="filter:drop-shadow(0 6px 14px rgba(0,0,0,.28))"/><text class="d" x="12" y="21" style="font-weight:700;fill:var(--ink);font-size:12.5px"></text>${ser.map((_,k)=>`<text class="n" x="12" y="${42+k*19}" style="fill:var(--muted);font-size:12px"></text><text class="v" x="138" y="${42+k*19}" text-anchor="end" style="font:700 12px var(--f-num)"></text>`).join('')}</g></g>
+    <rect x="${L}" y="0" width="${W-L-R}" height="${Hh}" fill="transparent"/>`;
   el.innerHTML=g; if(anim) drawLines(el);
+  el.style.touchAction='pan-y';
+  const hov=el.querySelector('#rcHov'), hl=hov.querySelector('line'), hc=hov.querySelectorAll('circle'), tip=hov.querySelector('.tip'), tn=tip.querySelectorAll('.n'), tv=tip.querySelectorAll('.v');
+  el.onpointermove=e=>{ const bx=el.getBoundingClientRect(), px=(e.clientX-bx.left)*W/bx.width; let bi=0;
+    for(let i=1;i<n;i++) if(Math.abs(X(i)-px)<Math.abs(X(bi)-px)) bi=i;
+    const x=X(bi); hov.style.display=''; hl.setAttribute('x1',x); hl.setAttribute('x2',x);
+    ser.forEach((r,k)=>{ hc[k].setAttribute('cx',x); hc[k].setAttribute('cy',Y(r.pts[bi])); });
+    tip.querySelector('.d').textContent=ymd(H[bi].d);
+    [...ser].sort((a,b)=>b.pts[bi]-a.pts[bi]).forEach((r,k)=>{ tn[k].textContent=medals[k]+' '+r.nm; tv[k].textContent=pct(r.pts[bi]); tv[k].style.fill=r.col; });
+    const tx=x+14+150>W-4?x-14-150:x+14, th=30+ser.length*19, ty=Y(ser[0].pts[bi])<(T+PB)/2?PB-th:T;
+    tip.setAttribute('transform',`translate(${tx.toFixed(1)} ${ty.toFixed(1)})`); };
+  el.onpointerleave=()=>{ hov.style.display='none'; };
 }
 function drawOrchard(anim){
   const el=$('#orchard'), cw=el.clientWidth||700, W=Math.max(700,Math.round(cw)), sc=cw/W, fs=Math.min(Math.max(14,13/sc),24), G=270-fs*2.6-10, hs=S.holdings, n=hs.length, vmax=Math.max(...hs.map(h=>h.value_krw));
@@ -2010,6 +2097,7 @@ $('#thWin').addEventListener('click', e=>{ const b=e.target.closest('button'); i
 $('#mcMu').addEventListener('input', e=>{ UI.mu=+e.target.value; store.set('wc_mu',UI.mu); renderMC(false); });
 $('#mcSig').addEventListener('input', e=>{ UI.sig=+e.target.value; store.set('wc_sig',UI.sig); renderMC(false); });
 $('#raceRange').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RACE=b.dataset.r; store.set('wc_race',RACE); drawRace(true); });
+$('#contribRange').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; CRNG=b.dataset.r; store.set('wc_crange',CRNG); drawContrib(true); });
 $('#raceCcy').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RCCY=b.dataset.c; store.set('wc_rccy',RCCY); drawRace(true); });
 $('#brokerTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; BROKER=b.dataset.b; renderHold(); });
 $('#labTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; LAB=b.dataset.l; renderLab(true); });
