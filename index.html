@@ -482,6 +482,47 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
   .chart text{font-size:12.5px}
 }
 /* 큰 모니터(QHD·4K): 화면을 꽉 채우도록 전체를 비율대로 확대 */
+
+/* ── 🍩 종목 색 + 리밸런싱 탭 크기(2026-10-05) ── */
+:root{--a-QQQM:#2a78d6;--a-SCHD:#1baf7a;--a-BTC:#eb6834;--a-TLT:#4a3aa7;--a-IAU:#eda100;--a-MCHI:#e87ba4;--a-ETH:#008300}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--a-QQQM:#3987e5;--a-SCHD:#199e70;--a-BTC:#d95926;--a-TLT:#9085e9;--a-IAU:#c98500;--a-MCHI:#d55181;--a-ETH:#008300}}
+:root[data-theme="dark"]{--a-QQQM:#3987e5;--a-SCHD:#199e70;--a-BTC:#d95926;--a-TLT:#9085e9;--a-IAU:#c98500;--a-MCHI:#d55181;--a-ETH:#008300}
+.radar-box{grid-template-columns:minmax(0,1fr)!important;align-items:start}
+.rb-charts{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.rb-fig{margin:0;display:grid;gap:4px;justify-items:center;min-width:0}
+.rb-fig figcaption{font-size:12px;color:var(--muted)}
+.rb-card .radar{max-width:360px}
+.donut{width:100%;max-width:240px;display:block;margin:0 auto}
+.donut .act{transform-origin:120px 120px;animation:radarIn .9s cubic-bezier(.3,1.4,.5,1) both}
+.donut path{transition:opacity .2s}
+.donut:hover path.seg{opacity:.55} .donut path.seg:hover{opacity:1}
+.wrow{grid-template-columns:96px 1fr 76px;font-size:14px}
+.wrow .sym{display:flex;align-items:center;gap:6px}
+.wrow .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.wtrack{height:11px}
+.dgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dcell{padding:12px;gap:4px}
+.dcell .s{font-size:13.5px}
+.dcell b{font-size:18px}
+.dcell span{font-size:12.5px;line-height:1.45}
+.receipt{font-size:14.5px;gap:8px;padding:16px 18px}
+.rc-row .pl{font-size:12.5px}
+.rc-empty{font-size:13.5px;word-break:keep-all}
+.rc-grid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);align-items:start}
+.rc-bars{display:grid;gap:8px;min-width:0}
+.cmonth{font-size:12.5px;flex-basis:100%;max-width:none;margin-top:2px}
+.cmonth b{color:var(--ink);font-weight:600}
+#contribLede .chip{white-space:normal}
+@media (max-width:430px){ .fxsum .box b{font-size:13px;word-break:keep-all} .fxsum .box span{font-size:11.5px} }
+@media (min-width:560px){ .rb-charts{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:center} }
+@media (min-width:880px) and (max-width:1199px){ .rc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)} }
+@media (min-width:1200px){ #v-rebal > .rb-radar{grid-column:1 / span 7;grid-row:span 2} #v-rebal > .rb-plan,#v-rebal > .rb-rcpt{grid-column:8 / -1} }
+@media (min-width:1700px){ #v-rebal > .rb-radar{grid-column:1 / span 6} #v-rebal > .rb-plan,#v-rebal > .rb-rcpt{grid-column:7 / -1} .rc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)} }
+@media (min-width:1700px){
+  .wrow{font-size:15px;grid-template-columns:104px 1fr 82px} .wtrack{height:12px}
+  .dcell b{font-size:20px} .dcell .s{font-size:14.5px} .dcell span{font-size:13px}
+  .receipt{font-size:15.5px} .rb-card .radar{max-width:420px} .donut{max-width:280px}
+}
 @media (min-width:2200px){ .wrap{zoom:1.2} }
 @media (min-width:3000px){ .wrap{zoom:1.6} }
 @media (max-width:879px){ .hero{padding:18px} .card{padding:16px;gap:14px} }
@@ -742,7 +783,7 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
           <div class="hero-ch">
             <span class="eyebrow" id="sparkLbl">기준가</span>
             <div class="seg" role="tablist" id="rangeTabs">
-              <button role="tab" data-r="2d">48시간</button><button role="tab" data-r="30">1개월</button><button role="tab" data-r="90">3개월</button><button role="tab" data-r="365">1년</button><button role="tab" data-r="all">전체</button>
+              <button role="tab" data-r="td">오늘</button><button role="tab" data-r="2d">48시간</button><button role="tab" data-r="30">1개월</button><button role="tab" data-r="90">3개월</button><button role="tab" data-r="365">1년</button><button role="tab" data-r="all">전체</button>
             </div>
           </div>
           <button class="mascot" id="qtalk" type="button" aria-label="쿼카 한마디"></button>
@@ -804,15 +845,18 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 
     <!-- 리밸런싱 -->
     <section class="view" id="v-rebal" role="tabpanel" hidden>
-      <section class="card c6 x4" data-qk="scale">
+      <section class="card c6 rb-card rb-radar" data-qk="scale">
         <div class="card-h"><h2><span class="hi">🎯</span>리밸런싱 레이더</h2><span class="note" id="bandNote"></span></div>
         <div class="ins" id="radarLede"></div>
         <div class="radar-box">
-          <svg class="radar" id="radar" viewBox="-34 -6 368 312" aria-label="목표 대비 비중 레이더"></svg>
+          <div class="rb-charts">
+            <figure class="rb-fig"><svg class="radar" id="radar" viewBox="-34 -6 368 312" aria-label="목표 대비 비중 레이더"></svg><figcaption>🕸️ 목표 대비 (점선 = 목표)</figcaption></figure>
+            <figure class="rb-fig"><svg class="donut" id="donut" viewBox="0 0 240 240" role="img" aria-label="지금 비중과 목표 비중 도넛"></svg><figcaption>🍩 바깥 = 지금 · 안쪽 = 목표</figcaption></figure>
+          </div>
           <div class="wlist" id="wlist"></div>
         </div>
       </section>
-      <section class="card c6 x4" data-qk="watering">
+      <section class="card c6 rb-card rb-plan" data-qk="watering">
         <div class="card-h"><h2><span class="hi">💸</span>오늘의 적립 플랜</h2><span class="note" id="dailyNote"></span></div>
         <div class="ins" id="dailyLede"></div>
         <div class="dca">
@@ -821,11 +865,13 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
         <div class="return-list" id="returnList"></div>
         <div class="acc" id="mixAcc"></div>
       </section>
-      <section class="card x4" data-qk="receipt">
+      <section class="card rb-card rb-rcpt" data-qk="receipt">
         <div class="card-h"><h2><span class="hi">🧾</span>오늘의 매수 영수증</h2><span class="note" id="rcptNote"></span></div>
-        <div class="receipt" id="receipt"></div>
-        <div class="eyebrow">최근 2주 매수 금액</div>
-        <svg class="chart race" id="buyBars" viewBox="0 0 600 130" aria-label="최근 2주 하루 매수 금액"></svg>
+        <div class="rc-grid">
+          <div class="receipt" id="receipt"></div>
+          <div class="rc-bars"><div class="eyebrow">📊 최근 2주 매수 금액 (만원)</div>
+          <svg class="chart race" id="buyBars" viewBox="0 0 600 130" aria-label="최근 2주 하루 매수 금액"></svg></div>
+        </div>
       </section>
     </section>
 
@@ -966,7 +1012,7 @@ const VIEWS=['home','rebal','goal','lab','log'];
 let S=null, PW=null, DEMO=false, CAST=store.get('wc_cast')==='1';
 let VIEW = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : (VIEWS.includes(store.get('wc_view'))?store.get('wc_view'):'home');
 let CALM=null, CALD=null, THW=store.get('wc_thw')||'365';
-let RANGE=store.get('wc_range')||'all', RACE=['90','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
+let RANGE=store.get('wc_range2')||'td', RACE=['90','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
 let UI={goal:null, keep:null, wi:null, mu:null, sig:null};
 
 /* ── 암호 해제 (수집기와 같은 PBKDF2-SHA256 → AES-256-GCM) ── */
@@ -1030,19 +1076,19 @@ function weights(){
 }
 const CRYPTO=new Set(['BTC','ETH']);
 const man = v => { const x=Math.round(v/1000)/10; return (x>=100?Math.round(x).toLocaleString('ko-KR'):x)+'만'; };
-/* 매일 적립: config.daily_dca(종목별 하루 금액). 목표 비중 미달 종목은 ×2 */
+/* 매일 적립: config.daily_dca(종목별 하루 금액). 목표 미달이어도 2배로 사지 않음(2026-10 결정) */
 function dailyBase(){
   const d=S.config.daily_dca; if(d && Object.keys(d).length) return d;
   const m=S.config.monthly_dca||1500000, T=S.config.targets; return Object.fromEntries(Object.keys(T).map(k=>[k, m/21*T[k]/100]));
 }
 function dailyPlan(){
-  const base=dailyBase(), W=weights(), mult=S.config.under_weight_mult??2, inv=S.invest_krw;
-  const P=W.map(x=>{ const b=base[x.sym]||0, x2=x.w<x.t && b>0, a=b*(x2?mult:1); return {...x,b,a,x2,sh:x.price?a/x.price:0}; });
+  const base=dailyBase(), W=weights(), mult=1, inv=S.invest_krw;
+  const P=W.map(x=>{ const b=base[x.sym]||0, x2=mult>1 && x.w<x.t && b>0, a=b*(x2?mult:1); return {...x,b,a,x2,sh:x.price?a/x.price:0}; });
   const tot=P.reduce((s,x)=>s+x.a,0); P.forEach(x=>x.w2=(x.v+x.a)/(inv+tot)*100); return P;
 }
 /* 오늘 가격 그대로라고 보고, 매일 규칙대로 사면 밴드 밖 종목이 며칠 뒤 돌아오는지 */
 function bandReturnDays(){
-  const base=dailyBase(), W=weights(), mult=S.config.under_weight_mult??2, band=S.config.band_rel??.25;
+  const base=dailyBase(), W=weights(), mult=1, band=S.config.band_rel??.25;
   const v=Object.fromEntries(W.map(x=>[x.sym,x.v])), out={};
   const off=W.filter(x=>x.st!=='ok'); if(!off.length) return out;
   for(let d=1; d<=730 && Object.keys(out).length<off.length; d++){
@@ -1228,23 +1274,32 @@ function renderHold(){
 }
 function drawSpark(anim){
   segSel('rangeTabs','r',RANGE);
-  let pts;
+  let pts, DAY=null;
   const T=d=>Date.parse(d+'T15:30:00+09:00');
-  if(RANGE==='2d') pts=(S.intraday||[]).map(x=>({t:Date.parse(x.t), u:x.u}));
+  if(RANGE==='td'){   // 오늘: 어제 마지막 기록(=히어로 '오늘'과 같은 기준)에서 출발, 가로축은 00시~24시
+    const today=kday(S.asof), d0=Date.parse(today+'T00:00:00+09:00');
+    const hb=[...(S.history||[])].reverse().find(x=>x.d<today&&x.u), ib=(S.intraday||[]).filter(x=>kday(x.t)<today).at(-1);
+    pts=(S.intraday||[]).filter(x=>kday(x.t)===today).map(x=>({t:Date.parse(x.t), u:x.u}));
+    const bu=hb?.u ?? ib?.u; if(bu) pts.unshift({t:d0, u:bu}); DAY={d0, bu}; }
+  else if(RANGE==='2d') pts=(S.intraday||[]).map(x=>({t:Date.parse(x.t), u:x.u}));
   else { const cut=RANGE==='all'?'':addDay(kday(S.asof),-(+RANGE)), i0=SER.findIndex(x=>x.d>=cut);
     pts=(i0<0?[]:SER.slice(Math.max(i0-(i0>0&&SER[i0-1].mon?1:0),0))).map(x=>({t:T(x.d), u:x.u, mon:x.mon})); }
   if(pts.length) pts[pts.length-1].u=S.nav.unit;
   $('#sparkLbl').textContent='기준가 '+S.nav.unit.toFixed(1)+(S._hasPast?' · '+ymd(startD())+' = 1,000':'');
-  const el=$('#spark'); if(pts.length<2){ el.innerHTML='<text x="300" y="80" text-anchor="middle" style="fill:var(--faint);font-size:15px">데이터가 쌓이는 중이에요</text>'; return; }
+  const el=$('#spark'); if(pts.length<2){ el.innerHTML=`<text x="300" y="80" text-anchor="middle" style="fill:var(--faint);font-size:15px">${DAY?'오늘 첫 기록을 기다리는 중이에요':'데이터가 쌓이는 중이에요'}</text>`; return; }
   const us=pts.map(p=>p.u), mn=Math.min(...us), mx=Math.max(...us), W=Math.max(Math.round(el.clientWidth||600),300), H=Math.round(Math.min(Math.max(W*.3,130),190)), pad=14, A=anim&&!RM;
   el.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  const t0=pts[0].t, t1=pts.at(-1).t, X=t=>2+(t-t0)/((t1-t0)||1)*(W-62), Y=v=>pad+(1-(v-mn)/((mx-mn)||1))*(H-pad*2-14);
+  const t0=pts[0].t, t1=pts.at(-1).t, X=DAY?(t=>2+(t-DAY.d0)/864e5*(W-62)):(t=>2+(t-t0)/((t1-t0)||1)*(W-62)), Y=v=>pad+(1-(v-mn)/((mx-mn)||1))*(H-pad*2-14);
   const xy=pts.map(p=>[X(p.t),Y(p.u)]), col=pts.at(-1).u>=pts[0].u?'var(--up)':'var(--down)', last=xy.at(-1);
   let g=`<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".22"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient>
     <clipPath id="sclip"><rect x="0" y="0" height="${H}" width="${A?0:W}">${A?`<animate attributeName="width" from="0" to="${W}" dur="1.4s" fill="freeze" calcMode="spline" keySplines=".3 .7 .2 1" keyTimes="0;1"/>`:''}</rect></clipPath></defs>`;
   // 실시간 시작선
   const lv=S._hasPast&&RANGE!=='2d'?T(liveD()):null;
-  if(lv && lv>t0 && lv<t1){ const x=X(lv); g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="6" y2="${H-16}" stroke="var(--faint)" stroke-dasharray="2 3"/><text x="${(x-5).toFixed(1)}" y="${H-3}" text-anchor="end" style="font-size:11px;fill:var(--faint)">◀ 월말 기록</text><text x="${(x+5).toFixed(1)}" y="${H-3}" style="font-size:11px;fill:var(--faint)">실시간 ▶</text>`; }
+  if(DAY){ const yb=Y(DAY.bu).toFixed(1);
+    g+=`<line x1="2" x2="${(W-60).toFixed(1)}" y1="${yb}" y2="${yb}" stroke="var(--faint)" stroke-dasharray="3 4" opacity=".7"/>`;
+    (W>=460?[6,12,18]:[12,18]).forEach(h=>{ const x=X(DAY.d0+h*36e5).toFixed(1); g+=`<line x1="${x}" x2="${x}" y1="${H-20}" y2="${H-16}" stroke="var(--faint)"/><text x="${x}" y="${H-3}" text-anchor="middle" style="font-size:11px;fill:var(--faint)">${h}시</text>`; });
+    g+=`<text x="2" y="${H-3}" style="font-size:11px;fill:var(--faint)">어제 마감 대비</text>`; }
+  else if(lv && lv>t0 && lv<t1){ const x=X(lv); g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="6" y2="${H-16}" stroke="var(--faint)" stroke-dasharray="2 3"/><text x="${(x-5).toFixed(1)}" y="${H-3}" text-anchor="end" style="font-size:11px;fill:var(--faint)">◀ 월말 기록</text><text x="${(x+5).toFixed(1)}" y="${H-3}" style="font-size:11px;fill:var(--faint)">실시간 ▶</text>`; }
   else g+=`<text x="2" y="${H-3}" style="font-size:11px;fill:var(--faint)">${RANGE==='2d'?(()=>{const k=new Date(t0+9*36e5).toISOString(); return (+k.slice(5,7))+'/'+(+k.slice(8,10))+' '+k.slice(11,16)+'부터';})():ymd(new Date(t0+9*36e5).toISOString().slice(0,10))}</text>`;
   g+=`<path d="${path(xy)}L${last[0].toFixed(1)} ${H-16}L${xy[0][0].toFixed(1)} ${H-16}Z" fill="url(#sg)" clip-path="url(#sclip)"/>
     <path class="draw" d="${path(xy)}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>`;
@@ -1290,7 +1345,7 @@ function renderDiv(anim){
   $('#divNote').textContent='세후 · 원천징수 '+Math.round(divTax()*100)+'%';
   const M=v=>CAST?'•••':short(v)+'원';
   $('#divKpi').innerHTML=[
-    ['🧺 올해 받은 배당', D.length?M(yr):'-', D.length?`${D.filter(x=>x.t.slice(0,4)===Y).length}회 감지`:'첫 배당을 기다리는 중'],
+    ['🧺 올해 받은 배당', D.length?M(yr):'-', D.length?`${new Set(D.filter(x=>x.t.slice(0,4)===Y).map(x=>x.t.slice(0,7))).size}개월 받음`:'첫 배당을 기다리는 중'],
     ['🔮 예상 연 배당', M(expY), '포트 배당률 '+(expY/inv/(1-divTax())*100).toFixed(2)+'% (세전)'],
     ['📆 월평균 예상', M(expY/12), CAST?'':'하루 약 '+Math.round(expY/365).toLocaleString('ko-KR')+'원'],
     ['🗓️ 최근 12개월', D.length?M(y12):'-', '실제 들어온 돈'],
@@ -1426,11 +1481,15 @@ function drawContrib(anim){
   $('#contribNote').textContent=ymd(H[0].d)+'~';
   $('#csum').innerHTML=[['💸 넣은 돈', CAST?'—':short(last.p),''],['🌱 시장 몫', CAST?pct(gr):(gain>=0?'+':'')+short(gain), sgn(gain)],['⚖️ 시장 비중', pct(gain/last.v), sgn(gain)]]
     .map(([k,v,c])=>`<div class="box lift"><span>${k}</span><b class="${c}">${v}</b></div>`).join('');
-  const m0=kday(S.asof).slice(0,7), prevM=H.filter(x=>x.d.slice(0,7)<m0).at(-1)||H[0];
-  const mFlow=H.filter(x=>x.d.slice(0,7)===m0).reduce((a,x)=>a+(x.f||0),0), mMkt=(last.v-prevM.v)-mFlow;
+  const m0=kday(S.asof).slice(0,7), mN=+m0.slice(5), prevM=H.filter(x=>x.d.slice(0,7)<m0).at(-1)||H[0], inM=H.filter(x=>x.d.slice(0,7)===m0);
+  const mFlow=inM.reduce((a,x)=>a+(x.f||0),0), mMkt=(last.v-prevM.v)-mFlow, md=d=>(+d.slice(5,7))+'/'+(+d.slice(8,10));
+  // 이번 달 입금 내역: 월말 기록 ~ 실시간 시작 사이(연결 구간)와 날짜별 감지분을 나눠서 보여줌
+  const gapF=(S.long?.gap_flow)||0, parts=[];
+  inM.forEach(x=>{ let f=x.f||0; if(!x.mon && x.d===liveD() && gapF){ parts.push(['연결 구간', gapF]); f-=gapF; } if(Math.abs(f)>=1) parts.push([x.mon?md(x.d)+' 월말':md(x.d), f]); });
   $('#contribLede').innerHTML = H.length<2 ? '<span class="chip dim">내일부터 그래프가 그려져요</span>'
     : CAST ? `<span class="chip">수익률 <b class="${sgn(gr)}">${pct(gr)}</b> (원금 대비)</span>`
-    : `<span class="chip">이번 달 적립 <b>${short(mFlow)}원</b></span><span class="chip ${mMkt>=0?'hl':'sky'}">이번 달 시장 몫 <b class="${sgn(mMkt)}">${(mMkt>=0?'+':'')+short(mMkt)}원</b></span>${mMkt>mFlow&&mFlow>0?'<span class="chip warn">💪 시장이 월급보다 더 일했어요</span>':''}`;
+    : `<span class="chip">💸 ${mN}월 넣은 돈 <b>${(mFlow>0?'+':'')+short(mFlow)}원</b></span><span class="chip ${mMkt>=0?'hl':'sky'}">🌱 ${mN}월 시장 몫 <b class="${sgn(mMkt)}">${(mMkt>=0?'+':'')+short(mMkt)}원</b></span>${mMkt>mFlow&&mFlow>0?'<span class="chip warn">💪 시장이 월급보다 더 일했어요</span>':''}
+       <p class="lede cmonth">${md(prevM.d)} 기록 이후 ${mN}월 기준${parts.length?' · 넣은 돈 내역 '+parts.map(([k,v])=>`${k} <b>${(v>0?'+':'')+short(v)}</b>`).join(' · '):' · 이번 달 입출금 없음'}</p>`;
   const el=$('#contribChart'), [W,Hh]=box(el,.45,200,280), L=46,R=12,T=12,B=22, n=H.length;
   if(n<2){ el.innerHTML=`<text x="${W/2}" y="${Hh/2}" text-anchor="middle" style="fill:var(--faint);font-size:15px">🧮 내일부터 그래프가 그려져요</text>`; return; }
   const tt=x=>Date.parse(x.d), t0=tt(H[0]), t1=tt(last);
@@ -1459,11 +1518,11 @@ function renderReceipt(){
   $('#receipt').innerHTML=`${rows}<div class="rc-tot"><span>합계</span><span>${man(got)} / 계획 ${man(plan)}</span></div>
     <div class="rc-empty">${got?'✅ 계획대로 · 🟡 일부만 · ⏳ 아직 · 🌙 주말 휴장':'아직 오늘 매수가 감지되지 않았어요. 체결되면 15분 안에 여기 찍혀요.'}</div>`;
   // 최근 2주 막대
-  const el=$('#buyBars'), [W,Hh]=box(el,.22,110,150), L=8,R=8,T=16,B=20, days=[...Array(14)].map((_,i)=>addDay(today,i-13));
+  const el=$('#buyBars'), [W,Hh]=box(el,.34,140,230), L=8,R=8,T=20,B=24, days=[...Array(14)].map((_,i)=>addDay(today,i-13));
   const vals=days.map(d=>Object.values((S.trades||{})[d]||{}).reduce((s,v)=>s+Math.max(v[1],0),0)), mx=Math.max(...vals,1), bw=(W-L-R)/14;
   el.innerHTML=days.map((d,i)=>{ const h=vals[i]/mx*(Hh-T-B), x=L+i*bw+bw*.18, w=bw*.64;
     return `<rect x="${x.toFixed(1)}" y="${(Hh-B-h).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(h,1.5).toFixed(1)}" rx="3" fill="${d===today?'var(--gold)':vals[i]?'var(--leaf)':'var(--line)'}"><title>${d} ${man(vals[i])}원</title></rect>
-      <text x="${(x+w/2).toFixed(1)}" y="${Hh-6}" text-anchor="middle" style="font-size:10px;fill:${wday(d)===0?'var(--up)':wday(d)===6?'var(--down)':'var(--faint)'}">${+d.slice(8)}</text>${vals[i]&&W>420?`<text x="${(x+w/2).toFixed(1)}" y="${(Hh-B-h-4).toFixed(1)}" text-anchor="middle" style="font-size:9.5px;fill:var(--muted)">${Math.round(vals[i]/1e4)}</text>`:''}`; }).join('');
+      <text x="${(x+w/2).toFixed(1)}" y="${Hh-6}" text-anchor="middle" style="font-size:12px;fill:${wday(d)===0?'var(--up)':wday(d)===6?'var(--down)':'var(--faint)'}">${+d.slice(8)}</text>${vals[i]&&W>300?`<text x="${(x+w/2).toFixed(1)}" y="${(Hh-B-h-5).toFixed(1)}" text-anchor="middle" style="font-size:11.5px;fill:var(--muted)">${Math.round(vals[i]/1e4)}</text>`:''}`; }).join('');
 }
 
 /* ── 🗓️ 수익 달력 ── */
@@ -1623,15 +1682,15 @@ function drawOrchard(anim){
 
 /* ── 리밸런싱 ── */
 function renderRebal(anim){
-  const W=weights(), band=S.config.band_rel??.25;
+  const W=dsort(weights()), band=S.config.band_rel??.25;
   $('#bandNote').textContent='밴드 ±'+Math.round(band*100)+'% (상대)';
   const under=W.filter(x=>x.st==='under'), over=W.filter(x=>x.st==='over');
   $('#radarLede').innerHTML = over.length||under.length
-    ? (over.length?`<span class="chip warn">↑ 초과 <b>${over.map(x=>x.sym).join(' · ')}</b> → 익절 후보</span>`:'')+(under.length?`<span class="chip sky">↓ 미달 <b>${under.map(x=>x.sym).join(' · ')}</b> → 매일 2배</span>`:'')
+    ? (over.length?`<span class="chip warn">↑ 초과 <b>${over.map(x=>x.sym).join(' · ')}</b> → 익절 후보</span>`:'')+(under.length?`<span class="chip sky">↓ 미달 <b>${under.map(x=>x.sym).join(' · ')}</b> → 적립으로 천천히 채워요</span>`:'')
     : '<span class="chip hl">✅ 전 종목 밴드 안</span>';
-  drawRadar(W, anim);
+  drawRadar(W, anim); drawDonut(W, anim);
   $('#wlist').innerHTML=W.map(x=>{ const max=Math.max(x.hi*1.35,x.w*1.08,5), P=v=>Math.min(v/max*100,100);
-    return `<div class="wrow"><span class="sym">${EMO[x.sym]||'•'} ${x.sym}</span><div class="wtrack" title="목표 ${x.t}% · 현재 ${x.w.toFixed(1)}%">
+    return `<div class="wrow"><span class="sym"><i class="sw" style="background:${acol(x.sym)}"></i>${EMO[x.sym]||'•'} ${x.sym}</span><div class="wtrack" title="목표 ${x.t}% · 현재 ${x.w.toFixed(1)}%">
       <div class="wband" style="left:${P(x.lo)}%;width:${P(x.hi)-P(x.lo)}%"></div><div class="wbar grow ${x.st==='ok'?'':x.st}" data-w="${P(x.w)}%"></div><div class="wtgt" style="left:${P(x.t)}%"></div></div>
       <span class="st ${x.st}">${x.w.toFixed(1)}% ${x.st==='ok'?'✓':x.st==='under'?'↓':'↑'}</span></div>`; }).join('');
   renderDaily();
@@ -1641,7 +1700,7 @@ function renderRebal(anim){
 function renderDaily(){
   const P=dailyPlan(), mx=Math.max(...P.map(x=>x.a),1), baseTot=P.reduce((s,x)=>s+x.b,0), recTot=P.reduce((s,x)=>s+x.a,0), n2=P.filter(x=>x.x2);
   $('#dailyNote').textContent='하루 기본 '+man(baseTot)+'원';
-  $('#dailyLede').innerHTML = `<span class="chip hl">오늘 합계 <b>${man(recTot)}원</b></span>`+(n2.length?`<span class="chip sky">×2 <b>${n2.map(x=>x.sym).join(' · ')}</b> (+${man(recTot-baseTot)})</span>`:'<span class="chip">기본 금액 그대로</span>');
+  $('#dailyLede').innerHTML = `<span class="chip hl">오늘 합계 <b>${man(recTot)}원</b></span>`+(n2.length?`<span class="chip sky">×2 <b>${n2.map(x=>x.sym).join(' · ')}</b> (+${man(recTot-baseTot)})</span>`:'<span class="chip">정해진 금액 그대로</span>');
   $('#dgrid').innerHTML=P.map(x=>`<div class="dcell lift ${x.x2?'x2':''}"><div class="s"><span>${EMO[x.sym]||''} ${x.sym}</span>${x.x2?'<em>×2</em>':''}</div>
     <b>${x.x2?`<span class="was">${man(x.b)}</span>`:''}${man(x.a)}원</b><span>${CRYPTO.has(x.sym)?'≈ '+x.sh.toFixed(5)+'개':'≈ '+x.sh.toFixed(2)+'주'} · 지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%</span>
     <div class="db"><i class="grow" data-w="${(x.a/mx*100).toFixed(1)}%"></i></div></div>`).join('');
@@ -1658,6 +1717,26 @@ function renderDaily(){
     <div class="acc-body"><div><div style="display:grid;gap:4px;padding:2px 0 14px">${rows.map(r=>`<div class="mixrow"><b>${EMO[r.k]||''} ${r.k}</b><div class="mixbar"><i class="t grow" data-w="${(r.t/mxw*100).toFixed(1)}%"></i><i class="d grow" data-w="${(r.d/mxw*100).toFixed(1)}%"></i></div><span class="num gap ${r.d-r.t>=1.5?'up':r.t-r.d>=1.5?'down':''}" style="white-space:nowrap;font-size:12px">${r.d.toFixed(1)} / ${r.t}%</span></div>`).join('')}
     <p class="lede" style="font-size:12px;margin:6px 4px 0">진한 막대·앞 숫자 = 매일 적립 비율, 연한 막대·뒤 숫자 = 목표 비중. 차이가 크면 시간이 갈수록 비중이 그쪽으로 끌려가요.</p></div></div></div></div>`;
   grow($('#v-rebal'));
+}
+/* 🍩 도넛: 바깥 고리 = 지금 비중, 안쪽 고리 = 목표 비중. 색은 종목에 고정(순위·필터와 무관) */
+const DORD=['QQQM','SCHD','BTC','TLT','IAU','MCHI','ETH'];   // 목표 비중 큰 순 = 도넛·범례·레이더 순서(색 인접쌍 검증한 순서)
+const dsort = W => [...W].sort((a,b)=>(DORD.indexOf(a.sym)+1||99)-(DORD.indexOf(b.sym)+1||99));
+const acol = s => DORD.includes(s) ? `var(--a-${s})` : 'var(--faint)';
+function drawDonut(W, anim){
+  const el=$('#donut'); if(!el) return;
+  const cx=120, cy=120, L=dsort(W);
+  const arc=(r0,r1,a0,a1)=>{ a1=Math.min(a1,a0+Math.PI*2-1e-4); const p=(r,a)=>(cx+r*Math.cos(a)).toFixed(2)+' '+(cy+r*Math.sin(a)).toFixed(2), lg=a1-a0>Math.PI?1:0;
+    return `M${p(r1,a0)}A${r1} ${r1} 0 ${lg} 1 ${p(r1,a1)}L${p(r0,a1)}A${r0} ${r0} 0 ${lg} 0 ${p(r0,a0)}Z`; };
+  const ring=(key,r0,r1,op)=>{ const tot=L.reduce((s,x)=>s+(x[key]||0),0)||1; let a=-Math.PI/2, g='';
+    L.forEach(x=>{ const v=(x[key]||0)/tot, a1=a+v*Math.PI*2; if(v>0) g+=`<path class="seg" d="${arc(r0,r1,a,a1)}" fill="${acol(x.sym)}" fill-opacity="${op}" stroke="var(--surface)" stroke-width="2"><title>${x.sym} · 지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%</title></path>`; a=a1; });
+    return g; };
+  let g=`<g class="${anim&&!RM?'act':''}">${ring('w',74,108,1)}${ring('t',56,68,.55)}</g>`;
+  const big=[...W].sort((a,b)=>Math.abs(b.w-b.t)-Math.abs(a.w-a.t))[0];
+  if(big){ const d=big.w-big.t;
+    g+=`<text x="${cx}" y="${cy-8}" text-anchor="middle" style="font:600 11px var(--f-body);fill:var(--muted)">가장 큰 차이</text>
+      <text x="${cx}" y="${cy+12}" text-anchor="middle" style="font:700 16px var(--f-num);fill:var(--ink)">${EMO[big.sym]||''}${big.sym}</text>
+      <text x="${cx}" y="${cy+30}" text-anchor="middle" style="font:600 12px var(--f-num);fill:var(--muted)">${(d>=0?'+':'')+d.toFixed(1)}%p</text>`; }
+  el.innerHTML=g;
 }
 function drawRadar(W, anim){
   const cx=150, cy=150, R=104, n=W.length, maxR=1.6, band=S.config.band_rel??.25;
@@ -1879,7 +1958,7 @@ function renderLog(anim){
     ['🌳 기준가(좌수법)는 뭐예요?','시작일 자산을 1,000으로 놓고, 적립·입금이 들어오면 그 시점 기준가로 좌수를 새로 사요. 돈을 더 넣어도 기준가는 그대로라서, 순수하게 운용으로 번 만큼만 움직여요. 고점 대비 낙폭도 이 기준가로 계산해서 적립금 때문에 생기는 착시가 없어요.'],
     ['💸 적립은 어떻게 자동으로 감지해요?','15분마다 총자산 변화에서 가격·환율 변화로 생긴 몫을 빼요. 남는 금액이 3천 원을 넘으면 입금이나 출금으로 보고 일지에 남겨요.'],
     ['💱 환율 분해 공식','원화 손익 = 주가 효과 (평가$ − 원금$) × 매입환율 + 환율 효과 평가$ × (현재환율 − 매입환율). 매입환율은 원화 원금 ÷ 달러 원금이고, 추가 매수분은 그날 환율로 원금에 더해요.'],
-    ['🎯 밴드와 2배 매수 규칙','목표 비중의 ±25%(상대)가 정상 범위예요. 예를 들어 IAU 8.5%면 6.4~10.6%예요. 목표 비중보다 적은 종목은 그날 적립 금액을 2배로 사고, 매도는 하지 않아요. 밴드 복귀일은 오늘 가격이 그대로라고 보고 매일 이 규칙대로 샀을 때의 계산이에요.'],
+    ['🎯 밴드 규칙','목표 비중의 ±25%(상대)가 정상 범위예요. 예를 들어 IAU 8.5%면 6.4~10.6%예요. 목표보다 적은 종목도 정해진 금액 그대로 사고(2배 매수 없음), 매도는 하지 않아요. 밴드 복귀일은 오늘 가격이 그대로라고 보고 매일 정해진 금액으로 샀을 때의 계산이에요.'],
     ['🏡 이사 플랜 계산 가정','전체 목표 = 이사자금 + 이사 후 남길 금융자산이에요. 매일 적립 금액을 월로 바꿀 때 미국 ETF는 미국 영업일 월 21일, 코인은 월 30.4일로 계산해요. 지금 총자산에서 시작해 연 수익률을 월 복리로 나눠 붙이고, 세금·수수료·환율 변동은 빠진 참고치예요.'],
     ['🏁 시장과 대결은 어떻게 계산해요?','비교 시작일을 0%로 맞추고 각자의 누적 수익률을 그려요. 내 포트는 기준가(좌수법)라 적립한 돈은 수익률에 섞이지 않아요. S&P500은 과거 구간은 월말 지수, 실시간 구간은 SPY ETF 가격(배당 제외)을 이어 붙였고, 원화로 보기는 그날 환율을 곱해요. 두 구간을 잇는 며칠 동안의 S&P500 움직임은 0%로 봐요.'],
     ['🎲 이사 성공 확률은 어떻게 계산해요?','매달 적립을 이어간다고 보고, 수익률이 평균 주변에서 무작위로 흔들리는 미래를 1,000번 만들어요. 연 기대수익률과 변동성은 가정이라 바꿔가며 보세요. 「내 실적」 버튼은 지금까지 완료된 월 수익률로 두 값을 채우는데, 기간이 짧으면 과하게 낙관적일 수 있어요.'],
@@ -1887,7 +1966,7 @@ function renderLog(anim){
     ['💵 배당은 어떻게 잡혀요?','토스 Open API에는 배당 내역 조회가 없어서, 15분마다 원화 입금 없이 달러 예수금만 늘어난 금액을 배당으로 봐요(3천 원 이상). 배당은 입금이 아니라 수익으로 처리해서 기준가에 반영돼요. 예상 배당은 지금 평가금액 × 종목별 대략 배당률 × (1 − 원천징수 15%)이고, 배당률·지급월은 config.json의 div_yield·div_months로 바꿀 수 있어요. 배당을 원화로 자동 환전받는 설정이면 입금으로 잡힐 수 있으니 dividends_extra에 직접 넣어주세요.'],
     ['📊 과거 월말 기록은 어떻게 이어 붙여요?','실시간 수집 전의 월말 자산·입출금 기록을 같은 좌수법으로 계산해요. 그달 입출금은 전월말 기준가로 좌수를 사고, 첫 달을 기준가 1,000으로 놓아요. 마지막 월말 자산과 실시간 첫 총액의 차이는 그 며칠의 운용 성과로 보고 이어 붙여요. 과거 구간은 월말 값만 있어서 그래프에서 점으로 표시되고, 월 중간에 있었던 낙폭은 보이지 않아요.'],
     ['🧮 원금 vs 시장은 무엇을 기준으로 해요?','넣은 돈은 첫 달 자산에 그 뒤 입출금을 모두 더한 금액이에요. 시장 몫은 지금 자산에서 넣은 돈을 뺀 값이라, 종목별 평단으로 계산하는 평가 손익과는 다를 수 있어요.'],
-    ['💸 적립 플랜과 밴드 복귀일','매일 적립 금액 기준이고, 목표 비중보다 적은 종목은 그날 2배로 사요(매도 없이 리밸런싱). 주수와 밴드 복귀일은 오늘 가격이 그대로라고 가정한 참고치예요.'],
+    ['💸 적립 플랜과 밴드 복귀일','매일 정해진 적립 금액 그대로예요(목표 미달 종목도 2배로 사지 않아요). 주수와 밴드 복귀일은 오늘 가격이 그대로라고 가정한 참고치예요.'],
     ['🌡️ 환율 온도계는 어떻게 봐요?','최근 1년 또는 2년 환율 중 지금 환율이 어디쯤인지 보여줘요. 매일 적립은 환율을 고르지 않고 평균을 사는 방법이라 참고로만 보세요.'],
     ['🎲 만약에 시뮬레이터 계산','미국 ETF는 달러 가격에 주가 변화를 곱한 뒤 바꾼 환율로 원화 환산하고, 코인은 원화 가격에 변화율을 곱해요. 달러 예수금도 바꾼 환율을 따라가요.'],
   ];
@@ -1918,7 +1997,7 @@ $('#lockBtn').addEventListener('click', ()=>{ store.del('wc_pw'); location.reloa
 $('#castBtn').addEventListener('click', ()=>{ CAST=!CAST; store.set('wc_cast',CAST?'1':'0'); renderAll(false); });
 $('#tabbar').addEventListener('click', e=>{ const b=e.target.closest('[data-v]'); if(b && b.dataset.v!==VIEW) setTab(b.dataset.v); });
 $('#tabbar').addEventListener('keydown', e=>{ if(!['ArrowLeft','ArrowRight'].includes(e.key)) return; const t=$$('#tabbar [role=tab]'), i=t.findIndex(b=>b.dataset.v===VIEW), n=t[(i+(e.key==='ArrowRight'?1:t.length-1))%t.length]; n.focus(); setTab(n.dataset.v); });
-$('#rangeTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RANGE=b.dataset.r; store.set('wc_range',RANGE); drawSpark(true); });
+$('#rangeTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RANGE=b.dataset.r; store.set('wc_range2',RANGE); drawSpark(true); });
 $('#farmer').addEventListener('click', ()=>setTab('rebal'));
 $('#qtalk').addEventListener('click', ()=>{ const m=$('#qtalk'); m.classList.toggle('talk'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop'); });
 $('#monCard').addEventListener('click', e=>{ const t=e.target.closest('[data-m]'); if(!t) return; MONSEL=MONSEL===t.dataset.m?null:t.dataset.m; renderMonthly(false); });
