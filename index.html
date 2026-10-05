@@ -340,16 +340,19 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cal-nav b{font-family:var(--f-display);font-size:19px;font-weight:400}
 .cal-nav .tbtn:disabled{opacity:.3;cursor:default}
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .cal .wd{font-size:11.5px;color:var(--muted);text-align:center;font-weight:600;padding-bottom:2px}
 .cal .wd.sun{color:var(--up)} .cal .wd.sat{color:var(--down)}
-.cd{aspect-ratio:1/1;max-width:100%;border:0;border-radius:9px;background:var(--sunk);display:grid;align-content:center;justify-items:center;gap:0;padding:2px;min-width:0;transition:transform .15s}
-.cd .n{font-size:11px;color:var(--muted);line-height:1.1}
-.cd .r{font-family:var(--f-num);font-size:10.5px;font-weight:600;line-height:1.2;white-space:nowrap}
+.cd{position:relative;min-height:clamp(54px,9vw,78px);max-width:100%;border:0;border-radius:12px;background:var(--sunk);display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;padding:7px 8px 8px;min-width:0;transition:transform .15s;overflow:hidden}
+.cd .n{font-size:12.5px;font-weight:700;color:var(--muted);line-height:1;text-align:left}
+.cd .r{font-family:var(--f-num);font-size:14px;font-weight:700;line-height:1;white-space:nowrap;text-align:center;letter-spacing:-.02em}
+.cd:disabled:not(.blank) .n{opacity:.55}
+.cd:disabled:not(.blank){opacity:.7}
 .cd.blank{background:none;pointer-events:none}
-.cd.today{outline:2px solid var(--ink);outline-offset:-2px}
+.cd.is-today{outline:2px solid var(--ink);outline-offset:-2px;box-shadow:0 0 0 4px color-mix(in srgb,var(--ink) 12%,transparent)}
 .cd.sel{outline:2px solid var(--gold);outline-offset:-2px;transform:scale(1.06)}
-.cd.buy::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);margin-top:1px}
+.cd.buy::after{content:"";position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 25%,transparent)}
+@media (max-width:560px){.cal{gap:4px}.cd{min-height:52px;padding:5px 4px 6px;border-radius:10px}.cd .n{font-size:11px}.cd .r{font-size:11.5px}.cd.buy::after{top:5px;right:5px;width:5px;height:5px}.cal .wd{font-size:11px}}
 @media (hover:hover){.cd:not(.blank):hover{transform:scale(1.08)}}
 .cal-detail{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:12px;padding:10px 12px;min-height:44px}
 .cal-detail b{color:var(--ink)}
@@ -382,6 +385,69 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
 .stress div{background:var(--sunk);border-radius:12px;padding:10px;font-size:12px;line-height:1.4;color:var(--muted);min-width:0}
 .stress b{display:block;font-family:var(--f-num);font-size:17px}
 .presets{display:flex;gap:6px;flex-wrap:wrap}
+/* 🛒 금액별 매수표 */
+#v-rebal > .rb-week{grid-column:1 / -1}
+.wk-top{display:grid;gap:16px}
+@media (min-width:880px){.wk-top{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}}
+.wk-amt{display:grid;gap:12px;min-width:0}
+.wk-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wk-kpi .box b{font-size:18px}
+.wk-kpi .box small{font-size:11.5px;color:var(--muted)}
+.wk-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wkd{border-radius:12px;padding:9px 6px 8px;display:grid;gap:6px;text-align:center;background:var(--sunk);border:1px solid var(--line);min-width:0}
+.wkd .l{font-size:12px;font-weight:700;color:var(--muted)}
+.wkd b{font-family:var(--f-num);font-size:14.5px;white-space:nowrap}
+.wkd .wst{display:flex;height:6px;border-radius:999px;overflow:hidden;gap:1px;background:var(--line)}
+.wkd .wst i{display:block;height:100%}
+.wkd small{font-size:10.5px;color:var(--faint);white-space:nowrap}
+.wkd.we{background:transparent;border-style:dashed}
+.wkd.we b{color:var(--muted)}
+.wkd.now{border-color:var(--n2);box-shadow:0 0 0 3px color-mix(in srgb,var(--n2) 20%,transparent)}
+.wkd.now .l{color:var(--n2)}
+.wk-dots{display:inline-flex;gap:3px;margin-left:auto}
+.wk-dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--line)}
+.ds-r.wk-r{grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)}
+@media (max-width:560px){.wk-kpi .box b{font-size:15px}.wk-days{gap:3px}.wkd{padding:7px 2px 6px;border-radius:9px}.wkd b{font-size:10.5px;letter-spacing:-.03em}.wkd small{display:none}.ds-r.wk-r{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.85fr)}.ds-r.wk-r>.m,.ds-r.wk-r>.dt{display:none!important}.wk-dots{display:none}}
+/* 💧 적립금 시뮬레이터 */
+.ds-grid{display:grid;gap:18px}
+@media (min-width:880px){.ds-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center}}
+.ds-left{display:grid;gap:14px;min-width:0}
+.ds-amt{display:grid;gap:2px}
+.ds-amt span{font-size:13px;color:var(--muted);font-weight:600}
+.ds-amt b{font-family:var(--f-num);font-size:clamp(28px,4vw,38px);line-height:1.1;background:linear-gradient(90deg,var(--n1),var(--n2),var(--n3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ds-amt em{font-style:normal;font-size:12.5px;color:var(--muted);font-weight:600}
+.ds-amt em b{font-size:12.5px;font-family:var(--f-num)}
+#dsAmt,#wkAmt{-webkit-appearance:none;appearance:none;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--n1),var(--n2) var(--p,50%),var(--sunk) var(--p,50%));outline:none}
+#dsAmt::-webkit-slider-thumb,#wkAmt::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--surface);border:3px solid var(--n2);box-shadow:0 0 0 6px color-mix(in srgb,var(--n2) 22%,transparent),0 4px 12px rgba(0,0,0,.3);cursor:grab}
+#dsAmt::-moz-range-thumb,#wkAmt::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--surface);border:3px solid var(--n2);box-shadow:0 0 0 6px color-mix(in srgb,var(--n2) 22%,transparent);cursor:grab}
+.presets button.on{border-color:var(--n2);color:var(--n2);background:color-mix(in srgb,var(--n2) 12%,var(--surface))}
+.ds-cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ds-cmp .box{gap:3px}
+.ds-cmp .box b{font-size:16px}
+.ds-cmp .box i{font-style:normal;font-size:11.5px;font-weight:700}
+.ds-cmp .fast{color:var(--leaf)} .ds-cmp .slow{color:var(--warn)} .ds-cmp .same{color:var(--muted)}
+.ds-right{display:grid;gap:8px;min-width:0}
+.ds-cap{font-size:13px;font-weight:600}
+.ds-cap span{color:var(--faint);font-weight:500;font-size:12px}
+#dsChart{cursor:crosshair}
+.ds-alloc{display:grid;gap:12px;border-top:1px dashed var(--line);padding-top:14px}
+.ds-ah{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-ah>b{font-size:14.5px}
+.ds-bar{display:flex;height:16px;border-radius:999px;overflow:hidden;gap:2px;background:var(--sunk)}
+.ds-bar i{display:block;height:100%;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.ds-tbl{display:grid}
+.ds-r{display:grid;grid-template-columns:minmax(0,1.25fr) 50px minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr);gap:8px;align-items:center;padding:9px 4px;border-bottom:1px dashed var(--line);font-size:13.5px}
+.ds-r:last-child{border-bottom:0}
+.ds-r.h{font-size:11.5px;color:var(--faint);font-weight:600;padding-block:2px 6px}
+.ds-r .sym{display:flex;align-items:center;gap:7px;font-weight:700;white-space:nowrap;min-width:0}
+.ds-r .sym i{width:10px;height:10px;border-radius:3px;flex:none}
+.ds-r .sym small{font-size:11px;color:var(--faint);font-weight:500}
+.ds-r>span:not(.sym){text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ds-r .w{color:var(--muted);font-size:12.5px}
+.ds-r .d b{font-size:14.5px}
+.ds-r .dd{font-size:12.5px}
+.ds-r.t{border-top:1px solid var(--line);font-weight:700}
+@media (max-width:520px){.ds-r{grid-template-columns:minmax(0,1.15fr) 44px minmax(0,.9fr) minmax(0,.8fr);font-size:13px;gap:6px}.ds-r>.m,.ds-r .sym small{display:none}.ds-cmp{grid-template-columns:minmax(0,1fr)}.ds-cmp .box{grid-template-columns:auto 1fr;align-items:center;column-gap:10px}.ds-cmp .box span{grid-column:1/-1}.ds-cmp .box i{text-align:right}}
 .presets button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;transition:transform .15s}
 .presets button:active{transform:scale(.95)}
 .wi-out{display:grid;gap:6px;text-align:center;padding:16px;border-radius:14px;background:var(--sunk);justify-items:center}
@@ -460,7 +526,7 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
 .mc.sel{box-shadow:inset 0 0 0 2px var(--gold);transform:scale(1.05)}
 @media (hover:hover){.mc:not(.blank):hover{transform:scale(1.07)}}
 .stack{display:grid;gap:14px;align-content:start;min-width:0}
-.cal,.cal-nav{width:100%;max-width:520px;margin-inline:auto}
+.cal,.cal-nav{width:100%;max-width:680px;margin-inline:auto}
 @media (max-width:430px){.m-hide{display:none}.top{flex-wrap:nowrap}.brand{white-space:nowrap;min-width:0}.cast-t{display:none}.fxsum .box b{font-size:13.5px}#status{min-width:0;overflow:hidden}}
 /* ── 화면 맞춤: PC(가로)는 12칸 그리드로 폭을 다 쓰고, 휴대폰(세로)은 한 줄 ── */
 @media (min-width:880px){
@@ -877,10 +943,48 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
           <svg class="chart race" id="buyBars" viewBox="0 0 600 130" aria-label="최근 2주 하루 매수 금액"></svg></div>
         </div>
       </section>
+      <section class="card rb-card rb-week" id="wkCard" data-qk="clipboard">
+        <div class="card-h"><h2><span class="hi">🛒</span>금액별 매수표</h2><span class="note">ETF 주 5일 · 코인 주 7일</span></div>
+        <div class="wk-top">
+          <div class="wk-amt">
+            <div class="ds-amt"><span>매달 넣을 돈</span><b class="num" id="wkVal"></b><em id="wkSub"></em></div>
+            <input type="range" id="wkAmt" min="500000" max="15000000" step="100000" aria-label="월 적립금">
+            <div class="presets" id="wkPre"></div>
+          </div>
+          <div class="wk-kpi" id="wkKpi"></div>
+        </div>
+        <div class="ds-ah"><b>📅 요일별로 이렇게 사요</b><div class="seg" role="tablist" id="wkMode"><button role="tab" data-m="tgt">🎯 목표 비중대로</button><button role="tab" data-m="cur">📋 지금 비율대로</button></div></div>
+        <div class="wk-days" id="wkDays"></div>
+        <div class="ds-tbl" id="wkRows"></div>
+        <div class="ins" id="wkFoot"></div>
+      </section>
     </section>
 
     <!-- 목표 -->
     <section class="view" id="v-goal" role="tabpanel" hidden>
+      <section class="card" id="dsCard" data-qk="watering">
+        <div class="card-h"><h2><span class="hi">💧</span>적립금 시뮬레이터</h2><span class="note" id="dsNote"></span></div>
+        <div class="ds-grid">
+          <div class="ds-left">
+            <div class="ds-amt"><span>매달 넣을 돈</span><b class="num" id="dsVal"></b><em id="dsDiff"></em></div>
+            <input type="range" id="dsAmt" min="500000" max="15000000" step="100000" aria-label="월 적립금">
+            <div class="presets" id="dsPre"></div>
+            <div class="ds-cmp" id="dsCmp"></div>
+          </div>
+          <div class="ds-right">
+            <div class="ds-cap">📉 월 적립금이 늘수록 💰 전체 목표 도착 시점이 이렇게 당겨져요 <span>· 차트를 눌러도 바뀌어요</span></div>
+            <svg class="chart race" id="dsChart" viewBox="0 0 600 260" aria-label="월 적립금에 따른 목표 도달 시점"></svg>
+            <div class="legend" id="dsLeg"></div>
+          </div>
+        </div>
+        <div class="ds-alloc">
+          <div class="ds-ah"><b>🛒 이 금액이면 종목별로 이렇게 사요</b>
+            <div class="seg" role="tablist" id="dsMode"><button role="tab" data-m="tgt">🎯 목표 비중대로</button><button role="tab" data-m="cur">📋 지금 비율대로</button></div></div>
+          <div class="ds-bar" id="dsBar"></div>
+          <div class="ds-tbl" id="dsRows"></div>
+          <div class="ins" id="dsFoot"></div>
+        </div>
+      </section>
       <section class="card c6" data-qk="thumbs">
         <div class="card-h"><h2><span class="hi">🏡</span>이사 플랜</h2><span class="note num" id="dday"></span></div>
         <div class="goal-top">
@@ -1017,7 +1121,7 @@ let S=null, PW=null, DEMO=false, CAST=store.get('wc_cast')==='1';
 let VIEW = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : (VIEWS.includes(store.get('wc_view'))?store.get('wc_view'):'home');
 let CALM=null, CALD=null, THW=store.get('wc_thw')||'365';
 let RANGE=store.get('wc_range2')||'td', RACE=['30','90','180','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', CRNG=['30','90','180','365','all'].includes(store.get('wc_crange'))?store.get('wc_crange'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
-let UI={goal:null, keep:null, wi:null, mu:null, sig:null};
+let UI={goal:null, keep:null, wi:null, mu:null, sig:null, dca:null, dsm:store.get('wc_dsmode')||'tgt'};
 
 /* ── 암호 해제 (수집기와 같은 PBKDF2-SHA256 → AES-256-GCM) ── */
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -1115,9 +1219,11 @@ function bandReturnDays(){
   }
   off.forEach(x=>{ if(!out[x.sym]) out[x.sym]=null; }); return out;
 }
-/* 월 적립 환산: 미국 ETF는 미국 영업일, 코인은 매일 */
+/* 월 적립 환산: ETF는 주 5일, 코인은 주 7일 사는 것으로 보고 한 달 = 52주/12 */
+const WK={stock:5,crypto:7}, WPM=52/12;
+function dcaDays(){ return {stock:WK.stock*WPM, crypto:WK.crypto*WPM}; }
 function monthlyFlow(){
-  const base=dailyBase(), days=S.config.dca_days||{stock:21,crypto:30.4};
+  const base=dailyBase(), days=dcaDays();
   if(!S.config.daily_dca) return S.config.monthly_dca||1500000;
   return Object.entries(base).reduce((s,[k,v])=>s+v*(CRYPTO.has(k)?days.crypto:days.stock),0);
 }
@@ -1600,7 +1706,7 @@ function renderCal(){
     let bg='', txt='';
     if(x){ const a=Math.min(Math.abs(x.r)/.02,1), c=x.r>=0?'var(--up)':'var(--down)'; bg=`background:color-mix(in srgb, ${c} ${Math.round(12+a*68)}%, var(--surface));`; const rv=Math.abs(x.r*100)<.05?'0.0':(x.r>0?'+':'')+(x.r*100).toFixed(1); txt=`<span class="r" style="color:${a>.55?'#fff':x.r>=0?'var(--up)':'var(--down)'}">${rv}</span>`;
       (x.r>=0?ups:downs).push(d); if(!best||x.r>best.r) best={d,r:x.r}; if(!worst||x.r<worst.r) worst={d,r:x.r}; }
-    g+=`<button class="cd ${d===today?'today':''} ${d===CALD?'sel':''} ${tr&&Object.values(tr).some(v=>v[1]>0)?'buy':''}" data-d="${d}" style="${bg}" ${x?'':'disabled'}><span class="n" style="${x&&Math.min(Math.abs(x.r)/.02,1)>.55?'color:#fff':''}">${dd}</span>${txt}</button>`; }
+    g+=`<button class="cd ${d===today?'is-today':''} ${d===CALD?'sel':''} ${tr&&Object.values(tr).some(v=>v[1]>0)?'buy':''}" data-d="${d}" style="${bg}" ${x?'':'disabled'}><span class="n" style="${x&&Math.min(Math.abs(x.r)/.02,1)>.55?'color:#fff':''}">${dd}</span>${txt}</button>`; }
   $('#cal').innerHTML=g;
   const inM=S.history.filter(x=>x.d.slice(0,7)===CALM), prev=S.history.filter(x=>x.d.slice(0,7)<CALM).at(-1)||inM[0];
   const mr=inM.length? ( (CALM===today.slice(0,7)?S.nav.unit:inM.at(-1).u)/prev.u-1 ):0;
@@ -1652,7 +1758,7 @@ function mulberry(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>
 function renderMC(anim){
   const sc=S.config.scenarios||{}; if(UI.mu==null) UI.mu=+(store.get('wc_mu')||sc['기본']||.07); if(UI.sig==null) UI.sig=+(store.get('wc_sig')||.15);
   $('#mcMu').value=UI.mu; $('#mcSig').value=UI.sig; $('#mcMuV').textContent=(UI.mu*100).toFixed(1)+'%'; $('#mcSigV').textContent=(UI.sig*100).toFixed(0)+'%';
-  const now=new Date(S.asof), yrs=goalYears(), move=goalAmt(), total=goalTotal(), dca=monthlyFlow(), v0=S.total_krw;
+  const now=new Date(S.asof), yrs=goalYears(), move=goalAmt(), total=goalTotal(), dca=goalDca(), v0=S.total_krw;
   const M=monthsTo(new Date(Math.max(...yrs)+'-01-01T00:00:00+09:00'),now), N=1000, rnd=mulberry(20261004);
   const m=Math.log(1+UI.mu)/12, s=UI.sig/Math.sqrt(12), drift=m-s*s/2, P=[...Array(M+1)].map(()=>new Float64Array(N));
   for(let k=0;k<N;k++){ let v=v0; P[0][k]=v; for(let t=1;t<=M;t++){ const z=Math.sqrt(-2*Math.log(rnd()||1e-12))*Math.cos(2*Math.PI*rnd()); v=v*Math.exp(drift+s*z)+dca; P[t][k]=v; } }
@@ -1781,6 +1887,7 @@ function renderRebal(anim){
       <div class="wband" style="left:${P(x.lo)}%;width:${P(x.hi)-P(x.lo)}%"></div><div class="wbar grow ${x.st==='ok'?'':x.st}" data-w="${P(x.w)}%"></div><div class="wtgt" style="left:${P(x.t)}%"></div></div>
       <span class="st ${x.st}">${x.w.toFixed(1)}% ${x.st==='ok'?'✓':x.st==='under'?'↓':'↑'}</span></div>`; }).join('');
   renderDaily();
+  renderWeekPlan();
   renderReceipt();
   grow($('#v-rebal'));
 }
@@ -1847,9 +1954,114 @@ function drawRadar(W, anim){
 
 /* ── 목표 ── */
 function monthsTo(date, now){ return Math.max(Math.round((date-now)/864e5/30.44),1); }
+/* 💧 적립금 시뮬레이터: 월 적립금을 바꿔 보면 목표 도착 시점·필요 수익률·종목별 매수 금액이 어떻게 바뀌는지 */
+const goalDca = () => UI.dca ?? monthlyFlow();
+function reachM(r, goal, v0, dca, cap=480){ let v=v0; for(let m=0;m<=cap;m++){ if(v>=goal) return m; v=v*Math.pow(1+r,1/12)+dca; } return null; }
+function dsAlloc(M){
+  const base=dailyBase(), days=dcaDays(), T=S.config.targets||{}, dd=k=>CRYPTO.has(k)?days.crypto:days.stock;
+  const syms=[...DORD.filter(k=>T[k]!=null||base[k]), ...Object.keys(T).filter(k=>!DORD.includes(k))];
+  const curM=Object.fromEntries(syms.map(k=>[k,(base[k]||0)*dd(k)])), curTot=Object.values(curM).reduce((a,b)=>a+b,0)||1, tT=syms.reduce((a,k)=>a+(T[k]||0),0)||1;
+  return syms.map(k=>{ const w=UI.dsm==='cur'?curM[k]/curTot:(T[k]||0)/tT, m=M*w; return {sym:k, w, m, d:m/dd(k), cd:base[k]||0, cr:CRYPTO.has(k)}; });
+}
+function renderWeekPlan(){
+  const card=$('#wkCard'); card.hidden=!!CAST; if(CAST) return;
+  const act=monthlyFlow(), sel=goalDca(), sl=$('#wkAmt'), MIN=+sl.min, MAX=+sl.max;
+  sl.value=Math.min(Math.max(Math.round(sel/1e5)*1e5,MIN),MAX); sl.style.setProperty('--p',((sl.value-MIN)/(MAX-MIN)*100).toFixed(1)+'%');
+  $('#wkVal').textContent=short(sel)+'원';
+  const df=sel-act; $('#wkSub').innerHTML=Math.abs(df)<5e4?'💧 지금 적립 그대로 · 목표 탭 시뮬레이터와 같은 금액':`지금 ${short(act)}원보다 <b class="${df>0?'up':'down'}">${df>0?'+':''}${short(df)}원</b> · 🧪 가정`;
+  const pres=[[null,'↩️ 지금 그대로'],[act+5e5,'+50만'],[act+1e6,'+100만'],[act+2e6,'+200만'],[act*1.5,'×1.5'],[act*2,'×2']];
+  $('#wkPre').innerHTML=pres.filter(([v])=>v==null||v<=MAX).map(([v,t])=>`<button type="button" data-v="${v??''}" class="${(v==null?UI.dca==null:UI.dca!=null&&Math.abs(UI.dca-Math.round(v/1e5)*1e5)<1)?'on':''}">${t}</button>`).join('');
+  segSel('wkMode','m',UI.dsm);
+  const A=dsAlloc(sel), E=A.filter(x=>!x.cr), C=A.filter(x=>x.cr), sum=(a,k)=>a.reduce((t,x)=>t+x[k],0);
+  const eD=sum(E,'d'), cD=sum(C,'d'), wk=eD*WK.stock+cD*WK.crypto, wd=eD+cD;
+  $('#wkKpi').innerHTML=[['📆 1주 합계',man(wk)+'원',`주 ${WK.stock}일 ETF + ${WK.crypto}일 코인`],['🗓️ 평일 하루',man(wd)+'원',`ETF ${man(eD)} + 코인 ${man(cD)}`],['🌙 주말 하루',man(cD)+'원','코인만 사요']]
+    .map(([k,v,t])=>`<div class="box lift"><span>${k}</span><b>${v}</b><small>${t}</small></div>`).join('');
+  // 요일 칸 (월~일), 오늘 강조
+  const today=wday(kday(S.asof)), order=[1,2,3,4,5,6,0], mx=wd||1;
+  $('#wkDays').innerHTML=order.map(w=>{ const we=w===0||w===6, list=we?C:A, tot=we?cD:wd;
+    return `<div class="wkd ${we?'we':''} ${w===today?'now':''}"><span class="l">${WD[w]}${w===today?'<span class="m-hide"> · 오늘</span>':''}</span><b>${man(tot)}</b>
+      <div class="wst" style="width:${Math.max(tot/mx*100,28).toFixed(0)}%;justify-self:center">${list.filter(x=>x.d>0).map(x=>`<i style="flex:${x.d.toFixed(0)};background:${acol(x.sym)}"></i>`).join('')}</div><small>${we?'🌙 ETF 쉼':'ETF+코인'}</small></div>`; }).join('');
+  const dd=(v,c)=>{ const x=v-c; return Math.abs(x)<500?'<span class="dd" style="color:var(--faint)">그대로</span>':`<span class="dd ${x>0?'up':'down'}">${x>0?'+':'-'}${man(Math.abs(x))}</span>`; };
+  const dots=x=>`<span class="wk-dots">${order.map(w=>`<i style="${(x.cr||(w!==0&&w!==6))?`background:${acol(x.sym)};border-color:${acol(x.sym)}`:''}"></i>`).join('')}</span>`;
+  $('#wkRows').innerHTML=`<div class="ds-r wk-r h"><span class="sym">종목</span><span class="dt">사는 날</span><span>하루</span><span>1주</span><span class="m">한 달</span><span>하루 vs 지금</span></div>`+
+    A.map(x=>`<div class="ds-r wk-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${EMO[x.sym]||''} ${x.sym}</span><span class="dt" style="display:flex">${dots(x)}</span><span class="d"><b>${man(x.d)}</b></span><span>${man(x.d*(x.cr?WK.crypto:WK.stock))}</span><span class="m">${man(x.m)}</span>${dd(x.d,x.cd)}</div>`).join('')+
+    `<div class="ds-r wk-r t"><span class="sym">합계</span><span class="dt"></span><span class="d"><b>${man(wd)}</b></span><span>${man(wk)}</span><span class="m">${man(sel)}</span>${dd(wd,sum(A,'cd'))}</div>`;
+  $('#wkFoot').innerHTML=`<span class="chip">🇺🇸 ETF는 월~금 <b>주 ${WK.stock}일</b> · 한 달 ≈ ${(WK.stock*WPM).toFixed(1)}일</span><span class="chip">🪙 코인은 매일 <b>주 ${WK.crypto}일</b> · 한 달 ≈ ${(WK.crypto*WPM).toFixed(1)}일</span>`+(UI.dsm==='tgt'?'<span class="chip hl">🎯 목표 비중대로 나눴어요</span>':'<span class="chip">📋 지금 하루 적립 비율 그대로</span>');
+}
+function renderDcaSim(anim){
+  const card=$('#dsCard'); card.hidden=!!CAST; if(CAST) return;
+  const act=monthlyFlow(), sel=goalDca(), sl=$('#dsAmt'), MIN=+sl.min, MAX=+sl.max;
+  sl.value=Math.min(Math.max(Math.round(sel/1e5)*1e5,MIN),MAX); sl.style.setProperty('--p',((sl.value-MIN)/(MAX-MIN)*100).toFixed(1)+'%');
+  $('#dsVal').textContent=short(sel)+'원';
+  const df=sel-act; $('#dsDiff').innerHTML=Math.abs(df)<5e4?'💧 지금 적립 그대로 (하루로 나눠 매일 사는 금액의 월 합계)':`지금 ${short(act)}원보다 <b class="${df>0?'up':'down'}">${df>0?'+':''}${short(df)}원</b> · 🧪 목표 탭 전체가 이 금액으로 계산돼요`;
+  $('#dsNote').textContent='지금 월 '+short(act)+'원';
+  const pres=[[null,'↩️ 지금 그대로'],[act+5e5,'+50만'],[act+1e6,'+100만'],[act+2e6,'+200만'],[act*1.5,'×1.5'],[act*2,'×2']];
+  $('#dsPre').innerHTML=pres.filter(([v])=>v==null||v<=MAX).map(([v,t])=>`<button type="button" data-v="${v??''}" class="${(v==null?UI.dca==null:UI.dca!=null&&Math.abs(UI.dca-Math.round(v/1e5)*1e5)<1)?'on':''}">${t}</button>`).join('');
+  // 비교 상자 (기본 시나리오)
+  const sc=S.config.scenarios||{'보수':.04,'기본':.07,'낙관':.10}, keys=Object.keys(sc), base=sc['기본']??sc[keys[1]]??.07;
+  const now=new Date(S.asof), v0=S.total_krw, move=goalAmt(), total=goalTotal(), yrs=goalYears(), g=S.config.goal||{};
+  const primary=new Date((g.date||yrs[0]+'-01-01')+'T00:00:00+09:00'), mP=monthsTo(primary,now), py=String(primary.getFullYear()).slice(2)+'.'+String(primary.getMonth()+1).padStart(2,'0');
+  const cmp=(goal)=>{ const a=reachM(base,goal,v0,act), b=reachM(base,goal,v0,sel); const t=b==null?'40년+':b===0?'달성':ym(now,b);
+    let d='<i class="same">지금과 같아요</i>'; if(a!=null&&b!=null&&a!==b) d=b<a?`<i class="fast">⚡ ${a-b}개월 빨라요</i>`:`<i class="slow">🐌 ${b-a}개월 늦어요</i>`; else if(a==null&&b!=null) d='<i class="fast">⚡ 40년 안에 도착</i>';
+    return [t,d]; };
+  const [t1,d1]=cmp(total), [t2,d2]=cmp(move), nA=needRate(total,mP,v0,act), nB=needRate(total,mP,v0,sel), dn=(nB-nA)*100;
+  $('#dsCmp').innerHTML=[['💰 전체 목표 도착',t1,d1],['🏠 이사자금 도착',t2,d2],[`⭐ ${py} 필요 수익률`,nB<=0?'적립만 OK':'연 '+(nB*100).toFixed(1)+'%',Math.abs(dn)<.05?'<i class="same">지금과 같아요</i>':`<i class="${dn<0?'fast':'slow'}">${dn<0?'⬇':'⬆'} ${Math.abs(dn).toFixed(1)}%p (지금 ${(Math.max(nA,0)*100).toFixed(1)}%)</i>`]]
+    .map(([k,v,d])=>`<div class="box lift"><span>${k}</span><b>${v}</b>${d}</div>`).join('') ;
+  drawDcaChart(act, sel, sc, keys, now, v0, total, yrs, primary, anim);
+  // 종목별 매수 금액
+  segSel('dsMode','m',UI.dsm);
+  const A=dsAlloc(sel), days=dcaDays();
+  $('#dsBar').innerHTML=A.filter(x=>x.w>0).map(x=>`<i style="width:${(x.w*100).toFixed(2)}%;background:${acol(x.sym)}" title="${x.sym} ${(x.w*100).toFixed(1)}%"></i>`).join('');
+  const sD=A.filter(x=>!x.cr).reduce((a,x)=>a+x.d,0), cD=A.filter(x=>x.cr).reduce((a,x)=>a+x.d,0), sC=A.filter(x=>!x.cr).reduce((a,x)=>a+x.cd,0), cC=A.filter(x=>x.cr).reduce((a,x)=>a+x.cd,0);
+  const dd=(v,c)=>{ const x=v-c; return Math.abs(x)<500?'<span class="dd" style="color:var(--faint)">그대로</span>':`<span class="dd ${x>0?'up':'down'}">${x>0?'+':'-'}${man(Math.abs(x))}</span>`; };
+  $('#dsRows').innerHTML=`<div class="ds-r h"><span class="sym">종목</span><span>비중</span><span class="m">한 달</span><span>하루</span><span>지금 대비</span></div>`+
+    A.map(x=>`<div class="ds-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${EMO[x.sym]||''} ${x.sym} <small>${x.cr?'주 7일':'주 5일'}</small></span><span class="w">${(x.w*100).toFixed(1)}%</span><span class="m">${man(x.m)}</span><span class="d"><b>${man(x.d)}</b></span>${dd(x.d,x.cd)}</div>`).join('')+
+    `<div class="ds-r t"><span class="sym">합계</span><span class="w">100%</span><span class="m">${man(sel)}</span><span class="d"><b>${man(sD+cD)}</b></span>${dd(sD+cD,sC+cC)}</div>`;
+  $('#dsFoot').innerHTML=`<span class="chip">🇺🇸 미국 ETF · 주 5일(월~금) 하루 <b>${man(sD)}</b></span><span class="chip">🪙 코인 · 주 7일(매일) 하루 <b>${man(cD)}</b></span>`+(UI.dsm==='tgt'?'<span class="chip hl">🎯 목표 비중대로 나눴어요</span>':'<span class="chip">📋 지금 하루 적립 비율 그대로 늘리거나 줄였어요</span>');
+}
+function drawDcaChart(act, sel, sc, keys, now, v0, total, yrs, primary, anim){
+  const el=$('#dsChart'), [W,Hh]=box(el,.5,220,320), L=44,R=16,T=16,B=26, sl=$('#dsAmt'), MIN=+sl.min, MAX=+sl.max;
+  const ny=now.getFullYear()+now.getMonth()/12, cols=['var(--warn)','var(--leaf)','var(--sky)'], emo=['🐢','🌱','🚀'];
+  if(v0>=total){ el.innerHTML=`<text x="${W/2}" y="${Hh/2}" text-anchor="middle" style="fill:var(--leaf);font-size:16px;font-weight:700">🎉 이미 전체 목표를 넘었어요</text>`; $('#dsLeg').innerHTML=''; return; }
+  const N=56, xs=[...Array(N+1)].map((_,i)=>MIN+(MAX-MIN)*i/N);
+  const lines=keys.map(k=>xs.map(x=>{ const m=reachM(sc[k],total,v0,x); return m==null?null:ny+m/12; }));
+  const at=keys.map(k=>{ const m=reachM(sc[k],total,v0,sel); return m==null?null:ny+m/12; });
+  const finite=lines.flat().filter(v=>v!=null), yMin=Math.floor(Math.min(ny,...finite)), yTop=Math.min(Math.max(...finite,Math.max(...yrs)+1),Math.max(...yrs)+8,ny+25), yMax=Math.ceil(yTop+.3);
+  const X=v=>L+(v-MIN)/(MAX-MIN)*(W-L-R), Y=y=>T+(1-(y-yMin)/(yMax-yMin))*(Hh-T-B), f=v=>v.toFixed(1);
+  const step=Math.max(1,Math.ceil((yMax-yMin)/6));
+  let g=`<defs><linearGradient id="dsF" x1="0" y1="${T}" x2="0" y2="${Hh-B}" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--leaf);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--leaf);stop-opacity:0"/></linearGradient>
+    <filter id="dsGlow" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>`;
+  const gy=yrs.filter(y=>y>=yMin&&y<=yMax);
+  for(let y=yMin; y<=yMax; y+=step){ if(gy.some(z=>Math.abs(Y(z)-Y(y))<15)) continue; g+=`<line x1="${L}" x2="${W-R}" y1="${f(Y(y))}" y2="${f(Y(y))}" stroke="var(--line)" stroke-dasharray="2 5"/><text x="${L-6}" y="${f(Y(y)+4)}" text-anchor="end">${String(y).slice(2)}년</text>`; }
+  let lastLY=-99; gy.forEach(y=>{ const showL=Math.abs(Y(y)-lastLY)>=13; if(showL) lastLY=Y(y); g+=`<line x1="${L}" x2="${W-R}" y1="${f(Y(y))}" y2="${f(Y(y))}" stroke="var(--gold)" stroke-opacity=".55" stroke-dasharray="4 4"/>${showL?`<text x="${L-6}" y="${f(Y(y)+4)}" text-anchor="end" style="fill:var(--gold);font-weight:700">🏡${String(y).slice(2)}년</text>`:''}`; });
+  const xt=[MIN,(MIN+MAX)/2,MAX]; xt.forEach((v,i)=>g+=`<text x="${f(X(v))}" y="${Hh-7}" text-anchor="${['start','middle','end'][i]}">월 ${man(v)}</text>`);
+  // 기본 시나리오 아래 은은한 면
+  const segs=pts=>{ const out=[]; let cur=[]; pts.forEach(p=>{ if(p) cur.push(p); else if(cur.length){ out.push(cur); cur=[]; } }); if(cur.length) out.push(cur); return out; };
+  const P=lines.map(ln=>ln.map((y,i)=>y==null||y>yMax?null:[X(xs[i]),Y(y)]));
+  const bi=keys.indexOf('기본')>=0?keys.indexOf('기본'):1;
+  segs(P[bi]).forEach(sg=>{ if(sg.length>1) g+=`<path d="${spath(sg)}L${f(sg.at(-1)[0])} ${Hh-B}L${f(sg[0][0])} ${Hh-B}Z" fill="url(#dsF)"/>`; });
+  P.forEach((pts,i)=>segs(pts).forEach(sg=>{ if(sg.length<2) return; const d=spath(sg), main=i===bi;
+    if(main) g+=`<path d="${d}" fill="none" stroke="${cols[i]}" stroke-width="7" stroke-opacity=".45" filter="url(#dsGlow)"/>`;
+    g+=`<path class="draw" data-dur="1.2" d="${d}" fill="none" stroke="${cols[i]}" stroke-width="${main?2.8:2}" ${main?'':'stroke-dasharray="6 5"'} stroke-linecap="round"/>`; }));
+  // 지금 / 설정 세로선
+  const xa=X(Math.min(Math.max(act,MIN),MAX)), xsx=X(Math.min(Math.max(sel,MIN),MAX));
+  g+=`<line x1="${f(xa)}" x2="${f(xa)}" y1="${T}" y2="${Hh-B}" stroke="var(--muted)" stroke-dasharray="3 4"/><text x="${f(xa)}" y="${T-3}" text-anchor="middle" style="font-size:11px;fill:var(--muted);font-weight:600">지금</text>`;
+  if(Math.abs(xsx-xa)>2) g+=`<line x1="${f(xsx)}" x2="${f(xsx)}" y1="${T}" y2="${Hh-B}" stroke="var(--n2)" stroke-width="2"/>`;
+  at.forEach((y,i)=>{ if(y==null||y>yMax) return; g+=`<circle cx="${f(xsx)}" cy="${f(Y(y))}" r="${i===bi?6:4.5}" fill="${cols[i]}" stroke="var(--surface)" stroke-width="2">${i===bi&&!RM?'<animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite"/>':''}</circle>`; });
+  if(at[bi]!=null && at[bi]<=yMax){ const y=Y(at[bi]), m=Math.round((at[bi]-ny)*12), lab=`🌱 ${ym(now,m)} 도착`, lw=lab.length*7.2+16, lx=xsx+10+lw>W-R?xsx-10-lw:xsx+10;
+    g+=`<rect x="${f(lx)}" y="${f(y-12)}" width="${f(lw)}" height="24" rx="12" style="fill:var(--leaf);fill-opacity:.2;stroke:var(--leaf);stroke-opacity:.5"/><text x="${f(lx+lw/2)}" y="${f(y+4.5)}" text-anchor="middle" style="font:700 12.5px var(--f-body);fill:var(--ink)">${lab}</text>`; }
+  el.innerHTML=g; if(anim) drawLines(el);
+  $('#dsLeg').innerHTML=keys.map((k,i)=>`<span><i style="background:${cols[i]}"></i>${emo[i]||''} ${k} ${Math.round(sc[k]*100)}% · <b>${at[i]==null?'40년+':ym(now,Math.round((at[i]-ny)*12))}</b></span>`).join('');
+  // 차트를 눌러서 금액 고르기
+  let raf=0; const pick=e=>{ const bx=el.getBoundingClientRect(), px=(e.clientX-bx.left)*W/bx.width, v=MIN+(Math.min(Math.max(px,L),W-R)-L)/(W-L-R)*(MAX-MIN);
+    const r=Math.round(v/1e5)*1e5; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{ UI.dca=Math.abs(r-act)<5e4?null:r; renderGoal(false); }); };
+  el.style.touchAction='pan-y';
+  el.onpointerdown=e=>{ el.setPointerCapture?.(e.pointerId); pick(e); }; el.onpointermove=e=>{ if(e.buttons) pick(e); };
+}
 function needRate(goal, months, v0, dca){ if(project(0,months,v0,dca).pop()>=goal) return 0; let lo=-.5,hi=1.5; for(let i=0;i<50;i++){ const mid=(lo+hi)/2, f=project(mid,months,v0,dca).pop(); f<goal?lo=mid:hi=mid; } return hi; }
 const ym = (now,m) => { const d=new Date(now); d.setMonth(d.getMonth()+m); return String(d.getFullYear()).slice(2)+'.'+String(d.getMonth()+1).padStart(2,'0'); };
 function renderGoal(anim){
+  renderDcaSim(anim);
   const g=S.config.goal||{date:'2030-01-01'};
   UI.goal=goalAmt(); UI.keep=keepAmt();
   $('#goalAmt').value=UI.goal; $('#goalVal').textContent=won(UI.goal);
@@ -1858,17 +2070,17 @@ function renderGoal(anim){
   const end=new Date(Math.max(...yrs)+'-01-01T00:00:00+09:00');
   const days=Math.ceil((primary-now)/864e5), months=monthsTo(end,now), mPrim=monthsTo(primary,now);
   countUp($('#dday'), days, v=>'D-'+Math.round(v).toLocaleString('ko-KR'), anim?900:0, anim?days+365:days);
-  const v0=S.total_krw, prog=Math.min(v0/total,1), dca=monthlyFlow();
+  const v0=S.total_krw, prog=Math.min(v0/total,1), dca=goalDca();
   drawHouse(prog, anim);
   const sc=S.config.scenarios||{'보수':.04,'기본':.07,'낙관':.10}, keys=Object.keys(sc), proj=keys.map(k=>project(sc[k],months,v0,dca));
   const reach=(k,goal)=>{ let v=v0; for(let m=0;m<600;m++){ if(v>=goal) return m; v=v*Math.pow(1+sc[k],1/12)+dca; } return null; };
   const need=needRate(total, mPrim, v0, dca);
   $('#goalLede').innerHTML = prog>=1?`<span class="chip hl">🎉 전체 목표 <b>${moneyShort(total)}</b> 달성!</span>`:
-    `<span class="chip">🎯 ${CAST?'전체 목표':'<b>'+eok(total)+'</b>'} 중 <b>${(prog*100).toFixed(1)}%</b></span><span class="chip hl">${String(primary.getFullYear()).slice(2)}.${String(primary.getMonth()+1).padStart(2,'0')}까지 필요 <b>연 ${(need*100).toFixed(1)}%</b></span><span class="chip">💧 월 적립 <b>${short(dca)}</b></span>`;
+    `<span class="chip">🎯 ${CAST?'전체 목표':'<b>'+eok(total)+'</b>'} 중 <b>${(prog*100).toFixed(1)}%</b></span><span class="chip hl">${String(primary.getFullYear()).slice(2)}.${String(primary.getMonth()+1).padStart(2,'0')}까지 필요 <b>연 ${(need*100).toFixed(1)}%</b></span><span class="chip ${UI.dca!=null?'sky':''}">${UI.dca!=null?'🧪 가정':'💧'} 월 적립 <b>${short(dca)}</b></span>`;
   // 후보 연도별 필요 수익률
   $('#years').innerHTML=yrs.map(y=>{ const r=needRate(total, monthsTo(new Date(y+'-01-01T00:00:00+09:00'),now), v0, dca), cls=r<=.07?'easy':r<=.10?'mid':'hard';
     return `<div class="yr lift ${cls} ${y===primary.getFullYear()?'primary':''}"><span class="y">${y}</span><b>${r<=0?'적립만으로 OK':'연 '+(r*100).toFixed(1)+'%'}</b><span>${y}.01 이사 시 필요</span></div>`; }).join('');
-  $('#dcaEcho').textContent='월 '+short(dca)+'원 적립 환산';
+  $('#dcaEcho').textContent=(UI.dca!=null?'🧪 가정 · ':'')+'월 '+short(dca)+'원 적립'+(UI.dca!=null?'':' 환산');
   $('#scen').innerHTML=keys.map((k,i)=>{ const fv=project(sc[k],mPrim,v0,dca).at(-1), m1=reach(k,move), m2=reach(k,total), hit=fv>=total;
     return `<div class="sc lift ${hit?'hit':'miss'}"><span class="t">${['🐢','🌱','🚀'][i]||''} ${k} ${Math.round(sc[k]*100)}%</span><b data-cu="${fv}"></b><span>🏠 ${m1==null?'—':m1===0?'달성':ym(now,m1)} · 💰 ${m2==null?'—':m2===0?'달성':ym(now,m2)}</span></div>`; }).join('');
   $$('#scen [data-cu]').forEach(e=>{ if(CAST){ e.textContent='•••'; return; } const to=+e.dataset.cu; countUp(e,to,v=>(v/1e8).toFixed(2)+'억',anim?1100:0,anim?v0:to); });
@@ -2116,6 +2328,12 @@ function openHold(sym){ BROKER='all'; OPEN.add(sym); renderHold(); const it=$(`#
 $('#orchard').addEventListener('click', e=>{ const t=e.target.closest('.tree'); if(!t) return; const sym=t.dataset.sym; BROKER='all'; OPEN.add(sym); renderHold();
   const it=$(`#hold [data-sym="${sym}"]`); if(!it) return; it.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'}); it.classList.remove('hl'); void it.offsetWidth; it.classList.add('hl'); });
 $('#badges').addEventListener('click', e=>{ const b=e.target.closest('.medal.got'); if(b) confetti([b.querySelector('.ic').textContent,'✨','🎉']); });
+$('#wkAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderWeekPlan(); });
+$('#wkPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#wkAmt').max); renderWeekPlan(); });
+$('#wkMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderWeekPlan(); });
+$('#dsAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderGoal(false); });
+$('#dsPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#dsAmt').max); renderGoal(false); });
+$('#dsMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderDcaSim(false); });
 $('#goalAmt').addEventListener('input', e=>{ UI.goal=+e.target.value; store.set('wc_goal_move',UI.goal); renderGoal(false); });
 $('#keepAmt').addEventListener('input', e=>{ UI.keep=+e.target.value; store.set('wc_goal_keep',UI.keep); renderGoal(false); });
 [['wiFx','fx'],['wiEq','eq'],['wiCr','cr']].forEach(([id,k])=>$('#'+id).addEventListener('input', e=>{ UI.wi[k]=+e.target.value; calcWi(false); }));
