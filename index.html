@@ -592,8 +592,7 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
   .dcell b{font-size:20px} .dcell .s{font-size:14.5px} .dcell span{font-size:13px}
   .receipt{font-size:15.5px} .rb-card .radar{max-width:420px} .donut{max-width:280px}
 }
-@media (min-width:2200px){ .wrap{zoom:1.2} }
-@media (min-width:3000px){ .wrap{zoom:1.6} }
+
 @media (max-width:879px){ .hero{padding:18px} .card{padding:16px;gap:14px} }
 /* 📈 시세 보드 */
 .mk{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
@@ -794,6 +793,26 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 }
 #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
 @media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+
+/* ── 📐 화면 맞춤(2026-10-06): 큰 모니터는 폭에 맞춰 연속 확대, 휴대폰은 글자가 잘리지 않게 ── */
+.wrap{zoom:var(--z,1)}
+.tsplit{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;font-size:12.5px;font-weight:600;color:var(--muted);padding-top:6px;margin-top:2px;border-top:1px dashed color-mix(in srgb,currentColor 25%,transparent)}
+.tsplit em{font-style:normal;font-weight:500;color:var(--faint);flex-basis:100%;font-size:11.5px}
+.tsplit span{white-space:nowrap}
+.tsplit b{font-family:var(--f-num);font-weight:700}
+@media (max-width:760px){ .tsplit{font-size:12px;gap:2px 8px} }
+@media (max-width:600px){
+  .tile{padding:13px 14px}
+  .tile .s{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;font-size:12px}
+  .card{padding:16px 14px}
+}
+@media (max-width:400px){
+  .fxsum{gap:6px} .fxsum .box{padding:9px 8px}
+  .fxsum .box b{font-size:12.5px} .fxsum .box span{font-size:11px;white-space:nowrap}
+  .ds-r.h span{white-space:normal;line-height:1.2}
+  .hero-sub{font-size:13px}
+}
+.ds-r.h span{white-space:normal;line-height:1.2}
 </style>
 </head>
 <body>
@@ -1348,8 +1367,8 @@ function renderHome(anim){
   $('#totalSub').innerHTML = CAST?'🎥 방송모드 · 금액은 숨겨요':'≈ <b>'+short(s.total_krw)+'</b> · 투자 '+short(s.invest_krw)+' · 현금 '+short(s.cash.total_krw);
   const u0=SER[0]?.u||1000, cum=s.nav.unit/u0-1, rg=raceGap(), W=weights(), {dd,lim,room}=ddInfo(), gp=Math.min(s.total_krw/goalTotal(),1);
   const dday=Math.ceil((new Date((s.config.goal?.date||'2030-01-01')+'T00:00:00+09:00')-new Date(s.asof))/864e5);
-  const td=$('#today'); td.className='today '+(dayAmt<0?'neg':''); td.title='어제 마지막 기록 대비 총자산 변화 (입출금 제외)';
-  td.innerHTML=`<span>${dayAmt>=0?'☀️':'🌧️'} 오늘</span><span class="num">${CAST?pct(dayRate,2):signShort(dayAmt)}</span>${CAST?'':`<span class="num">${pct(dayRate,2)}</span>`}<small>· 평가손익 ${CAST?pct(plTot/s.cost_krw):signShort(plTot)} (${pct(plTot/s.cost_krw)})</small>`;
+  const td=$('#today'); td.className='today '+(dayAmt<0?'neg':''); td.title=(DC.lbl?DC.lbl+' 미국장 개장':'어제 마지막 기록')+' 대비 총자산 변화 (입출금 제외)';
+  td.innerHTML=`<span>${dayAmt>=0?'☀️':'🌧️'} 오늘</span><span class="num">${CAST?pct(dayRate,2):signShort(dayAmt)}</span>${CAST?'':`<span class="num">${pct(dayRate,2)}</span>`}<small>· 평가손익 ${CAST?pct(plTot/s.cost_krw):signShort(plTot)} (${pct(plTot/s.cost_krw)})</small>${splitHtml(DC, s)}`;
   const T=(go,tone,k,v,n)=>`<button class="tile lift" data-go="${go}" data-tone="${tone}"><span class="k">${k}</span><b class="v">${v}</b><span class="s">${n}</span></button>`;
   $('#heroKv').innerHTML=[
     T('log', cum>=0?'up':'dn', '🌳 누적 수익률', `<span class="${sgn(cum)}" data-cu="${cum}" data-f="p"></span>`, ymd(startD())+'부터 · '+durTxt()+(yrsSince()>=.5?' · 연 '+pct(cagr()):'')),
@@ -1375,6 +1394,12 @@ function renderHome(anim){
   $('#cashNote').textContent=s.holdings.length+'종목'+(CAST?'':' · 현금 '+short(s.cash.total_krw));
   grow($('#v-home'));
 }
+function splitHtml(DC, s){
+  if(!DC.split) return DC.lbl?`<div class="tsplit"><em>🕥 ${DC.lbl} 미국장 개장부터</em></div>`:'';
+  const base=(s.total_krw-DC.a)||1, f=v=>CAST?pct(v/base,2):signShort(v);
+  const it=[['🇺🇸','미국 ETF',DC.split.etf],['🪙','코인',DC.split.coin],['💱','환율',DC.split.fxe]].filter(x=>Math.abs(x[2])>=500);
+  return `<div class="tsplit"><em>🕥 ${DC.lbl} 미국장 개장부터</em>${it.map(([e,k,v])=>`<span>${e} ${k} <b class="${sgn(v)}">${f(v)}</b></span>`).join('')}</div>`;
+}
 function renderHold(){
   segSel('brokerTabs','b',BROKER);
   const s=S, T=s.config.targets, list=s.holdings.filter(h=>BROKER==='all'||h.broker===BROKER);
@@ -1398,17 +1423,16 @@ function drawSpark(anim){
   segSel('rangeTabs','r',RANGE);
   let pts, DAY=null;
   const T=d=>Date.parse(d+'T15:30:00+09:00');
-  if(RANGE==='td'){   // 오늘: 어제 마지막 기록(=히어로 '오늘'과 같은 기준)에서 출발, 가로축은 00시~24시
-    const today=kday(S.asof), d0=Date.parse(today+'T00:00:00+09:00');
-    const hb=[...(S.history||[])].reverse().find(x=>x.d<today&&x.u), ib=(S.intraday||[]).filter(x=>kday(x.t)<today).at(-1);
-    pts=(S.intraday||[]).filter(x=>kday(x.t)===today).map(x=>({t:Date.parse(x.t), u:x.u}));
-    const bu=hb?.u ?? ib?.u; if(bu) pts.unshift({t:d0, u:bu}); DAY={d0, bu}; }
+  if(RANGE==='td'){   // 오늘: 미국장 개장(=히어로 '오늘'과 같은 기준)에서 출발, 가로축은 개장 → 다음 개장 24시간
+    const {B,b}=dayBase();
+    pts=(S.intraday||[]).filter(x=>Date.parse(x.t)>B).map(x=>({t:Date.parse(x.t), u:x.u}));
+    if(b) pts.unshift({t:B, u:b.u}); DAY={d0:B, bu:b?.u, wk:[1,2,3,4,5].includes(new Date(B-nyOff(B)).getUTCDay())}; }
   else if(RANGE==='2d') pts=(S.intraday||[]).map(x=>({t:Date.parse(x.t), u:x.u}));
   else { const cut=RANGE==='all'?'':addDay(kday(S.asof),-(+RANGE)), i0=SER.findIndex(x=>x.d>=cut);
     pts=(i0<0?[]:SER.slice(Math.max(i0-(i0>0&&SER[i0-1].mon?1:0),0))).map(x=>({t:T(x.d), u:x.u, mon:x.mon})); }
   if(pts.length) pts[pts.length-1].u=S.nav.unit;
   $('#sparkLbl').textContent='기준가 '+S.nav.unit.toFixed(1)+(S._hasPast?' · '+ymd(startD())+' = 1,000':'');
-  const el=$('#spark'); if(pts.length<2){ el.innerHTML=`<text x="300" y="80" text-anchor="middle" style="fill:var(--faint);font-size:15px">${DAY?'오늘 첫 기록을 기다리는 중이에요':'데이터가 쌓이는 중이에요'}</text>`; return; }
+  const el=$('#spark'); if(pts.length<2){ el.innerHTML=`<text x="300" y="80" text-anchor="middle" style="fill:var(--faint);font-size:15px">${DAY?'미국장 개장 이후 첫 기록을 기다리는 중이에요':'데이터가 쌓이는 중이에요'}</text>`; return; }
   const us=pts.map(p=>p.u), mn=Math.min(...us), mx=Math.max(...us), W=Math.max(Math.round(el.clientWidth||600),300), H=Math.round(Math.min(Math.max(W*.3,130),190)), pad=14, A=anim&&!RM;
   el.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const t0=pts[0].t, t1=pts.at(-1).t, X=DAY?(t=>2+(t-DAY.d0)/864e5*(W-62)):(t=>2+(t-t0)/((t1-t0)||1)*(W-62)), Y=v=>pad+(1-(v-mn)/((mx-mn)||1))*(H-pad*2-14);
@@ -1418,9 +1442,12 @@ function drawSpark(anim){
   // 실시간 시작선
   const lv=S._hasPast&&RANGE!=='2d'?T(liveD()):null;
   if(DAY){ const yb=Y(DAY.bu).toFixed(1);
+    if(DAY.wk){ const x1=X(DAY.d0+6.5*36e5).toFixed(1);   // 미국 정규장 6시간 30분
+      g+=`<rect x="2" y="4" width="${(x1-2).toFixed(1)}" height="${H-20}" rx="6" fill="var(--sky)" opacity=".07"/><text x="8" y="17" style="font-size:11px;font-weight:600;fill:var(--muted)">🇺🇸 미국장</text>`; }
     g+=`<line x1="2" x2="${(W-60).toFixed(1)}" y1="${yb}" y2="${yb}" stroke="var(--faint)" stroke-dasharray="3 4" opacity=".7"/>`;
-    (W>=460?[6,12,18]:[12,18]).forEach(h=>{ const x=X(DAY.d0+h*36e5).toFixed(1); g+=`<line x1="${x}" x2="${x}" y1="${H-20}" y2="${H-16}" stroke="var(--faint)"/><text x="${x}" y="${H-3}" text-anchor="middle" style="font-size:11px;fill:var(--faint)">${h}시</text>`; });
-    g+=`<text x="2" y="${H-3}" style="font-size:11px;fill:var(--faint)">어제 마감 대비</text>`; }
+    for(let k=1;k<24;k++){ const t=DAY.d0+k*36e5, hh=+hm(t).slice(0,2); if(hh%6||hh===0) continue;
+      const x=X(t).toFixed(1); g+=`<line x1="${x}" x2="${x}" y1="${H-20}" y2="${H-16}" stroke="var(--faint)"/><text x="${x}" y="${H-3}" text-anchor="middle" style="font-size:11px;fill:var(--faint)">${hh}시</text>`; }
+    g+=`<text x="2" y="${H-3}" style="font-size:11px;fill:var(--faint)">${hm(DAY.d0)} 개장</text>`; }
   else if(lv && lv>t0 && lv<t1){ const x=X(lv); g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="6" y2="${H-16}" stroke="var(--faint)" stroke-dasharray="2 3"/><text x="${(x-5).toFixed(1)}" y="${H-3}" text-anchor="end" style="font-size:11px;fill:var(--faint)">◀ 월말 기록</text><text x="${(x+5).toFixed(1)}" y="${H-3}" style="font-size:11px;fill:var(--faint)">실시간 ▶</text>`; }
   else g+=`<text x="2" y="${H-3}" style="font-size:11px;fill:var(--faint)">${RANGE==='2d'?(()=>{const k=new Date(t0+9*36e5).toISOString(); return (+k.slice(5,7))+'/'+(+k.slice(8,10))+' '+k.slice(11,16)+'부터';})():ymd(new Date(t0+9*36e5).toISOString().slice(0,10))}</text>`;
   g+=`<path d="${path(xy)}L${last[0].toFixed(1)} ${H-16}L${xy[0][0].toFixed(1)} ${H-16}Z" fill="url(#sg)" clip-path="url(#sclip)"/>
@@ -1433,8 +1460,40 @@ function drawSpark(anim){
 }
 /* ── 공통 ── */
 const kday = t => new Date(new Date(t).getTime()+9*36e5).toISOString().slice(0,10);   // KST 날짜
-/* 오늘 = 어제(KST) 마지막 기록 대비 총자산 변화. 오늘 입출금은 빼고, %는 기준가(좌수법) 변화 */
+/* 🇺🇸 '오늘'의 출발점 = 가장 최근 미국 정규장 개장(뉴욕 09:30 → 한국 22:30, 서머타임 끝나면 23:30).
+   낮에 봐도 어젯밤 미국장 결과가 남아 있고, 새 장이 열릴 때만 0에서 다시 시작해요. 주말·휴장일도 같은 시각에 넘어가요. */
+const NYF = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+function nyParts(ms){ return Object.fromEntries(NYF.formatToParts(new Date(ms)).map(x=>[x.type,x.value])); }
+function nyOff(ms){ const p=nyParts(ms); return Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute) - Math.floor(ms/6e4)*6e4; }   // 뉴욕 시각 − UTC
+function usOpenBefore(ms){
+  const p=nyParts(ms), late=((+p.hour)%24)*60+(+p.minute) >= 570;
+  const d=Date.UTC(+p.year,+p.month-1,+p.day-(late?0:1));            // 개장 전이면 전날 개장
+  const y=new Date(d), noon=Date.UTC(y.getUTCFullYear(),y.getUTCMonth(),y.getUTCDate(),12);
+  return Date.UTC(y.getUTCFullYear(),y.getUTCMonth(),y.getUTCDate(),9,30) - nyOff(noon);
+}
+const hm = ms => new Date(ms+9*36e5).toISOString().slice(11,16);
+function dayBase(){
+  const now=Date.parse(S.asof), B=usOpenBefore(now), I=(S.intraday||[]).filter(x=>x.v&&x.u);
+  const b=[...I].reverse().find(x=>Date.parse(x.t)<=B) || I.find(x=>Date.parse(x.t)>B);
+  return {B, b, lbl:(kday(B)===kday(S.asof)?'오늘 ':'어제 ')+hm(B)};
+}
 function dayChg(){
+  const s=S, {B,b,lbl}=dayBase();
+  if(b){
+    const flow=(s.flows||[]).filter(f=>Date.parse(f.t)>Date.parse(b.t)).reduce((t,f)=>t+f.a,0);
+    const a=Math.round(s.total_krw-flow-b.v), r=s.nav.unit/b.u-1;
+    // 무엇 때문에 움직였나: 미국 ETF(달러 가격) · 코인 · 환율. 지금 수량 기준이라 그사이 산 몫만큼 조금 다를 수 있어요
+    let etf=0, coin=0, fxe=0, ok=!!b.p;
+    if(ok){ const usd=s.holdings.filter(h=>h.ccy==='USD'), fxNow=usd.length?usd[0].price_krw/usd[0].price:(s.fx?.rate||0);
+      let usd0=(s.cash?.toss_usd||0);
+      s.holdings.forEach(h=>{ const p0=b.p[h.sym]; if(p0==null) return;
+        if(h.ccy==='USD'){ etf+=h.qty*(h.price-p0)*fxNow; usd0+=h.qty*p0; } else coin+=h.qty*(h.price-p0); });
+      fxe=b.fx?usd0*(fxNow-b.fx):0; }
+    return {a, r, lbl, B, split: ok?{etf,coin,fxe}:null};
+  }
+  return dayChgKst();
+}
+function dayChgKst(){
   const s=S, today=kday(s.asof), h=s.history||[];
   const base=[...h].reverse().find(x=>x.d<today && x.v && x.u);
   const flowT=(h.at(-1)?.d===today ? (h.at(-1).f||0) : 0);
@@ -2261,7 +2320,7 @@ function renderLog(anim){
     ['🏡 이사 플랜 계산 가정','전체 목표 = 이사자금 + 이사 후 남길 금융자산이에요. 매일 적립 금액을 월로 바꿀 때 미국 ETF는 미국 영업일 월 21일, 코인은 월 30.4일로 계산해요. 지금 총자산에서 시작해 연 수익률을 월 복리로 나눠 붙이고, 세금·수수료·환율 변동은 빠진 참고치예요.'],
     ['🏁 시장과 대결은 어떻게 계산해요?','비교 시작일을 0%로 맞추고 각자의 누적 수익률을 그려요. 내 포트는 기준가(좌수법)라 적립한 돈은 수익률에 섞이지 않아요. S&P500은 과거 구간은 월말 지수, 실시간 구간은 SPY ETF 가격(배당 제외)을 이어 붙였고, 원화로 보기는 그날 환율을 곱해요. 두 구간을 잇는 며칠 동안의 S&P500 움직임은 0%로 봐요.'],
     ['🎲 이사 성공 확률은 어떻게 계산해요?','매달 적립을 이어간다고 보고, 수익률이 평균 주변에서 무작위로 흔들리는 미래를 1,000번 만들어요. 연 기대수익률과 변동성은 가정이라 바꿔가며 보세요. 「내 실적」 버튼은 지금까지 완료된 월 수익률로 두 값을 채우는데, 기간이 짧으면 과하게 낙관적일 수 있어요.'],
-    ['☀️ \'오늘\'은 언제 기준이에요?','어제(한국 시간) 마지막 수집값 대비 지금 총자산이 얼마나 변했는지예요. 오늘 들어온 입금·출금은 빼고, %는 기준가(좌수법) 변화라 현금까지 포함한 전체 기준이에요. 그래서 미국장이 쉬는 오전엔 코인과 환율 움직임만 잡혀요. 보유 종목 카드의 \'오늘 손익\'은 증권사가 주는 값이라 기준이 달라요(미국 ETF는 직전 거래일, 코인은 업비트 오전 9시 대비).'],
+    ['☀️ \'오늘\'은 언제 기준이에요?','가장 최근 미국 정규장 개장(한국 시간 22:30, 서머타임이 끝나면 23:30) 대비 지금 총자산이 얼마나 변했는지예요. 포트의 대부분이 미국 ETF라 하루를 미국장 하나로 끊었고, 낮에 봐도 어젯밤 미국장 결과가 남아 있다가 새 장이 열릴 때 0에서 다시 시작해요. 그사이 들어온 입금·출금은 빼고, %는 기준가(좌수법) 변화예요. 아래 줄의 🇺🇸 미국 ETF · 🪙 코인 · 💱 환율은 무엇 때문에 움직였는지 나눠 본 값이에요(지금 수량 기준이라 합계와 조금 다를 수 있어요). 일별 달력은 한국 시간 자정 기준이고, 보유 종목 카드의 \'오늘 손익\'은 증권사 값(미국 ETF는 직전 거래일, 코인은 업비트 09시 대비)이라 서로 조금 달라요.'],
     ['💵 배당은 어떻게 잡혀요?','토스 Open API에는 배당 내역 조회가 없어서, 15분마다 원화 입금 없이 달러 예수금만 늘어난 금액을 배당으로 봐요(3천 원 이상). 배당은 입금이 아니라 수익으로 처리해서 기준가에 반영돼요. 예상 배당은 지금 평가금액 × 종목별 대략 배당률 × (1 − 원천징수 15%)이고, 배당률·지급월은 config.json의 div_yield·div_months로 바꿀 수 있어요. 배당을 원화로 자동 환전받는 설정이면 입금으로 잡힐 수 있으니 dividends_extra에 직접 넣어주세요.'],
     ['📊 과거 월말 기록은 어떻게 이어 붙여요?','실시간 수집 전의 월말 자산·입출금 기록을 같은 좌수법으로 계산해요. 그달 입출금은 전월말 기준가로 좌수를 사고, 첫 달을 기준가 1,000으로 놓아요. 마지막 월말 자산과 실시간 첫 총액의 차이는 그 며칠의 운용 성과로 보고 이어 붙여요. 과거 구간은 월말 값만 있어서 그래프에서 점으로 표시되고, 월 중간에 있었던 낙폭은 보이지 않아요.'],
     ['🧮 원금 vs 시장은 무엇을 기준으로 해요?','넣은 돈은 첫 달 자산에 그 뒤 입출금을 모두 더한 금액이에요. 시장 몫은 지금 자산에서 넣은 돈을 뺀 값이라, 종목별 평단으로 계산하는 평가 손익과는 다를 수 있어요.'],
@@ -2339,7 +2398,9 @@ $('#keepAmt').addEventListener('input', e=>{ UI.keep=+e.target.value; store.set(
 [['wiFx','fx'],['wiEq','eq'],['wiCr','cr']].forEach(([id,k])=>$('#'+id).addEventListener('input', e=>{ UI.wi[k]=+e.target.value; calcWi(false); }));
 $('#presets').addEventListener('click', e=>{ const b=e.target.closest('[data-p]'); if(!b) return; const p=PRESETS[+b.dataset.p][1], fx0=S.fx.rate;
   UI.wi={fx: p.fxAbs ?? Math.round((fx0+p.fx)/10)*10, eq:p.eq, cr:p.cr}; calcWi(true); });
-let rz; addEventListener('resize', ()=>{ movePill(); clearTimeout(rz); rz=setTimeout(()=>{ if(S) RENDER[VIEW](false); },200); });
+function fitZoom(){ const w=innerWidth, z=w>1700?Math.min(w/1700,2):w<360?w/360:1; document.documentElement.style.setProperty('--z', z.toFixed(3)); }
+fitZoom();
+let rz; addEventListener('resize', ()=>{ fitZoom(); movePill(); clearTimeout(rz); rz=setTimeout(()=>{ if(S) RENDER[VIEW](false); },200); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>S&&renderAll(false));
 
 setInterval(async ()=>{
