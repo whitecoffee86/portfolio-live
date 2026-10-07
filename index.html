@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1F7A57">
+<meta name="theme-color" content="#0e1a34" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="장기포트">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="robots" content="noindex">
 <title>장기포트 라이브</title>
 <script>try{const t=localStorage.getItem('wcl_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
@@ -2412,7 +2412,8 @@ $('#labTabs').addEventListener('click', e=>{ const b=e.target.closest('button');
 $('#tlTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; TLK=b.dataset.k; renderLog(true); });
 $('#heroKv').addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(!b) return; if(b.dataset.go==='lab') LAB='dd'; if(b.dataset.go==='home'){ $('#raceCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'center'}); return; } setTab(b.dataset.go); });
 /* 테마 토글: 자동 → 라이트 → 다크 (단기 대시보드와 같은 저장 키) */
-function applyTheme(t){ const r=document.documentElement; if(t==='light'||t==='dark') r.dataset.theme=t; else delete r.dataset.theme; $('#themeTxt').textContent=' '+({light:'라이트',dark:'다크'}[t]||'자동'); }
+function syncBarColor(t){ const dk = t==='dark' || (t!=='light' && matchMedia('(prefers-color-scheme: dark)').matches); document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.removeAttribute('media'); m.content = dk?'#0e1a34':'#ffffff'; }); }
+function applyTheme(t){ syncBarColor(t); const r=document.documentElement; if(t==='light'||t==='dark') r.dataset.theme=t; else delete r.dataset.theme; $('#themeTxt').textContent=' '+({light:'라이트',dark:'다크'}[t]||'자동'); }
 applyTheme(store.get('wcl_theme'));
 $('#themeBtn').addEventListener('click', ()=>{ const order=['auto','light','dark'], cur=store.get('wcl_theme')||'auto', nx=order[(order.indexOf(cur)+1)%3]; store.set('wcl_theme',nx); applyTheme(nx); if(S) renderAll(false); });
 /* 카드 위 마우스 따라 은은한 빛 */
@@ -2438,7 +2439,7 @@ $('#presets').addEventListener('click', e=>{ const b=e.target.closest('[data-p]'
 function fitZoom(){ const w=innerWidth, z=w>1700?Math.min(w/1700,2):w<360?w/360:1; document.documentElement.style.setProperty('--z', z.toFixed(3)); }
 fitZoom();
 let rz; addEventListener('resize', ()=>{ fitZoom(); movePill(); clearTimeout(rz); rz=setTimeout(()=>{ if(S) RENDER[VIEW](false); },200); });
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>S&&renderAll(false));
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>{ syncBarColor(store.get('wcl_theme')); S&&renderAll(false); });
 
 setInterval(async ()=>{
   if(!S||DEMO||document.hidden) return;
