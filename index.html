@@ -2008,9 +2008,11 @@ function drawRace(anim){
     $('#podium').innerHTML=''; $('#raceLede').innerHTML=''; return;
   }
   const b0=H[0], last=H.length-1;
-  const val=(x,k,i)=> k==='me' ? (i===last? S.nav.unit : x.u)/b0.u-1
+  // 원화 = 셋 다 원화로 환산 · 달러 = 셋 다 달러로 환산 (내 포트·코스피는 환율로 나눔, S&P500은 그대로)
+  const fr=x=> RCCY==='usd' ? (b0.fx||1)/(x.fx||b0.fx||1) : 1;
+  const val=(x,k,i)=> k==='me' ? (i===last? S.nav.unit : x.u)/b0.u*fr(x)-1
     : k==='SPY' ? (RCCY==='krw' ? (x.b.SPY*x.fx)/(b0.b.SPY*b0.fx) : x.b.SPY/b0.b.SPY)-1
-    : x.b.KOSPI/b0.b.KOSPI-1;
+    : x.b.KOSPI/b0.b.KOSPI*fr(x)-1;
   const ser=RACERS.map(r=>({...r, pts:H.map((x,i)=>val(x,r.k,i))}));
   ser.forEach(r=>r.end=r.pts.at(-1));
   const rank=[...ser].sort((a,b)=>b.end-a.end), medals=['🥇','🥈','🥉'];
