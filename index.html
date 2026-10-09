@@ -1461,7 +1461,9 @@ function renderHeroTop(anim){
   const T=(go,tone,k,v,n)=>`<button class="tile lift" data-go="${go}" data-tone="${tone}"><span class="k">${k}</span><b class="v">${v}</b><span class="s">${n}</span></button>`;
   $('#heroKv').innerHTML=[
     T('log', cum>=0?'up':'dn', '🌳 누적 수익률', `<span class="${sgn(cum)}" data-cu="${cum}" data-f="p"></span>`, ymd(startD())+'부터 · '+durTxt()+(yrsSince()>=.5?' · 연 '+pct(cagr()):'')),
-    T('hold', plTot>=0?'up':'dn', '💰 평가손익', CAST?`<span class="${sgn(plTot)}">${pct(plTot/s.cost_krw)}</span>`:`<span class="${sgn(plTot)}" data-cu="${plTot}" data-f="s"></span>`, CAST?'투자 원금 대비':`${pct(plTot/s.cost_krw)} · 원금 ${short(s.cost_krw)} 대비`),
+    (()=>{ const CL=SER.filter(x=>x.p>0).at(-1); if(!CL) return T('hold', plTot>=0?'up':'dn', '💰 평가손익', `<span class="${sgn(plTot)}">${CAST?pct(plTot/s.cost_krw):signShort(plTot)}</span>`, '증권사 평단 기준');
+      const gn=CL.v-CL.p;
+      return T('contrib', gn>=0?'up':'dn', '💰 실제 번 돈', CAST?`<span class="${sgn(gn)}">${pct(gn/CL.p)}</span>`:`<span class="${sgn(gn)}" data-cu="${gn}" data-f="s"></span>`, CAST?'넣은 돈 대비':`넣은 돈 ${short(CL.p)} 대비 ${pct(gn/CL.p)}`); })(),
     rg ? T('home', rg.gap>=0?'up':'dn', '🇺🇸 S&amp;P500 대비', `<span class="${sgn(rg.gap)}">${(rg.gap>=0?'+':'')+(rg.gap*100).toFixed(1)}%p</span>`, `S&amp;P500 ${pct(rg.spy)} · ${rg.gap>=0?'🐂 앞서는 중':'🐢 추격 중'}`)
        : T('home','gold','🇺🇸 S&amp;P500 대비','—','지수 기록이 쌓이는 중'),
     T('goal','gold','🏡 이사 플랜', `<span style="color:var(--gold)">${(gp*100).toFixed(0)}%</span>`, `D-${dday.toLocaleString('ko-KR')} · ${CAST?'전체 목표':eok(goalTotal())} 중`),
@@ -2495,7 +2497,7 @@ $('#tlTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); 
   dc.addEventListener('pointermove', e=>{ if(e.pointerType==='mouse') pick(e); });
   dc.addEventListener('click', pick); dc.addEventListener('pointerleave', e=>{ if(e.pointerType==='mouse') divTipHide(); });
   document.addEventListener('click', e=>{ if(!e.target.closest?.('#divChart')) divTipHide(); }, {passive:true}); } }
-$('#heroKv').addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(!b) return; if(b.dataset.go==='lab') LAB='dd'; if(b.dataset.go==='hold'){ $('#holdCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); return; } if(b.dataset.go==='home'){ $('#raceCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'center'}); return; } setTab(b.dataset.go); });
+$('#heroKv').addEventListener('click', e=>{ const b=e.target.closest('[data-go]'); if(!b) return; if(b.dataset.go==='lab') LAB='dd'; if(b.dataset.go==='contrib'){ $('#contribCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); return; } if(b.dataset.go==='hold'){ $('#holdCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); return; } if(b.dataset.go==='home'){ $('#raceCard').scrollIntoView({behavior:RM?'auto':'smooth',block:'center'}); return; } setTab(b.dataset.go); });
 /* 테마 토글: 자동 → 라이트 → 다크 (단기 대시보드와 같은 저장 키) */
 function syncBarColor(t){ const dk = t==='dark' || (t!=='light' && matchMedia('(prefers-color-scheme: dark)').matches); document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.removeAttribute('media'); m.content = dk?'#0e1a34':'#ffffff'; }); }
 function applyTheme(t){ syncBarColor(t); const r=document.documentElement; if(t==='light'||t==='dark') r.dataset.theme=t; else delete r.dataset.theme; $('#themeTxt').textContent=' '+({light:'라이트',dark:'다크'}[t]||'자동'); }
