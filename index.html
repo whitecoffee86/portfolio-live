@@ -234,6 +234,46 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
 .dcell .db i{display:block;height:100%;background:var(--leaf);width:0}
 .dcell.x2 .db i{background:var(--sky)}
 
+
+/* 🏡 이사 플랜: 변수 패널 + 그래프 하나 */
+.pl-grid{display:grid;gap:16px;min-width:0}
+@media (min-width:980px){.pl-grid{grid-template-columns:minmax(270px,4fr) minmax(0,9fr);align-items:start}}
+.pl-ctl{display:grid;gap:16px;background:var(--sunk);border:1px solid var(--line);border-radius:16px;padding:14px 14px 16px;min-width:0}
+.pl-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
+.pl-reset{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;font:600 12px var(--f-body);cursor:pointer}
+.pl-k{display:grid;gap:8px;min-width:0}
+.pl-k label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;font-weight:600;min-width:0}
+.pl-k label small{font-size:11px;color:var(--faint);font-weight:500;margin-left:2px}
+.pl-k label b{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600;white-space:nowrap}
+.pl-k label b small{font-size:11.5px;margin-left:4px;color:inherit}
+.pl-k label b small.up{color:var(--leaf)} .pl-k label b small.down{color:var(--warn)}
+.pl-k .presets{gap:5px}
+.pl-k .presets button{padding:3px 9px;font-size:11.5px}
+.pl-ctl input[type=range],.pl-ctl #dsAmt{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;background:linear-gradient(90deg,var(--n1),var(--n2) var(--p,50%),var(--line) var(--p,50%));outline:none;margin:4px 0}
+.pl-ctl input[type=range]::-webkit-slider-thumb,.pl-ctl #dsAmt::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--surface);border:3px solid var(--n2);box-shadow:0 0 0 5px color-mix(in srgb,var(--n2) 20%,transparent),0 3px 10px rgba(0,0,0,.28);cursor:grab}
+.pl-ctl input[type=range]::-moz-range-thumb,.pl-ctl #dsAmt::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--surface);border:3px solid var(--n2);box-shadow:0 0 0 5px color-mix(in srgb,var(--n2) 20%,transparent);cursor:grab}
+.pl-main{display:grid;gap:10px;min-width:0}
+.pl-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.pl-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pl-kpi .box{gap:3px}
+.pl-kpi .box b{font-size:clamp(17px,2vw,22px)}
+.pl-kpi .box small{font-size:11.5px;color:var(--muted);white-space:normal;line-height:1.35}
+.pl-kpi .easy{color:var(--leaf)} .pl-kpi .mid{color:var(--gold)} .pl-kpi .hard{color:var(--warn)}
+.pl-cap{font-size:12px;color:var(--faint);font-weight:600}
+#planChart{cursor:crosshair;touch-action:pan-y}
+#mcYears{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
+#mcYears .yr{font:inherit;color:inherit;cursor:pointer}
+#mcYears .yr.sel{outline:2px solid var(--n2);outline-offset:1px}
+#mcYears .yr.sel .y::after{content:" 📌";font-size:12px}
+@media (max-width:430px){.pl-ctl{padding:12px}.pl-kpi .box{padding:9px 10px}}
+/* 폰·태블릿: 그래프를 위에 붙여 두고(스크롤해도 따라옴) 아래 변수를 움직이면서 바로 보기 */
+@media (max-width:979px){
+  .pl-main{display:contents}
+  .pl-kpi{order:1}.pl-cap{order:2}
+  #planChart{order:3;position:sticky;top:calc(var(--tbh,96px) + 4px);z-index:3;background:var(--surface);border-radius:12px;box-shadow:0 14px 18px -16px rgba(0,0,0,.45)}
+  #plLeg{order:4}.pl-ctl{order:5}#mcYears{order:6}
+  .pl-cap::after{content:" · 아래 변수를 움직이면 그래프가 따라와요"}
+}
 /* 목표 */
 .goal-top{display:grid;gap:16px;align-items:center}
 @media (min-width:560px){.goal-top{grid-template-columns:160px 1fr}}
@@ -606,6 +646,7 @@ input[type=range]{width:100%;accent-color:var(--leaf)}
 .qt-h{display:flex;align-items:center;gap:5px;font-weight:700;font-size:13.5px;min-width:0}
 .qt-h small{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--faint);display:flex;align-items:center;gap:4px;white-space:nowrap}
 .qt.live .qt-h small{color:var(--leaf)}
+.qt .qt-h small.nv{color:var(--sky)}
 .qt.live .qt-h small::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s infinite}
 .qt-p{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:600;font-size:19px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:6px;width:max-content;max-width:100%}
 .qt-r{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11.5px;color:var(--muted);white-space:nowrap;min-width:0}
@@ -1031,65 +1072,43 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 
     <!-- 목표 -->
     <section class="view" id="v-goal" role="tabpanel" hidden>
-      <section class="card" id="dsCard" data-qk="watering">
-        <div class="card-h"><h2><span class="hi">💧</span>적립금 시뮬레이터</h2><span class="note" id="dsNote"></span></div>
-        <div class="ds-grid">
-          <div class="ds-left">
-            <div class="ds-amt"><span>매달 넣을 돈</span><b class="num" id="dsVal"></b><em id="dsDiff"></em></div>
-            <input type="range" id="dsAmt" min="500000" max="15000000" step="100000" aria-label="월 적립금">
-            <div class="presets" id="dsPre"></div>
-            <div class="ds-cmp" id="dsCmp"></div>
-          </div>
-          <div class="ds-right">
-            <div class="ds-cap">📉 월 적립금이 늘수록 💰 전체 목표 도착 시점이 이렇게 당겨져요 <span>· 차트를 눌러도 바뀌어요</span></div>
-            <svg class="chart race" id="dsChart" viewBox="0 0 600 260" aria-label="월 적립금에 따른 목표 도달 시점"></svg>
-            <div class="legend" id="dsLeg"></div>
-          </div>
-        </div>
-        <div class="ds-alloc">
-          <div class="ds-ah"><b>🛒 이 금액이면 종목별로 이렇게 사요</b>
-            <div class="seg" role="tablist" id="dsMode"><button role="tab" data-m="tgt">🎯 목표 비중대로</button><button role="tab" data-m="cur">📋 지금 비율대로</button></div></div>
-          <div class="ds-bar" id="dsBar"></div>
-          <div class="ds-tbl" id="dsRows"></div>
-          <div class="ins" id="dsFoot"></div>
-        </div>
-      </section>
-      <section class="card c6" data-qk="thumbs">
+      <section class="card" id="planCard" data-qk="thumbs">
         <div class="card-h"><h2><span class="hi">🏡</span>이사 플랜</h2><span class="note num" id="dday"></span></div>
-        <div class="goal-top">
-          <div class="house" id="house"></div>
-          <div style="display:grid;gap:12px;min-width:0">
-            <div class="ins" id="goalLede"></div>
-            <div class="slider">
-              <label for="goalAmt"><span>🏠 이사자금</span><span class="num" id="goalVal"></span></label>
+        <div class="ins" id="goalLede"></div>
+        <div class="pl-grid">
+          <div class="pl-ctl" aria-label="시뮬레이션 변수">
+            <div class="pl-h"><b>🎛️ 변수</b><button type="button" class="pl-reset" id="plReset">↩️ 처음 값</button></div>
+            <div class="pl-k">
+              <label for="dsAmt"><span>💧 매달 넣을 돈</span><b class="num" id="dsVal"></b></label>
+              <input type="range" id="dsAmt" min="500000" max="15000000" step="100000" aria-label="월 적립금">
+              <div class="presets" id="dsPre"></div>
+            </div>
+            <div class="pl-k">
+              <label for="goalAmt"><span>🏠 이사자금</span><b class="num" id="goalVal"></b></label>
               <input type="range" id="goalAmt" min="300000000" max="2000000000" step="50000000">
             </div>
-            <div class="slider">
-              <label for="keepAmt"><span>💰 이사 후 남길 금융자산</span><span class="num" id="keepVal"></span></label>
+            <div class="pl-k">
+              <label for="keepAmt"><span>💰 이사 후 남길 금융자산</span><b class="num" id="keepVal"></b></label>
               <input type="range" id="keepAmt" min="0" max="1500000000" step="50000000">
             </div>
+            <div class="pl-k">
+              <label for="mcMu"><span>📈 연 기대수익률</span><b class="num" id="mcMuV"></b></label>
+              <input type="range" id="mcMu" min="0.02" max="0.20" step="0.005">
+              <div class="presets" id="mcPre"></div>
+            </div>
+            <div class="pl-k">
+              <label for="mcSig"><span>🎢 연 변동성 <small>클수록 띠가 넓어져요</small></span><b class="num" id="mcSigV"></b></label>
+              <input type="range" id="mcSig" min="0.05" max="0.35" step="0.01">
+            </div>
+          </div>
+          <div class="pl-main">
+            <div class="pl-kpi" id="plKpi"></div>
+            <div class="pl-cap">👆 그래프를 누르면 그 해를 이사 시점으로 골라요</div>
+            <svg class="chart race" id="planChart" viewBox="0 0 600 320" aria-label="실제 자산과 1,000번 시뮬레이션한 앞으로의 범위, 이사 목표선"></svg>
+            <div class="legend" id="plLeg"></div>
+            <div class="years" id="mcYears"></div>
           </div>
         </div>
-        <div class="years" id="years"></div>
-        <div class="road" id="road"></div>
-      </section>
-      <section class="card c6">
-        <div class="card-h"><h2><span class="hi">🔭</span>도착 시뮬레이션</h2><span class="note" id="dcaEcho"></span></div>
-        <div class="scen" id="scen"></div>
-        <svg class="chart" id="goalChart" viewBox="0 0 600 230" aria-label="목표일까지 예상 경로"></svg>
-        <div class="legend"><span><i style="background:var(--ink)"></i>실제</span><span><i style="background:var(--warn)"></i>보수</span><span><i style="background:var(--leaf)"></i>기본</span><span><i style="background:var(--sky)"></i>낙관</span><span><i style="background:var(--gold)"></i>🏠 이사자금 · 💰 전체 목표</span></div>
-      </section>
-      <section class="card" data-qk="calc">
-        <div class="card-h"><h2><span class="hi">🎲</span>이사 성공 확률</h2><span class="note">1,000번 시뮬레이션</span></div>
-        <div class="ins" id="mcLede"></div>
-        <div class="years" id="mcYears"></div>
-        <svg class="chart race" id="mcChart" viewBox="0 0 600 240" aria-label="1,000번 시뮬레이션한 자산 범위"></svg>
-        <div class="legend"><span><i style="background:var(--leaf);opacity:.25"></i>10~90% 범위</span><span><i style="background:var(--leaf);opacity:.5"></i>25~75% 범위</span><span><i style="background:var(--leaf)"></i>가운데 경로</span><span><i style="background:var(--gold)"></i>🏠 · 💰 목표</span></div>
-        <div class="dca">
-          <div class="slider"><label for="mcMu"><span>📈 연 기대수익률</span><span class="num" id="mcMuV"></span></label><input type="range" id="mcMu" min="0.02" max="0.20" step="0.005"></div>
-          <div class="slider"><label for="mcSig"><span>🎢 연 변동성</span><span class="num" id="mcSigV"></span></label><input type="range" id="mcSig" min="0.05" max="0.35" step="0.01"></div>
-        </div>
-        <div class="presets" id="mcPre"></div>
       </section>
     </section>
 
@@ -1190,7 +1209,7 @@ let S=null, PW=null, DEMO=false, CAST=store.get('wc_cast')==='1';
 let VIEW = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : (VIEWS.includes(store.get('wc_view'))?store.get('wc_view'):'home');
 let CALM=null, CALD=null, THW=store.get('wc_thw')||'365';
 let RANGE=store.get('wc_range2')||'td', RACE=['30','90','180','365','all'].includes(store.get('wc_race'))?store.get('wc_race'):'all', CRNG=['30','90','180','365','all'].includes(store.get('wc_crange'))?store.get('wc_crange'):'all', MONM=store.get('wc_monm')||'won', MONSEL=null, RCCY=store.get('wc_rccy')||'krw', BROKER='all', LAB='fx', TLK='all', OPEN=new Set();
-let UI={goal:null, keep:null, wi:null, mu:null, sig:null, dca:null, dsm:store.get('wc_dsmode')||'tgt'};
+let UI={goal:null, keep:null, wi:null, mu:null, sig:null, dca:null, yr:null, dsm:store.get('wc_dsmode')||'tgt'};
 
 /* ── 암호 해제 (수집기와 같은 PBKDF2-SHA256 → AES-256-GCM) ── */
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -1395,7 +1414,7 @@ function renderChrome(){
   $('#tape').innerHTML=items+items;
   const off=weights().filter(x=>x.st!=='ok').length, tb=$('[data-v="rebal"]');
   tb.querySelector('.badge')?.remove(); if(off) tb.insertAdjacentHTML('beforeend',`<span class="badge">${off}</span>`);
-  $('#foot').textContent=(DEMO?'샘플 데이터 · 실제 계좌 아님 · ':'')+'기준 '+new Date(s.asof).toLocaleString('ko-KR')+' · 토스증권·업비트 Open API · 15분마다 갱신'+(S._hasPast?' · '+ymd(startD())+'~'+ymd(addDay(liveD(),-1))+' 월말 기록':'');
+  $('#foot').textContent=(DEMO?'샘플 데이터 · 실제 계좌 아님 · ':'')+'기준 '+new Date(s.asof).toLocaleString('ko-KR')+' · 토스증권·업비트 Open API · 15분마다 기록'+(QOK||WSOK?' · 시세는 '+[QOK&&'네이버',WSOK&&'업비트'].filter(Boolean).join('·')+' 실시간':'')+(S._hasPast?' · '+ymd(startD())+'~'+ymd(addDay(liveD(),-1))+' 월말 기록':'');
 }
 function setTab(v, push=true){
   VIEW=v; store.set('wc_view',v); if(push) try{ history.replaceState(null,'','#'+v); }catch(e){}
@@ -1410,6 +1429,12 @@ function segSel(id, attr, val){ $$('#'+id+' [role=tab]').forEach(b=>b.setAttribu
 
 /* ── 요약 ── */
 function renderHome(anim){
+  renderHeroTop(anim);
+  drawSpark(anim);
+  renderQuotes();
+  renderHomeRest(anim);
+}
+function renderHeroTop(anim){
   const s=S, plTot=s.invest_krw-s.cost_krw, navRet=s.nav.unit/1000-1, DC=dayChg(), dayRate=DC.r, dayAmt=DC.a;
   const tot=$('#total');
   if(CAST){ tot._v=undefined; tot.textContent=pct(navRet); }
@@ -1433,8 +1458,9 @@ function renderHome(anim){
   ].join('');
   const F={s:signShort, p:v=>pct(v)};
   $$('#heroKv [data-cu]').forEach(e=>{ const to=+e.dataset.cu; countUp(e,to,F[e.dataset.f],anim?1200:0, anim?0:to); });
-  drawSpark(anim);
-  renderQuotes();
+}
+function renderHomeRest(anim){
+  const s=S;
   const AC=achievements();
   $('#badgeNote').textContent=AC.filter(a=>a.on).length+' / '+AC.length+' 획득';
   $('#badges').innerHTML=AC.map((a,i)=>`<div class="medal lift ${a.on?'got':'locked'} ${a.on&&anim?'new':''}" title="${a.on?'눌러서 축하하기':'아직 잠겨 있어요'}"><span class="ic" style="animation-delay:${i*.07}s">${a.e}</span><b>${a.t}</b><small>${a.d}</small></div>`).join('');
@@ -1531,7 +1557,7 @@ const hm = ms => new Date(ms+9*36e5).toISOString().slice(11,16);
 function nine(ms){ const k=new Date(ms+9*36e5), d=Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*36e5+9*36e5; return d - (k.getUTCHours()<9?864e5:0); }
 function snapAt(T, I){ return [...I].reverse().find(x=>Date.parse(x.t)<=T) || I.find(x=>Date.parse(x.t)>T); }
 function dayBase(){
-  const now=Date.parse(S.asof), B=nine(now), I=(S.intraday||[]).filter(x=>x.v&&x.u);
+  const now=Date.parse(S._liveT||S.asof), B=nine(now), I=(S.intraday||[]).filter(x=>x.v&&x.u);
   const b=snapAt(B,I), y=snapAt(B-864e5,I);
   const C=b?Math.max(B,Math.min(Date.parse(b.t),now)):B;
   return {B, C:B, b, y:(y&&b&&Date.parse(y.t)<Date.parse(b.t))?y:null, lbl:(kday(B)===kday(S.asof)?'오늘 ':'어제 ')+'09:00'};
@@ -1644,7 +1670,7 @@ function quoteTile(sym){
   const vals=(S.intraday||[]).map(x=>x.p&&x.p[sym]).filter(v=>v!=null); if(L) vals.push(p);
   const col=r>=0?'var(--up)':'var(--down)';
   return `<button class="qt ${L?'live':''}" data-q="${sym}" type="button">
-    <span class="qt-h">${EMO[sym]||'•'} ${sym}<small>${L?'실시간':coin?'업비트':'토스'}</small></span>
+    <span class="qt-h">${EMO[sym]||'•'} ${sym}<small>${L?(L.src==='naver'?'네이버 실시간':'실시간'):coin?'업비트':'토스'}</small></span>
     <span class="qt-p" data-px>${fmtPx(h,p)}</span>
     <span class="qt-r"><span>${coin?'원':'≈ '+man(p*S.fx.rate)+'원'}</span><span class="chg ${sgn(r)}" data-chg>${pct(r,2)}</span></span>
     <span class="qt-r"><span>평단 대비</span><b class="${sgn(p/h.avg-1)}" style="font:600 12px var(--f-num)">${h.avg?pct(p/h.avg-1):'-'}</b></span>
@@ -1654,12 +1680,13 @@ function renderQuotes(){
   const card=$('#quoteCard'); if(!card) return;
   const [us,cls]=usMarket(), fx=S.fx.rate, fxs=(S.intraday||[]).map(x=>x.fx).filter(Boolean);
   const fx24=(S.intraday||[]).find(x=>Date.now()-Date.parse(x.t)<=24*36e5&&x.fx), fr=fx24?fx/fx24.fx-1:0;
-  $('#mktChips').innerHTML=`<span class="chip ${cls}">🇺🇸 ${us}</span><span class="chip ${WSOK?'live':''}">🪙 ${WSOK?'실시간':'15분마다'}</span>`;
-  $('#qgrid').innerHTML=quoteSyms().map(quoteTile).join('')+`<div class="qt"><span class="qt-h">💱 USD/KRW<small>토스</small></span><span class="qt-p">${fx.toFixed(1)}</span>
-    <span class="qt-r"><span>원/달러</span><span class="chg ${sgn(fr)}">${pct(fr,2)}</span></span><span class="qt-r"><span>내 매입환율</span><b style="font:600 12px var(--f-num)">${myBuyFx()?myBuyFx().toFixed(0):'-'}</b></span>${qSpark(fxs.length>1?[...fxs.slice(0,-1),fx]:fxs, fr>=0?'var(--up)':'var(--down)')}</div>`;
+  const lf=LFX&&FXA, lfr=lf?LFX.c:null;
+  $('#mktChips').innerHTML=`<span class="chip ${cls}">🇺🇸 ${us}${QOK&&cls==='live'?' · 30초':''}</span><span class="chip ${QOK?'live':''}">📡 ETF·환율 ${QOK?'네이버':'15분마다'}</span><span class="chip ${WSOK?'live':''}">🪙 ${WSOK?'실시간':'15분마다'}</span>`;
+  $('#qgrid').innerHTML=quoteSyms().map(quoteTile).join('')+`<div class="qt"><span class="qt-h">💱 USD/KRW<small class="${lf?'nv':''}">${lf?'네이버':'토스'}</small></span><span class="qt-p">${fx.toFixed(1)}</span>
+    <span class="qt-r"><span>${lf?'전일 대비':'원/달러'}</span><span class="chg ${sgn(lf?lfr:fr)}">${pct(lf?lfr:fr,2)}</span></span><span class="qt-r"><span>내 매입환율</span><b style="font:600 12px var(--f-num)">${myBuyFx()?myBuyFx().toFixed(0):'-'}</b></span>${qSpark(fxs.length>1?[...fxs.slice(0,-1),fx]:fxs, fr>=0?'var(--up)':'var(--down)')}</div>`;
 }
 function onLive(sym, p, r){
-  const prev=LIVE[sym]?.p, now=Date.now(); LIVE[sym]={p,r,t:now}; const first=!WSOK; WSOK=true;
+  const prev=LIVE[sym]?.p, now=Date.now(); LIVE[sym]={p,r,t:now}; const first=!WSOK; WSOK=true; scheduleLive();
   if(VIEW!=='home'||!$('#qgrid')) return;
   if(first){ renderQuotes(); return; }
   const el=$(`#qgrid [data-q="${sym}"]`); if(!el || (el._t && now-el._t<800)) return; el._t=now;
@@ -1677,7 +1704,59 @@ function startWS(){
   WS.onclose=()=>{ WS=null; if(WSOK){ WSOK=false; } setTimeout(startWS, 5000); };
   WS.onerror=()=>{ try{ WS.close(); }catch(_){} };
 }
-document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(WS){ const w=WS; WS=null; w.onclose=null; w.close(); WSOK=false; } } else startWS(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(WS){ const w=WS; WS=null; w.onclose=null; w.close(); WSOK=false; } } else { startWS(); pollQuotes(); } });
+/* ⚡ 실시간 평가 — 15분마다 오는 기록(S0)은 그대로 두고, 지금 가격만 바꿔 총자산·손익·기준가를 다시 계산해요.
+   🪙 코인: 업비트 웹소켓(브라우저에서 바로) · 🇺🇸 미국 ETF·💱 환율: 네이버(Apps Script 웹 앱이 대신 받아 줌)
+   ETF는 미국 정규장(OPEN)일 때만 네이버 가격을 써요. 장 밖에서는 토스 기록 가격 그대로라 주간거래·애프터 가격 차이로 튀지 않아요.
+   환율은 하나은행 고시와 토스 환율이 몇 원 달라서, 토스 환율 × (네이버 지금 / 기록 시점 네이버) 로 '움직임'만 반영해요. */
+const QUOTE_URL = 'https://script.google.com/macros/s/AKfycbwiFSuu3CtnP53N9FRRySrvsYdvugHQodKIPaXAoOkAbwvUIeuYlrAlt8FUuAKnL2mH/exec';   // 장기포트 시세 웹 앱 주소 (…/exec)
+let S0=null, LFX=null, FXA=null, QT=0, QOK=false, LT=0, LSP=0;
+function baseLive(){ S0=structuredClone(S); FXA=LFX?.r||null; relive(); }
+function relive(){
+  if(!S0||DEMO) return false;
+  const fx=(LFX&&FXA)? S0.fx.rate*LFX.r/FXA : S0.fx.rate; let any=fx!==S0.fx.rate;
+  const H=S0.holdings.map(h=>{ const L=LIVE[h.sym], usd=h.ccy==='USD'; if(!L&&!(usd&&any)) return h; any=true;
+    const p=L?L.p:h.price, pk=usd?p*fx:p, v=h.qty*pk, r=L?L.r:h.day_rate;
+    const o={...h, price:p, price_krw:pk, value_krw:Math.round(v), pl_krw:Math.round(v-h.cost_krw), pl_rate:h.cost_krw?v/h.cost_krw-1:h.pl_rate, day_rate:r, day_pl_krw:L?Math.round(v*r/(1+r)):h.day_pl_krw};
+    if(usd){ if(h.avg) o.pl_rate_local=p/h.avg-1; if(h.buy_fx){ const c$=h.cost_krw/h.buy_fx; o.price_eff=Math.round((h.qty*p-c$)*h.buy_fx); o.fx_eff=Math.round(h.qty*p*(fx-h.buy_fx)); } }
+    return o; });
+  if(!any) return false;
+  const c=S0.cash, cash={...c, total_krw:Math.round(c.total_krw+(c.toss_usd||0)*(fx-S0.fx.rate))};
+  const inv=H.reduce((a,h)=>a+h.value_krw,0), tot=inv+cash.total_krw, k=tot/S0.total_krw;
+  Object.assign(S,{holdings:H, cash, invest_krw:inv, total_krw:tot, fx:{...S0.fx, rate:fx}, day_pl_krw:H.reduce((a,h)=>a+(h.day_pl_krw||0),0), _liveT:new Date().toISOString()});
+  const unit=S0.nav.unit*k, peak=Math.max(S0.nav.peak,unit);
+  S.nav={...S0.nav, unit, peak, peak_date:unit>S0.nav.peak?kday(S._liveT):S0.nav.peak_date, dd:unit/peak-1};
+  S.intraday=[...(S0.intraday||[]), {t:S._liveT, v:tot, u:unit, p:Object.fromEntries(H.map(h=>[h.sym,h.price])), fx, live:true}];
+  const z=SER.at(-1); if(z&&!z.mon){ z.v=tot; z.u=unit; }
+  return true;
+}
+function scheduleLive(){ if(LT||!S0||DEMO) return; LT=setTimeout(()=>{ LT=0; if(relive()) liveRender(); }, 2500); }
+function liveRender(){
+  if(document.hidden) return;
+  $('#fxChip').innerHTML='💱 '+S.fx.rate.toFixed(1)+' <span class="m-hide" style="color:var(--leaf);font-size:10px">●</span>';
+  if(VIEW!=='home') return;
+  renderHeroTop(false);
+  renderQuotes();
+  renderHold();
+  if((RANGE==='td'||RANGE==='2d') && Date.now()-LSP>20000){ LSP=Date.now(); drawSpark(false); }
+}
+async function pollQuotes(){
+  clearTimeout(QT); QT=0;
+  if(!S||DEMO||!/^https:\/\//.test(QUOTE_URL)) return;
+  if(!document.hidden){
+    try{
+      const r=await fetch(QUOTE_URL+(QUOTE_URL.includes('?')?'&':'?')+'t='+Date.now(), {cache:'no-store'}), j=await r.json();
+      let ch=false;
+      Object.entries(j.q||{}).forEach(([sym,q])=>{ if(!S0.holdings.some(h=>h.sym===sym)) return;
+        if(q && q.p>0 && q.st==='OPEN'){ if(LIVE[sym]?.p!==q.p) ch=true; LIVE[sym]={p:q.p, r:q.r||0, t:Date.now(), src:'naver'}; }
+        else if(LIVE[sym]?.src==='naver'){ delete LIVE[sym]; ch=true; } });
+      if(j.fx && j.fx.r>0){ if(!FXA) FXA=j.fx.r; if(LFX?.r!==j.fx.r) ch=true; LFX=j.fx; }
+      const was=QOK; QOK=!!(j.q && Object.keys(j.q).length); if(ch||was!==QOK){ relive(); liveRender(); }
+    }catch(e){ if(QOK){ QOK=false; renderQuotes(); } }
+  }
+  QT=setTimeout(pollQuotes, usMarket()[1]==='live'?30000:120000);
+}
+
 
 /* ── 🐹 쿼카 한마디: 오늘 분위기에 맞는 표정과 말 ── */
 function quokkaSays(){
@@ -1879,33 +1958,6 @@ function renderTherm(anim){
 
 /* ── 🎲 몬테카를로: 이사 성공 확률 ── */
 function mulberry(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
-function renderMC(anim){
-  const sc=S.config.scenarios||{}; if(UI.mu==null) UI.mu=+(store.get('wc_mu')||sc['기본']||.07); if(UI.sig==null) UI.sig=+(store.get('wc_sig')||.15);
-  $('#mcMu').value=UI.mu; $('#mcSig').value=UI.sig; $('#mcMuV').textContent=(UI.mu*100).toFixed(1)+'%'; $('#mcSigV').textContent=(UI.sig*100).toFixed(0)+'%';
-  const now=new Date(S.asof), yrs=goalYears(), move=goalAmt(), total=goalTotal(), dca=goalDca(), v0=S.total_krw;
-  const M=monthsTo(new Date(Math.max(...yrs)+'-01-01T00:00:00+09:00'),now), N=1000, rnd=mulberry(20261004);
-  const m=Math.log(1+UI.mu)/12, s=UI.sig/Math.sqrt(12), drift=m-s*s/2, P=[...Array(M+1)].map(()=>new Float64Array(N));
-  for(let k=0;k<N;k++){ let v=v0; P[0][k]=v; for(let t=1;t<=M;t++){ const z=Math.sqrt(-2*Math.log(rnd()||1e-12))*Math.cos(2*Math.PI*rnd()); v=v*Math.exp(drift+s*z)+dca; P[t][k]=v; } }
-  const ix=y=>Math.min(monthsTo(new Date(y+'-01-01T00:00:00+09:00'),now),M), prob=(t,g)=>P[t].reduce((c,v)=>c+(v>=g),0)/N;
-  const Q=P.map(a=>{ const b=Float64Array.from(a).sort(); return [.1,.25,.5,.75,.9].map(q=>b[Math.floor(q*(N-1))]); });
-  $('#mcYears').innerHTML=yrs.map(y=>{ const t=ix(y), p=prob(t,total), p2=prob(t,move), cls=p>=.7?'easy':p>=.4?'mid':'hard';
-    return `<div class="yr lift ${cls}"><span class="y">${y}</span><b data-cu="${p}"></b><span>💰 ${CAST?'전체 목표':eok(total)} 달성</span><span>🏠 ${CAST?'이사자금':eok(move)} ${Math.round(p2*100)}%</span></div>`; }).join('');
-  $$('#mcYears [data-cu]').forEach(e=>{ const to=+e.dataset.cu; countUp(e,to,v=>Math.round(v*100)+'%',anim?1000:0,anim?0:to); });
-  const best=yrs.map(y=>({y,p:prob(ix(y),total)})), firstOK=best.find(b=>b.p>=.7);
-  $('#mcLede').innerHTML=`<span class="chip">${yrs[0]}.01 성공 <b>${Math.round(best[0].p*100)}%</b></span>`+(firstOK?`<span class="chip hl">🏡 ${firstOK.y}년이면 <b>10번 중 ${Math.round(firstOK.p*10)}번</b></span>`:'<span class="chip warn">후보 연도 모두 70% 미만</span>');
-  const rz=realized();
-  $('#mcPre').innerHTML=(rz?`<button data-mu="${Math.min(Math.max(rz.mu,.02),.2).toFixed(3)}" data-sig="${Math.min(Math.max(rz.sig,.05),.35).toFixed(2)}">📊 내 ${rz.n}개월 실적 · 연 ${(rz.mu*100).toFixed(1)}% · 변동성 ${(rz.sig*100).toFixed(0)}%</button>`:'')+`<button data-mu="0.07" data-sig="0.15">🌱 기본 7% · 15%</button><button data-mu="0.04" data-sig="0.15">🐢 보수 4%</button>`;
-  // 부채꼴 차트
-  const el=$('#mcChart'), [W,Hh]=box(el,.42,210,290), L=46,R=14,T=14,B=22, X=t=>L+t/M*(W-L-R), top=Math.max(Q[M][4],total)*1.05, Y=v=>T+(1-v/top)*(Hh-T-B), A=anim&&!RM;
-  const band=(a,b)=>`M${Q.map((q,t)=>X(t).toFixed(1)+' '+Y(q[a]).toFixed(1)).join(' L')} L${[...Q].reverse().map((q,i)=>X(M-i).toFixed(1)+' '+Y(q[b]).toFixed(1)).join(' L')} Z`;
-  let g=`<defs><clipPath id="mcc"><rect x="0" y="0" height="${Hh}" width="${A?0:W}">${A?`<animate attributeName="width" from="0" to="${W}" dur="1.6s" fill="freeze"/>`:''}</rect></clipPath></defs>`;
-  yticks(0,top,4).forEach(v=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)"/><text x="${L-6}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end">${CAST?'':eok(v)}</text>`);
-  yrs.forEach(y=>{ const x=X(ix(y)); g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T}" y2="${Hh-B}" stroke="var(--gold)" stroke-dasharray="2 4" opacity=".7"/><text x="${x.toFixed(1)}" y="${Hh-5}" text-anchor="middle">${y}</text>`; });
-  g+=`<g clip-path="url(#mcc)"><path d="${band(0,4)}" fill="var(--leaf)" fill-opacity=".14"/><path d="${band(1,3)}" fill="var(--leaf)" fill-opacity=".24"/><path d="${path(Q.map((q,t)=>[X(t),Y(q[2])]))}" fill="none" stroke="var(--leaf)" stroke-width="2.4"/></g>`;
-  [[move,'🏠','1.4',' 3 4'],[total,'💰','2','6 4']].forEach(([v,e,w,da])=>g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--gold)" stroke-width="${w}" stroke-dasharray="${da}"/><text x="${L+6}" y="${(Y(v)-6).toFixed(1)}" style="fill:var(--gold);font-weight:700">${e} ${CAST?'':eok(v)}</text>`);
-  el.innerHTML=g;
-}
-
 /* 시장과 대결: 같은 시작일 = 0% 로 맞춘 누적 수익률 */
 const RACERS=[
   {k:'me', nm:'🌳 내 포트', col:'var(--leaf)', w:3},
@@ -2112,138 +2164,106 @@ function renderWeekPlan(){
     `<div class="ds-r wk-r t"><span class="sym">합계</span><span class="dt"></span><span class="d"><b>${man(wd)}</b></span><span>${man(wk)}</span><span class="m">${man(sel)}</span>${dd(wd,sum(A,'cd'))}</div>`;
   $('#wkFoot').innerHTML=`<span class="chip">🇺🇸 ETF는 월~금 <b>주 ${WK.stock}일</b> · 한 달 ≈ ${(WK.stock*WPM).toFixed(1)}일</span><span class="chip">🪙 코인은 매일 <b>주 ${WK.crypto}일</b> · 한 달 ≈ ${(WK.crypto*WPM).toFixed(1)}일</span>`+(UI.dsm==='tgt'?'<span class="chip hl">🎯 목표 비중대로 나눴어요</span>':'<span class="chip">📋 지금 하루 적립 비율 그대로</span>');
 }
-function renderDcaSim(anim){
-  const card=$('#dsCard'); card.hidden=!!CAST; if(CAST) return;
-  const act=monthlyFlow(), sel=goalDca(), sl=$('#dsAmt'), MIN=+sl.min, MAX=+sl.max;
-  sl.value=Math.min(Math.max(Math.round(sel/1e5)*1e5,MIN),MAX); sl.style.setProperty('--p',((sl.value-MIN)/(MAX-MIN)*100).toFixed(1)+'%');
-  $('#dsVal').textContent=short(sel)+'원';
-  const df=sel-act; $('#dsDiff').innerHTML=Math.abs(df)<5e4?'💧 지금 적립 그대로 (하루로 나눠 매일 사는 금액의 월 합계)':`지금 ${short(act)}원보다 <b class="${df>0?'up':'down'}">${df>0?'+':''}${short(df)}원</b> · 🧪 목표 탭 전체가 이 금액으로 계산돼요`;
-  $('#dsNote').textContent='지금 월 '+short(act)+'원';
-  const pres=[[null,'↩️ 지금 그대로'],[act+5e5,'+50만'],[act+1e6,'+100만'],[act+2e6,'+200만'],[act*1.5,'×1.5'],[act*2,'×2']];
-  $('#dsPre').innerHTML=pres.filter(([v])=>v==null||v<=MAX).map(([v,t])=>`<button type="button" data-v="${v??''}" class="${(v==null?UI.dca==null:UI.dca!=null&&Math.abs(UI.dca-Math.round(v/1e5)*1e5)<1)?'on':''}">${t}</button>`).join('');
-  // 비교 상자 (기본 시나리오)
-  const sc=S.config.scenarios||{'보수':.04,'기본':.07,'낙관':.10}, keys=Object.keys(sc), base=sc['기본']??sc[keys[1]]??.07;
-  const now=new Date(S.asof), v0=S.total_krw, move=goalAmt(), total=goalTotal(), yrs=goalYears(), g=S.config.goal||{};
-  const primary=new Date((g.date||yrs[0]+'-01-01')+'T00:00:00+09:00'), mP=monthsTo(primary,now), py=String(primary.getFullYear()).slice(2)+'.'+String(primary.getMonth()+1).padStart(2,'0');
-  const cmp=(goal)=>{ const a=reachM(base,goal,v0,act), b=reachM(base,goal,v0,sel); const t=b==null?'40년+':b===0?'달성':ym(now,b);
-    let d='<i class="same">지금과 같아요</i>'; if(a!=null&&b!=null&&a!==b) d=b<a?`<i class="fast">⚡ ${a-b}개월 빨라요</i>`:`<i class="slow">🐌 ${b-a}개월 늦어요</i>`; else if(a==null&&b!=null) d='<i class="fast">⚡ 40년 안에 도착</i>';
-    return [t,d]; };
-  const [t1,d1]=cmp(total), [t2,d2]=cmp(move), nA=needRate(total,mP,v0,act), nB=needRate(total,mP,v0,sel), dn=(nB-nA)*100;
-  $('#dsCmp').innerHTML=[['💰 전체 목표 도착',t1,d1],['🏠 이사자금 도착',t2,d2],[`⭐ ${py} 필요 수익률`,nB<=0?'적립만 OK':'연 '+(nB*100).toFixed(1)+'%',Math.abs(dn)<.05?'<i class="same">지금과 같아요</i>':`<i class="${dn<0?'fast':'slow'}">${dn<0?'⬇':'⬆'} ${Math.abs(dn).toFixed(1)}%p (지금 ${(Math.max(nA,0)*100).toFixed(1)}%)</i>`]]
-    .map(([k,v,d])=>`<div class="box lift"><span>${k}</span><b>${v}</b>${d}</div>`).join('') ;
-  drawDcaChart(act, sel, sc, keys, now, v0, total, yrs, primary, anim);
-  // 종목별 매수 금액
-  segSel('dsMode','m',UI.dsm);
-  const A=dsAlloc(sel), days=dcaDays();
-  $('#dsBar').innerHTML=A.filter(x=>x.w>0).map(x=>`<i style="width:${(x.w*100).toFixed(2)}%;background:${acol(x.sym)}" title="${x.sym} ${(x.w*100).toFixed(1)}%"></i>`).join('');
-  const sD=A.filter(x=>!x.cr).reduce((a,x)=>a+x.d,0), cD=A.filter(x=>x.cr).reduce((a,x)=>a+x.d,0), sC=A.filter(x=>!x.cr).reduce((a,x)=>a+x.cd,0), cC=A.filter(x=>x.cr).reduce((a,x)=>a+x.cd,0);
-  const dd=(v,c)=>{ const x=v-c; return Math.abs(x)<500?'<span class="dd" style="color:var(--faint)">그대로</span>':`<span class="dd ${x>0?'up':'down'}">${x>0?'+':'-'}${man(Math.abs(x))}</span>`; };
-  $('#dsRows').innerHTML=`<div class="ds-r h"><span class="sym">종목</span><span>비중</span><span class="m">한 달</span><span>하루</span><span>지금 대비</span></div>`+
-    A.map(x=>`<div class="ds-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${EMO[x.sym]||''} ${x.sym} <small>${x.cr?'주 7일':'주 5일'}</small></span><span class="w">${(x.w*100).toFixed(1)}%</span><span class="m">${man(x.m)}</span><span class="d"><b>${man(x.d)}</b></span>${dd(x.d,x.cd)}</div>`).join('')+
-    `<div class="ds-r t"><span class="sym">합계</span><span class="w">100%</span><span class="m">${man(sel)}</span><span class="d"><b>${man(sD+cD)}</b></span>${dd(sD+cD,sC+cC)}</div>`;
-  $('#dsFoot').innerHTML=`<span class="chip">🇺🇸 미국 ETF · 주 5일(월~금) 하루 <b>${man(sD)}</b></span><span class="chip">🪙 코인 · 주 7일(매일) 하루 <b>${man(cD)}</b></span>`+(UI.dsm==='tgt'?'<span class="chip hl">🎯 목표 비중대로 나눴어요</span>':'<span class="chip">📋 지금 하루 적립 비율 그대로 늘리거나 줄였어요</span>');
-}
-function drawDcaChart(act, sel, sc, keys, now, v0, total, yrs, primary, anim){
-  const el=$('#dsChart'), [W,Hh]=box(el,.5,220,320), L=44,R=16,T=16,B=26, sl=$('#dsAmt'), MIN=+sl.min, MAX=+sl.max;
-  const ny=now.getFullYear()+now.getMonth()/12, cols=['var(--warn)','var(--leaf)','var(--sky)'], emo=['🐢','🌱','🚀'];
-  if(v0>=total){ el.innerHTML=`<text x="${W/2}" y="${Hh/2}" text-anchor="middle" style="fill:var(--leaf);font-size:16px;font-weight:700">🎉 이미 전체 목표를 넘었어요</text>`; $('#dsLeg').innerHTML=''; return; }
-  const N=56, xs=[...Array(N+1)].map((_,i)=>MIN+(MAX-MIN)*i/N);
-  const lines=keys.map(k=>xs.map(x=>{ const m=reachM(sc[k],total,v0,x); return m==null?null:ny+m/12; }));
-  const at=keys.map(k=>{ const m=reachM(sc[k],total,v0,sel); return m==null?null:ny+m/12; });
-  const finite=lines.flat().filter(v=>v!=null), yMin=Math.floor(Math.min(ny,...finite)), yTop=Math.min(Math.max(...finite,Math.max(...yrs)+1),Math.max(...yrs)+8,ny+25), yMax=Math.ceil(yTop+.3);
-  const X=v=>L+(v-MIN)/(MAX-MIN)*(W-L-R), Y=y=>T+(1-(y-yMin)/(yMax-yMin))*(Hh-T-B), f=v=>v.toFixed(1);
-  const step=Math.max(1,Math.ceil((yMax-yMin)/6));
-  let g=`<defs><linearGradient id="dsF" x1="0" y1="${T}" x2="0" y2="${Hh-B}" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--leaf);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--leaf);stop-opacity:0"/></linearGradient>
-    <filter id="dsGlow" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>`;
-  const gy=yrs.filter(y=>y>=yMin&&y<=yMax);
-  for(let y=yMin; y<=yMax; y+=step){ if(gy.some(z=>Math.abs(Y(z)-Y(y))<15)) continue; g+=`<line x1="${L}" x2="${W-R}" y1="${f(Y(y))}" y2="${f(Y(y))}" stroke="var(--line)" stroke-dasharray="2 5"/><text x="${L-6}" y="${f(Y(y)+4)}" text-anchor="end">${String(y).slice(2)}년</text>`; }
-  let lastLY=-99; gy.forEach(y=>{ const showL=Math.abs(Y(y)-lastLY)>=13; if(showL) lastLY=Y(y); g+=`<line x1="${L}" x2="${W-R}" y1="${f(Y(y))}" y2="${f(Y(y))}" stroke="var(--gold)" stroke-opacity=".55" stroke-dasharray="4 4"/>${showL?`<text x="${L-6}" y="${f(Y(y)+4)}" text-anchor="end" style="fill:var(--gold);font-weight:700">🏡${String(y).slice(2)}년</text>`:''}`; });
-  const xt=[MIN,(MIN+MAX)/2,MAX]; xt.forEach((v,i)=>g+=`<text x="${f(X(v))}" y="${Hh-7}" text-anchor="${['start','middle','end'][i]}">월 ${man(v)}</text>`);
-  // 기본 시나리오 아래 은은한 면
-  const segs=pts=>{ const out=[]; let cur=[]; pts.forEach(p=>{ if(p) cur.push(p); else if(cur.length){ out.push(cur); cur=[]; } }); if(cur.length) out.push(cur); return out; };
-  const P=lines.map(ln=>ln.map((y,i)=>y==null||y>yMax?null:[X(xs[i]),Y(y)]));
-  const bi=keys.indexOf('기본')>=0?keys.indexOf('기본'):1;
-  segs(P[bi]).forEach(sg=>{ if(sg.length>1) g+=`<path d="${spath(sg)}L${f(sg.at(-1)[0])} ${Hh-B}L${f(sg[0][0])} ${Hh-B}Z" fill="url(#dsF)"/>`; });
-  P.forEach((pts,i)=>segs(pts).forEach(sg=>{ if(sg.length<2) return; const d=spath(sg), main=i===bi;
-    if(main) g+=`<path d="${d}" fill="none" stroke="${cols[i]}" stroke-width="7" stroke-opacity=".45" filter="url(#dsGlow)"/>`;
-    g+=`<path class="draw" data-dur="1.2" d="${d}" fill="none" stroke="${cols[i]}" stroke-width="${main?2.8:2}" ${main?'':'stroke-dasharray="6 5"'} stroke-linecap="round"/>`; }));
-  // 지금 / 설정 세로선
-  const xa=X(Math.min(Math.max(act,MIN),MAX)), xsx=X(Math.min(Math.max(sel,MIN),MAX));
-  g+=`<line x1="${f(xa)}" x2="${f(xa)}" y1="${T}" y2="${Hh-B}" stroke="var(--muted)" stroke-dasharray="3 4"/><text x="${f(xa)}" y="${T-3}" text-anchor="middle" style="font-size:11px;fill:var(--muted);font-weight:600">지금</text>`;
-  if(Math.abs(xsx-xa)>2) g+=`<line x1="${f(xsx)}" x2="${f(xsx)}" y1="${T}" y2="${Hh-B}" stroke="var(--n2)" stroke-width="2"/>`;
-  at.forEach((y,i)=>{ if(y==null||y>yMax) return; g+=`<circle cx="${f(xsx)}" cy="${f(Y(y))}" r="${i===bi?6:4.5}" fill="${cols[i]}" stroke="var(--surface)" stroke-width="2">${i===bi&&!RM?'<animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite"/>':''}</circle>`; });
-  if(at[bi]!=null && at[bi]<=yMax){ const y=Y(at[bi]), m=Math.round((at[bi]-ny)*12), lab=`🌱 ${ym(now,m)} 도착`, lw=lab.length*7.2+16, lx=xsx+10+lw>W-R?xsx-10-lw:xsx+10;
-    g+=`<rect x="${f(lx)}" y="${f(y-12)}" width="${f(lw)}" height="24" rx="12" style="fill:var(--leaf);fill-opacity:.2;stroke:var(--leaf);stroke-opacity:.5"/><text x="${f(lx+lw/2)}" y="${f(y+4.5)}" text-anchor="middle" style="font:700 12.5px var(--f-body);fill:var(--ink)">${lab}</text>`; }
-  el.innerHTML=g; if(anim) drawLines(el);
-  $('#dsLeg').innerHTML=keys.map((k,i)=>`<span><i style="background:${cols[i]}"></i>${emo[i]||''} ${k} ${Math.round(sc[k]*100)}% · <b>${at[i]==null?'40년+':ym(now,Math.round((at[i]-ny)*12))}</b></span>`).join('');
-  // 차트를 눌러서 금액 고르기
-  let raf=0; const pick=e=>{ const bx=el.getBoundingClientRect(), px=(e.clientX-bx.left)*W/bx.width, v=MIN+(Math.min(Math.max(px,L),W-R)-L)/(W-L-R)*(MAX-MIN);
-    const r=Math.round(v/1e5)*1e5; cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{ UI.dca=Math.abs(r-act)<5e4?null:r; renderGoal(false); }); };
-  el.style.touchAction='pan-y';
-  el.onpointerdown=e=>{ el.setPointerCapture?.(e.pointerId); pick(e); }; el.onpointermove=e=>{ if(e.buttons) pick(e); };
-}
 function needRate(goal, months, v0, dca){ if(project(0,months,v0,dca).pop()>=goal) return 0; let lo=-.5,hi=1.5; for(let i=0;i<50;i++){ const mid=(lo+hi)/2, f=project(mid,months,v0,dca).pop(); f<goal?lo=mid:hi=mid; } return hi; }
 const ym = (now,m) => { const d=new Date(now); d.setMonth(d.getMonth()+m); return String(d.getFullYear()).slice(2)+'.'+String(d.getMonth()+1).padStart(2,'0'); };
+/* 🏡 이사 플랜: 변수(적립금·목표·수익률·변동성·이사 시점)를 바꾸면 그래프 하나가 바로 움직여요 */
+const yDate = y => new Date(y+'-01-01T00:00:00+09:00');
+const planEndY = () => Math.max(...goalYears())+3;
+function yrSel(){ const g=S.config.goal||{}, d=g.date?+g.date.slice(0,4):goalYears()[0], v=UI.yr ?? (+store.get('wc_goal_yr')||d), y0=new Date(S.asof).getFullYear()+1;
+  return Math.min(Math.max(v,y0),planEndY()-1); }
+function mcInit(){ const sc=S.config.scenarios||{}; if(UI.mu==null) UI.mu=+(store.get('wc_mu')||sc['기본']||.07); if(UI.sig==null) UI.sig=+(store.get('wc_sig')||.15); }
+let MCC=null;
+function mcRun(v0, dca, mu, sig, M){   // 월별 로그정규 1,000번 · 시드 고정이라 슬라이더를 움직여도 결과가 출렁이지 않아요
+  const key=[Math.round(v0),Math.round(dca),mu,sig,M].join('|'); if(MCC&&MCC.key===key) return MCC;
+  const N=1000, rnd=mulberry(20261004), m=Math.log(1+mu)/12, s=sig/Math.sqrt(12), drift=m-s*s/2, P=[...Array(M+1)].map(()=>new Float64Array(N));
+  for(let k=0;k<N;k++){ let v=v0; P[0][k]=v; for(let t=1;t<=M;t++){ const z=Math.sqrt(-2*Math.log(rnd()||1e-12))*Math.cos(2*Math.PI*rnd()); v=v*Math.exp(drift+s*z)+dca; P[t][k]=v; } }
+  const Q=P.map(a=>{ const b=Float64Array.from(a).sort(); return [.1,.25,.5,.75,.9].map(q=>b[Math.floor(q*(N-1))]); });
+  return MCC={key,P,Q,N,M};
+}
+function setRange(id, v){ const el=$(id), mn=+el.min, mx=+el.max, c=Math.min(Math.max(v,mn),mx); el.value=c; el.style.setProperty('--p',((c-mn)/(mx-mn)*100).toFixed(1)+'%'); }
 function renderGoal(anim){
-  renderDcaSim(anim);
-  const g=S.config.goal||{date:'2030-01-01'};
+  const tb=$('.topbar'); if(tb) document.documentElement.style.setProperty('--tbh', tb.offsetHeight+'px');
+  const s=S, now=new Date(s.asof), v0=s.total_krw, act=monthlyFlow(), dca=goalDca(); mcInit();
   UI.goal=goalAmt(); UI.keep=keepAmt();
-  $('#goalAmt').value=UI.goal; $('#goalVal').textContent=won(UI.goal);
-  $('#keepAmt').value=UI.keep; $('#keepVal').textContent=won(UI.keep);
-  const move=UI.goal, total=move+UI.keep, now=new Date(S.asof), yrs=goalYears(), primary=new Date((g.date||yrs[0]+'-01-01')+'T00:00:00+09:00');
-  const end=new Date(Math.max(...yrs)+'-01-01T00:00:00+09:00');
-  const days=Math.ceil((primary-now)/864e5), months=monthsTo(end,now), mPrim=monthsTo(primary,now);
-  countUp($('#dday'), days, v=>'D-'+Math.round(v).toLocaleString('ko-KR'), anim?900:0, anim?days+365:days);
-  const v0=S.total_krw, prog=Math.min(v0/total,1), dca=goalDca();
-  drawHouse(prog, anim);
-  const sc=S.config.scenarios||{'보수':.04,'기본':.07,'낙관':.10}, keys=Object.keys(sc), proj=keys.map(k=>project(sc[k],months,v0,dca));
-  const reach=(k,goal)=>{ let v=v0; for(let m=0;m<600;m++){ if(v>=goal) return m; v=v*Math.pow(1+sc[k],1/12)+dca; } return null; };
-  const need=needRate(total, mPrim, v0, dca);
-  $('#goalLede').innerHTML = prog>=1?`<span class="chip hl">🎉 전체 목표 <b>${moneyShort(total)}</b> 달성!</span>`:
-    `<span class="chip">🎯 ${CAST?'전체 목표':'<b>'+eok(total)+'</b>'} 중 <b>${(prog*100).toFixed(1)}%</b></span><span class="chip hl">${String(primary.getFullYear()).slice(2)}.${String(primary.getMonth()+1).padStart(2,'0')}까지 필요 <b>연 ${(need*100).toFixed(1)}%</b></span><span class="chip ${UI.dca!=null?'sky':''}">${UI.dca!=null?'🧪 가정':'💧'} 월 적립 <b>${short(dca)}</b></span>`;
-  // 후보 연도별 필요 수익률
-  $('#years').innerHTML=yrs.map(y=>{ const r=needRate(total, monthsTo(new Date(y+'-01-01T00:00:00+09:00'),now), v0, dca), cls=r<=.07?'easy':r<=.10?'mid':'hard';
-    return `<div class="yr lift ${cls} ${y===primary.getFullYear()?'primary':''}"><span class="y">${y}</span><b>${r<=0?'적립만으로 OK':'연 '+(r*100).toFixed(1)+'%'}</b><span>${y}.01 이사 시 필요</span></div>`; }).join('');
-  $('#dcaEcho').textContent=(UI.dca!=null?'🧪 가정 · ':'')+'월 '+short(dca)+'원 적립'+(UI.dca!=null?'':' 환산');
-  $('#scen').innerHTML=keys.map((k,i)=>{ const fv=project(sc[k],mPrim,v0,dca).at(-1), m1=reach(k,move), m2=reach(k,total), hit=fv>=total;
-    return `<div class="sc lift ${hit?'hit':'miss'}"><span class="t">${['🐢','🌱','🚀'][i]||''} ${k} ${Math.round(sc[k]*100)}%</span><b data-cu="${fv}"></b><span>🏠 ${m1==null?'—':m1===0?'달성':ym(now,m1)} · 💰 ${m2==null?'—':m2===0?'달성':ym(now,m2)}</span></div>`; }).join('');
-  $$('#scen [data-cu]').forEach(e=>{ if(CAST){ e.textContent='•••'; return; } const to=+e.dataset.cu; countUp(e,to,v=>(v/1e8).toFixed(2)+'억',anim?1100:0,anim?v0:to); });
-  const stops=[move/3, move*2/3, move, move+UI.keep/2, total], nextI=stops.findIndex(v=>v0<v), icons=['🧱','🪵','🏠','🪴','💰'];
-  $('#road').innerHTML=`<i class="fill grow" data-w="${(Math.min(Math.max((v0-stops[0])/(total-stops[0]),0),1)*80).toFixed(1)}%"></i>`+stops.map((v,i)=>
-    `<div class="stop ${v0>=v?'done':''} ${i===nextI?'next':''}"><i>${v0>=v&&i!==2&&i!==4?'✔':icons[i]}</i>${CAST?['1/3','2/3','이사','+½','완성'][i]:eok(v)}</div>`).join('');
-  drawGoalChart(proj, move, total, now, end, yrs, anim);
-  renderMC(anim);
+  const move=UI.goal, total=move+UI.keep, yrs=goalYears(), ySel=yrSel(), tgt=yDate(ySel), ysl=String(ySel).slice(2)+'.01';
+  // 변수 패널
+  setRange('#dsAmt',Math.round(dca/1e5)*1e5); setRange('#goalAmt',move); setRange('#keepAmt',UI.keep); setRange('#mcMu',UI.mu); setRange('#mcSig',UI.sig);
+  const df=dca-act;
+  $('#dsVal').innerHTML=short(dca)+'원'+(Math.abs(df)<5e4?'':`<small class="${df>0?'up':'down'}">${df>0?'+':''}${short(df)}</small>`);
+  $('#goalVal').textContent=CAST?'•••':eok(move); $('#keepVal').textContent=CAST?'•••':eok(UI.keep);
+  $('#mcMuV').textContent='연 '+(UI.mu*100).toFixed(1)+'%'; $('#mcSigV').textContent=(UI.sig*100).toFixed(0)+'%';
+  const MAX=+$('#dsAmt').max, pres=[[null,'↩️ 지금'],[act+5e5,'+50만'],[act+1e6,'+100만'],[act+2e6,'+200만'],[act*1.5,'×1.5']];
+  $('#dsPre').innerHTML=pres.filter(([v])=>v==null||v<=MAX).map(([v,t])=>`<button type="button" data-v="${v??''}" class="${(v==null?UI.dca==null:UI.dca!=null&&Math.abs(UI.dca-Math.round(v/1e5)*1e5)<1)?'on':''}">${t}</button>`).join('');
+  const sc=s.config.scenarios||{'보수':.04,'기본':.07,'낙관':.10}, rz=realized(), on=(mu,sg)=>Math.abs(UI.mu-mu)<.0026&&(sg==null||Math.abs(UI.sig-sg)<.006)?'on':'';
+  $('#mcPre').innerHTML=Object.entries(sc).map(([k,r],i)=>`<button type="button" data-mu="${r}" data-sig="0.15" class="${on(r,.15)}">${['🐢','🌱','🚀'][i]||''} ${k} ${Math.round(r*100)}%</button>`).join('')
+    +(rz?`<button type="button" data-mu="${Math.min(Math.max(rz.mu,.02),.2).toFixed(3)}" data-sig="${Math.min(Math.max(rz.sig,.05),.35).toFixed(2)}" class="${on(+Math.min(Math.max(rz.mu,.02),.2).toFixed(3),+Math.min(Math.max(rz.sig,.05),.35).toFixed(2))}">📊 내 ${rz.n}개월</button>`:'');
+  // 시뮬레이션
+  const M=Math.min(monthsTo(yDate(planEndY()),now),360), R=mcRun(v0,dca,UI.mu,UI.sig,M), Q=R.Q;
+  const tOf=y=>Math.min(monthsTo(yDate(y),now),M), prob=(t,g)=>{ let c=0; for(const v of R.P[t]) c+=v>=g; return c/R.N; };
+  const tS=tOf(ySel), pT=prob(tS,total), pM=prob(tS,move), med=Q[tS][2];
+  const cross=g=>{ if(v0>=g) return 0; const i=Q.findIndex(q=>q[2]>=g); return i<0?null:i; }, mT=cross(total), mM=cross(move);
+  const need=needRate(total, monthsTo(tgt,now), v0, dca), tone=p=>p>=.7?'easy':p>=.4?'mid':'hard';
+  const when=m=>m==null?(planEndY()+'년 이후'):m===0?'달성!':ym(now,m);
+  const days=Math.ceil((tgt-now)/864e5), prog=Math.min(v0/total,1);
+  countUp($('#dday'), days, v=>'📌 '+ysl+' · D-'+Math.round(v).toLocaleString('ko-KR'), anim?900:0, anim?days+365:days);
+  $('#goalLede').innerHTML=prog>=1?`<span class="chip hl">🎉 전체 목표 <b>${moneyShort(total)}</b> 달성!</span>`:
+    `<span class="chip">🎯 ${CAST?'전체 목표':'<b>'+eok(total)+'</b>'} 중 <b>${(prog*100).toFixed(1)}%</b> 왔어요</span><span class="chip ${UI.dca!=null?'sky':''}">${UI.dca!=null?'🧪 가정':'💧'} 월 적립 <b>${short(dca)}</b></span><span class="chip">🎲 연 ${(UI.mu*100).toFixed(1)}% · 변동성 ${(UI.sig*100).toFixed(0)}% · 1,000번</span>`;
+  const K=(k,v,n,cls='',cu)=>`<div class="box lift"><span>${k}</span><b class="${cls}"${cu!=null?` data-cu="${cu}"`:''}>${v}</b><small>${n}</small></div>`;
+  $('#plKpi').innerHTML=[
+    K(`🎯 ${ysl} 성공 확률`, Math.round(pT*100)+'%', `💰 전체 목표 · 🏠 이사자금만 ${Math.round(pM*100)}%`, tone(pT), pT),
+    K('🌱 전체 목표 도착', when(mT), `가운데 경로 · 🏠 ${when(mM)}`, mT!=null&&mT<=tS?'easy':'mid'),
+    K(`📈 ${ysl}까지 필요 수익률`, need<=0?'적립만 OK':'연 '+(need*100).toFixed(1)+'%', need<=UI.mu?`설정 연 ${(UI.mu*100).toFixed(1)}%면 충분해요`:`설정보다 ${((need-UI.mu)*100).toFixed(1)}%p 높아요`, need<=UI.mu?'easy':need<=UI.mu+.03?'mid':'hard'),
+    K(`🔮 ${ysl} 예상 자산`, CAST?Math.round(med/total*100)+'%':eok(med), CAST?'가운데 경로 · 전체 목표 대비':`가운데 · 목표의 ${Math.round(med/total*100)}% · 10~90% ${eok(Q[tS][0])}~${eok(Q[tS][4])}`),
+  ].join('');
+  $$('#plKpi [data-cu]').forEach(e=>{ const to=+e.dataset.cu; countUp(e,to,v=>Math.round(v*100)+'%',anim?900:0,anim?0:to); });
+  // 이사 시점 카드 (후보 연도 + 지금 고른 해)
+  const ylist=[...new Set([...yrs, ySel])].sort((a,b)=>a-b);
+  $('#mcYears').innerHTML=ylist.map(y=>{ const t=tOf(y), p=prob(t,total), p2=prob(t,move);
+    return `<button type="button" class="yr lift ${tone(p)} ${y===ySel?'sel':''}" data-y="${y}"><span class="y">${y}</span><b>${Math.round(p*100)}%</b><span>💰 성공 · 🏠 ${Math.round(p2*100)}%</span></button>`; }).join('');
+  drawPlan(Q, M, now, move, total, yrs, ySel, mT, pT, anim);
   grow($('#v-goal'));
   if(anim && v0>=move && store.get('wc_move_party')!==String(move)){ store.set('wc_move_party',String(move)); setTimeout(()=>confetti(['🏠','🎉','🔑','✨']),600); }
 }
-function drawHouse(p, anim){
-  const top=24, bot=148, y=(bot-(bot-top)*p).toFixed(1), A=anim&&!RM;
-  $('#house').innerHTML=`<svg viewBox="0 0 160 160" aria-hidden="true">
-    <defs><clipPath id="hc"><path d="M80 24 L146 74 L133 74 L133 148 L27 148 L27 74 L14 74 Z"/></clipPath></defs>
-    <path d="M80 24 L146 74 L133 74 L133 148 L27 148 L27 74 L14 74 Z" fill="var(--sunk)" stroke="var(--line)" stroke-width="2" stroke-linejoin="round"/>
-    <g clip-path="url(#hc)"><g transform="translate(0 ${A?bot:y})">${A?`<animateTransform attributeName="transform" type="translate" from="0 ${bot}" to="0 ${y}" dur="1.6s" fill="freeze" calcMode="spline" keySplines=".2 .8 .2 1" keyTimes="0;1"/>`:''}
-      <path class="wave" d="M0 0 q18.75 -7 37.5 0 t37.5 0 t37.5 0 t37.5 0 t37.5 0 t37.5 0 V170 H0Z" fill="var(--gold)" opacity=".88"/></g></g>
-    <rect x="70" y="124" width="20" height="24" rx="3" fill="var(--surface)" opacity=".75"/></svg>
-    <div class="pct"><b>${(p*100).toFixed(0)}%</b><span>달성</span></div>`;
-}
-function drawGoalChart(proj, goal, total, now, end, yrs, anim){
-  const [W,H]=box($('#goalChart'),.42,220,330), L=50,R=18,T=14,B=24, A=anim&&!RM, hist=SER.filter((x,i,a)=>x.mon||i%3===0||i===a.length-1);
-  const t0=new Date(SER[0].d), X=d=>L+(d-t0)/(end-t0)*(W-L-R);
-  const all=[...hist.map(x=>x.v),...proj.flat(),goal,total], ymax=Math.max(...all)*1.05, ymin=Math.min(...hist.map(x=>x.v))*.9, Y=v=>T+(1-(v-ymin)/(ymax-ymin))*(H-T-B);
-  let g='';
-  const step=Math.pow(10,Math.floor(Math.log10((ymax-ymin)/3))), nice=[1,2,5,10].map(m=>m*step).find(s=>(ymax-ymin)/s<=5)||step*10;
-  for(let v=Math.ceil(ymin/nice)*nice; v<ymax; v+=nice) g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)"/><text x="${L-6}" y="${(Y(v)+6).toFixed(1)}" text-anchor="end">${CAST?'':eok(v)}</text>`;
-  for(let y=t0.getFullYear()+1; y<=end.getFullYear(); y++){ const x=X(new Date(y,0,1)); g+=`<text x="${x.toFixed(1)}" y="${H-6}" text-anchor="middle">${y}</text><line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T}" y2="${H-B}" stroke="var(--line)" stroke-dasharray="2 4"/>`; }
-  yrs.forEach(y=>{ const x=X(new Date(y+'-01-01T00:00:00+09:00')); g+=`<rect x="${(x-1).toFixed(1)}" y="${T}" width="2" height="${H-B-T}" fill="var(--gold)" opacity=".35"/><text x="${x.toFixed(1)}" y="${T+14}" text-anchor="middle" style="font-size:14px">🏡</text>`; });
-  g+=`<line x1="${L}" x2="${W-R}" y1="${Y(goal).toFixed(1)}" y2="${Y(goal).toFixed(1)}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="3 4"/><text x="${L+6}" y="${(Y(goal)-7).toFixed(1)}" style="fill:var(--gold);font-weight:700">🏠 ${CAST?'이사자금':eok(goal)}</text>`;
-  g+=`<line x1="${L}" x2="${W-R}" y1="${Y(total).toFixed(1)}" y2="${Y(total).toFixed(1)}" stroke="var(--gold)" stroke-width="2" stroke-dasharray="6 4"/><text x="${L+6}" y="${(Y(total)-7).toFixed(1)}" style="fill:var(--gold);font-weight:700">💰 ${CAST?'전체 목표':eok(total)}</text>`;
-  const cols=['var(--warn)','var(--leaf)','var(--sky)'], xn=X(now);
-  g+=`<defs><clipPath id="gclip"><rect x="${xn.toFixed(1)}" y="0" height="${H}" width="${A?0:W}">${A?`<animate attributeName="width" from="0" to="${W}" dur="1.6s" begin=".8s" fill="freeze"/>`:''}</rect></clipPath></defs><g clip-path="url(#gclip)">`;
-  proj.forEach((p,i)=>{ const pts=p.map((v,m)=>{const d=new Date(now); d.setMonth(d.getMonth()+m); return [X(d),Y(v)];}); g+=`<path d="${path(pts)}" fill="none" stroke="${cols[i]}" stroke-width="2" stroke-dasharray="${i===1?'':'5 4'}"/>`; });
-  g+='</g>';
-  g+=`<path class="draw" data-dur="1" d="${path(hist.map(x=>[X(new Date(x.d)),Y(x.v)]))}" fill="none" stroke="var(--ink)" stroke-width="2.4"/>`;
-  g+=`<circle cx="${xn.toFixed(1)}" cy="${Y(S.total_krw).toFixed(1)}" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/><text x="${(xn-8).toFixed(1)}" y="${(Y(S.total_krw)-12).toFixed(1)}" text-anchor="end" style="fill:var(--ink);font-weight:700">지금</text>`;
-  $('#goalChart').innerHTML=g; if(anim) drawLines($('#goalChart'));
+function drawPlan(Q, M, now, move, total, yrs, ySel, mT, pT, anim){
+  const el=$('#planChart'), [W,H]=box(el,.5,250,400), L=CAST?14:50, R=16, T=34, B=24, A=anim&&!RM;
+  const hist=SER.filter((x,i,a)=>x.mon||i%3===0||i===a.length-1), t0=new Date(SER[0].d+'T00:00:00+09:00');
+  const addM=m=>{ const d=new Date(now); d.setMonth(d.getMonth()+m); return d; }, end=addM(M);
+  const X=d=>L+(d-t0)/(end-t0)*(W-L-R), Xm=m=>X(addM(m)), tS=Math.min(monthsTo(yDate(ySel),now),M);
+  const top=Math.max(total*1.18, Q[tS][3]*1.06, ...hist.map(x=>x.v)), Y=v=>T+(1-Math.min(v,top*1.2)/top)*(H-T-B), f=v=>v.toFixed(1);
+  let g=`<defs><clipPath id="plc"><rect x="${f(X(now))}" y="${T-6}" height="${H-B-T+6}" width="${A?0:W}">${A?`<animate attributeName="width" from="0" to="${W}" dur="1.5s" fill="freeze" calcMode="spline" keySplines=".25 .8 .25 1" keyTimes="0;1"/>`:''}</rect></clipPath>
+    <linearGradient id="plPast" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ink);stop-opacity:.12"/><stop offset="1" style="stop-color:var(--ink);stop-opacity:0"/></linearGradient></defs>`;
+  yticks(0,top,4).forEach(v=>{ g+=`<line x1="${L}" x2="${W-R}" y1="${f(Y(v))}" y2="${f(Y(v))}" stroke="var(--line)"/>`+(CAST?'':`<text x="${L-6}" y="${f(Y(v)+4)}" text-anchor="end">${eok(v)}</text>`); });
+  const y0=t0.getFullYear()+1, y1=end.getFullYear(), every=Math.max(1,Math.ceil((y1-y0+1)/Math.max(Math.floor((W-L-R)/58),2)));
+  for(let y=y0; y<=y1; y++){ const x=X(yDate(y)); if(x>W-R-4) continue; g+=`<line x1="${f(x)}" x2="${f(x)}" y1="${H-B}" y2="${H-B+4}" stroke="var(--faint)"/>`+((y-y0)%every?'':`<text x="${f(x)}" y="${H-6}" text-anchor="middle">${y}</text>`); }
+  // 후보 연도: 금색 점선
+  yrs.forEach(y=>{ if(y===ySel) return; const x=X(yDate(y)); g+=`<line x1="${f(x)}" x2="${f(x)}" y1="${T}" y2="${H-B}" stroke="var(--gold)" stroke-dasharray="2 4" opacity=".55"/>`; });
+  // 앞으로: 10~90% · 25~75% 띠 + 가운데 경로
+  const band=(a,b)=>`M${Q.map((q,t)=>f(Xm(t))+' '+f(Y(q[a]))).join(' L')} L${Q.map((q,t)=>[Xm(t),Y(q[b])]).reverse().map(p=>f(p[0])+' '+f(p[1])).join(' L')} Z`;
+  g+=`<g clip-path="url(#plc)"><path d="${band(0,4)}" fill="var(--leaf)" fill-opacity=".13"/><path d="${band(1,3)}" fill="var(--leaf)" fill-opacity=".22"/>
+    <path d="${spath(Q.map((q,t)=>[Xm(t),Y(q[2])]))}" fill="none" stroke="var(--leaf)" stroke-width="2.6" stroke-linecap="round"/></g>`;
+  // 목표선
+  [[move,'🏠',CAST?'이사자금':eok(move),'1.4','3 4'],[total,'💰',CAST?'전체 목표':eok(total),'2','6 4']].forEach(([v,e,t,w,da],i)=>{ const y=Y(v), close=i===1&&Math.abs(Y(move)-y)<16;
+    g+=`<line x1="${L}" x2="${W-R}" y1="${f(y)}" y2="${f(y)}" stroke="var(--gold)" stroke-width="${w}" stroke-dasharray="${da}"/><text x="${L+6}" y="${f(close?y-6:y-6)}" style="fill:var(--gold);font-weight:700">${e} ${t}</text>`; });
+  // 지나온 길(실제)
+  const hp=hist.map(x=>[X(new Date(x.d+'T00:00:00+09:00')),Y(x.v)]); hp.push([X(now),Y(S.total_krw)]);
+  g+=`<path d="${path(hp)}L${f(hp.at(-1)[0])} ${H-B}L${f(hp[0][0])} ${H-B}Z" fill="url(#plPast)"/><path class="draw" data-dur="1" d="${path(hp)}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  const xn=X(now); g+=`<line x1="${f(xn)}" x2="${f(xn)}" y1="${T}" y2="${H-B}" stroke="var(--faint)" stroke-dasharray="2 3"/><circle cx="${f(xn)}" cy="${f(Y(S.total_krw))}" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/>`;
+  // 전체 목표 도착(가운데 경로)
+  if(mT!=null&&mT>0&&mT<=M){ const x=Xm(mT), y=Y(total); g+=`<circle cx="${f(x)}" cy="${f(y)}" r="5.5" fill="var(--leaf)" stroke="var(--surface)" stroke-width="2"/><text x="${f(x)}" y="${f(y+19)}" text-anchor="middle" style="font:700 11.5px var(--f-body);fill:var(--leaf)">🌱 ${ym(now,mT)}</text>`; }
+  // 고른 이사 시점
+  const xs=X(yDate(ySel)), ym_=Y(Q[tS][2]), lab=`📌 ${String(ySel).slice(2)}.01 · 💰 ${Math.round(pT*100)}%`, lw=lab.length*7+18, lx=Math.min(Math.max(xs-lw/2,L),W-R-lw);
+  const tc=pT>=.7?'var(--leaf)':pT>=.4?'var(--gold)':'var(--warn)';
+  g+=`<line x1="${f(xs)}" x2="${f(xs)}" y1="${T-4}" y2="${H-B}" stroke="var(--n2)" stroke-width="2"/>
+    <rect x="${f(lx)}" y="4" width="${f(lw)}" height="24" rx="12" style="fill:${tc};fill-opacity:.18;stroke:${tc};stroke-opacity:.55"/><text x="${f(lx+lw/2)}" y="20.5" text-anchor="middle" style="font:700 12.5px var(--f-body);fill:var(--ink)">${lab}</text>
+    <circle cx="${f(xs)}" cy="${f(ym_)}" r="6" fill="var(--n2)" stroke="var(--surface)" stroke-width="2">${RM?'':'<animate attributeName="r" values="6;8.5;6" dur="2s" repeatCount="indefinite"/>'}</circle>`;
+  if(!CAST){ const t=eok(Q[tS][2]), right=xs+10+t.length*8<W-R; g+=`<text x="${f(right?xs+10:xs-10)}" y="${f(ym_+4)}" text-anchor="${right?'start':'end'}" style="font:700 13px var(--f-num);fill:var(--n2)">${t}</text>`; }
+  el.innerHTML=g; if(anim) drawLines(el);
+  $('#plLeg').innerHTML=`<span><i style="background:var(--ink)"></i>지나온 길</span><span><i style="background:var(--leaf)"></i>가운데 경로</span><span><i style="background:var(--leaf);opacity:.5"></i>25~75%</span><span><i style="background:var(--leaf);opacity:.25"></i>10~90%</span><span><i style="background:var(--gold)"></i>🏠 · 💰 목표</span>`;
+  // 그래프를 눌러 이사 시점 고르기
+  const pick=e=>{ const bx=el.getBoundingClientRect(), px=(e.clientX-bx.left)*W/bx.width, t=t0.getTime()+(Math.min(Math.max(px,L),W-R)-L)/(W-L-R)*(end-t0);
+    const y=Math.min(Math.max(Math.round(new Date(t).getFullYear()+new Date(t).getMonth()/12),now.getFullYear()+1),planEndY()-1);
+    if(y!==yrSel()){ UI.yr=y; store.set('wc_goal_yr',y); renderGoal(false); } };
+  el.onpointerdown=e=>{ el.setPointerCapture?.(e.pointerId); pick(e); }; el.onpointermove=e=>{ if(e.buttons) pick(e); };
 }
 
 /* ── 분석 ── */
@@ -2401,11 +2421,11 @@ function renderAll(anim){ renderChrome(); RENDER[VIEW](anim); }
 
 /* ── 이벤트 ── */
 async function openDash(pw, enc, demo){
-  S=await decrypt(enc,pw); PW=pw; DEMO=demo; prep();
+  S=await decrypt(enc,pw); PW=pw; DEMO=demo; prep(); baseLive();
   $('#seed').textContent='🌱'; $('#seed').classList.add('open'); const lq=$('#lockQ'); if(lq){ lq.style.animation='hop .5s'; }
   await new Promise(r=>setTimeout(r, RM?0:380));
   $('#lock').hidden=true; $('#app').hidden=false;
-  renderChrome(); setTab(VIEW,false); startWS();
+  renderChrome(); setTab(VIEW,false); startWS(); pollQuotes();
   const today=new Date().toISOString().slice(0,10);
   if(S.nav.dd>-0.001 && store.get('wc_ath')!==today){ store.set('wc_ath',today); setTimeout(()=>confetti(),900); }
 }
@@ -2425,13 +2445,15 @@ $('#farmer').addEventListener('click', ()=>setTab('rebal'));
 $('#qtalk').addEventListener('click', ()=>{ const m=$('#qtalk'); m.classList.toggle('talk'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop'); });
 $('#monCard').addEventListener('click', e=>{ const t=e.target.closest('[data-m]'); if(!t) return; MONSEL=MONSEL===t.dataset.m?null:t.dataset.m; renderMonthly(false); });
 $('#monMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; MONM=b.dataset.m; store.set('wc_monm',MONM); renderMonthly(true); });
-$('#mcPre').addEventListener('click', e=>{ const b=e.target.closest('[data-mu]'); if(!b) return; UI.mu=+b.dataset.mu; UI.sig=+b.dataset.sig; store.set('wc_mu',UI.mu); store.set('wc_sig',UI.sig); renderMC(true); });
+$('#mcPre').addEventListener('click', e=>{ const b=e.target.closest('[data-mu]'); if(!b) return; UI.mu=+b.dataset.mu; UI.sig=+b.dataset.sig; store.set('wc_mu',UI.mu); store.set('wc_sig',UI.sig); renderGoal(false); });
+$('#mcYears').addEventListener('click', e=>{ const b=e.target.closest('[data-y]'); if(!b) return; UI.yr=+b.dataset.y; store.set('wc_goal_yr',UI.yr); renderGoal(false); });
+$('#plReset').addEventListener('click', ()=>{ ['wc_goal_move','wc_goal_keep','wc_mu','wc_sig','wc_goal_yr'].forEach(k=>store.del(k)); Object.assign(UI,{goal:null,keep:null,mu:null,sig:null,dca:null,yr:null}); renderGoal(true); });
 $('#calPrev').addEventListener('click', ()=>{ const ms=[...new Set(S.history.map(x=>x.d.slice(0,7)))].sort(); const i=ms.indexOf(CALM); if(i>0){ CALM=ms[i-1]; CALD=null; renderCal(); } });
 $('#calNext').addEventListener('click', ()=>{ const ms=[...new Set(S.history.map(x=>x.d.slice(0,7)))].sort(); const i=ms.indexOf(CALM); if(i<ms.length-1){ CALM=ms[i+1]; CALD=null; renderCal(); } });
 $('#cal').addEventListener('click', e=>{ const b=e.target.closest('.cd[data-d]'); if(!b||b.disabled) return; CALD=CALD===b.dataset.d?null:b.dataset.d; renderCal(); });
 $('#thWin').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; THW=b.dataset.w; store.set('wc_thw',THW); renderTherm(true); });
-$('#mcMu').addEventListener('input', e=>{ UI.mu=+e.target.value; store.set('wc_mu',UI.mu); renderMC(false); });
-$('#mcSig').addEventListener('input', e=>{ UI.sig=+e.target.value; store.set('wc_sig',UI.sig); renderMC(false); });
+$('#mcMu').addEventListener('input', e=>{ UI.mu=+e.target.value; store.set('wc_mu',UI.mu); renderGoal(false); });
+$('#mcSig').addEventListener('input', e=>{ UI.sig=+e.target.value; store.set('wc_sig',UI.sig); renderGoal(false); });
 $('#raceRange').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RACE=b.dataset.r; store.set('wc_race',RACE); drawRace(true); });
 $('#contribRange').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; CRNG=b.dataset.r; store.set('wc_crange',CRNG); drawContrib(true); });
 $('#raceCcy').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RCCY=b.dataset.c; store.set('wc_rccy',RCCY); drawRace(true); });
@@ -2458,7 +2480,6 @@ $('#wkPre').addEventListener('click', e=>{ const b=e.target.closest('button'); i
 $('#wkMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderWeekPlan(); });
 $('#dsAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderGoal(false); });
 $('#dsPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#dsAmt').max); renderGoal(false); });
-$('#dsMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderDcaSim(false); });
 $('#goalAmt').addEventListener('input', e=>{ UI.goal=+e.target.value; store.set('wc_goal_move',UI.goal); renderGoal(false); });
 $('#keepAmt').addEventListener('input', e=>{ UI.keep=+e.target.value; store.set('wc_goal_keep',UI.keep); renderGoal(false); });
 [['wiFx','fx'],['wiEq','eq'],['wiCr','cr']].forEach(([id,k])=>$('#'+id).addEventListener('input', e=>{ UI.wi[k]=+e.target.value; calcWi(false); }));
@@ -2472,7 +2493,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>{ sy
 setInterval(async ()=>{
   if(!S||DEMO||document.hidden) return;
   const enc=await fetchEnc(); if(!enc||enc.updated===S.asof){ renderChrome(); return; }
-  try{ S=await decrypt(enc,PW); prep(); renderAll(false); }catch(e){}
+  try{ S=await decrypt(enc,PW); prep(); baseLive(); renderAll(false); }catch(e){}
 }, 120000);
 
 (async ()=>{
