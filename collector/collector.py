@@ -421,6 +421,7 @@ def compute(raw, cfg, state, ts):
     curs = {h["sym"]: float(h.get("stk") or 0) for h in holds if h.get("stk")}
     prevq, prevs = state.get("qty"), state.get("stk_q", {})
     trades = state.setdefault("trades", {})
+    td = (ts - timedelta(hours=9)).date().isoformat()  # 매수 하루 = 09:00 ~ 다음날 09:00 (밤사이 미국장 체결분 포함)
     if prevq is not None:
         for sym in set(curq) | set(prevq):
             dq = curq.get(sym, 0) - prevq.get(sym, 0)
@@ -428,7 +429,7 @@ def compute(raw, cfg, state, ts):
             if dq < 0 and ds > 0:            # 현물 → 스테이킹으로 옮긴 건 매도가 아님
                 dq += min(ds, -dq)
             if abs(dq) > 1e-9:
-                day = trades.setdefault(d, {})
+                day = trades.setdefault(td, {})
                 q0, k0 = day.get(sym, [0, 0])
                 day[sym] = [round(q0 + dq, 8), round(k0 + dq * px_krw.get(sym, 0))]
     state["qty"], state["stk_q"] = curq, curs
