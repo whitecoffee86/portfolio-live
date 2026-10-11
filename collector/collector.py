@@ -199,6 +199,67 @@ class Upbit:
         return {x["market"]: x for x in r.json()}
 
 
+# ───────────────────────── 스테이킹 자동 추적 ─────────────────────────
+def track_staking(cfg, state, coins, upbit_krw, tick):
+    """스테이킹 수량을 state 에서 따라가요. config.json 의 staked 에 적힌 코인만 대상.
+
+    1) 현물이 줄었는데 업비트 원화가 (판 만큼) 안 늘었다 → 현물을 스테이킹으로 옮긴 것
+       → 줄어든 수량을 스테이킹에 더함. 총자산이 그대로라 입출금으로 안 잡힘.
+    2) config 의 staked 수량을 사용자가 바꿨다 → 앱의 '총 스테이킹 수량'으로 맞춘 것
+       → 그 수량을 기준으로 삼고, 늘어난 만큼(=보상)은 입금이 아니라 수익으로 처리.
+
+    반환: (staked {코인: {"qty","avg"}}, 보정액 원)  보정액은 compute 가 입출금 감지에서 빼요.
+    """
+    cfg_st = {k: (v if isinstance(v, dict) else {"qty": v}) for k, v in (cfg.get("staked") or {}).items()}
+    trk = state.setdefault("stk_track", {})
+    prev = state.get("upbit_prev") or {}
+    p_spot, p_krw = prev.get("spot") or {}, prev.get("krw")
+    thr = cfg.get("flow_threshold_krw", 3000)
+    log = state.setdefault("stk_log", [])
+    stamp = now_kst().isoformat(timespec="minutes")
+    adj = 0.0
+
+    for c, cv in cfg_st.items():
+        cq, ca = f(cv.get("qty")), f(cv.get("avg"))
+        price = f((tick.get(f"KRW-{c}") or {}).get("trade_price"))
+        bal, spot_avg = coins.get(c, [0.0, 0.0])
+        T = trk.get(c)
+        if T is None:  # 처음: config 값을 그대로 기준으로
+            T = {"qty": cq, "avg": ca, "cfg": cq, "cfg_avg": ca}
+            trk[c] = T
+
+        # ① 현물 → 스테이킹 이동 감지
+        moved = 0.0
+        if c in p_spot and p_krw is not None and price:
+            d = f(p_spot[c]) - bal
+            if d > 0 and d * price >= thr:
+                got = upbit_krw - f(p_krw)          # 팔았다면 원화가 거의 d×가격만큼 늘어야 함
+                if got < 0.5 * d * price:
+                    moved = d
+                    a_in = spot_avg or f(prev.get("avg", {}).get(c)) or price
+                    q0, a0 = T["qty"], (T.get("avg") or a_in)
+                    T["avg"] = (q0 * a0 + d * a_in) / (q0 + d)
+                    T["qty"] = q0 + d
+                    log.append({"t": stamp, "c": c, "k": "move", "q": round(d, 8)})
+                    print(f"  🔒 {c} {d:.6f}개 현물 → 스테이킹 이동 감지 (입출금 아님)")
+
+        # ② config 수량을 바꿨으면 그 값으로 맞춤, 차이는 보상(수익)
+        if abs(cq - f(T.get("cfg"))) > 1e-9:
+            reward = cq - T["qty"]   # ①에서 이미 더한 이동분은 빠짐
+            if price:
+                adj += reward * price
+            T.update(qty=cq, cfg=cq)
+            log.append({"t": stamp, "c": c, "k": "sync", "q": round(reward, 8)})
+            print(f"  🎁 {c} 스테이킹 수량 맞춤 {cq:.6f}개 (차이 {reward:+.6f}개 → 수익으로 처리)")
+        if ca and abs(ca - f(T.get("cfg_avg"))) > 1e-9:
+            T.update(avg=ca, cfg_avg=ca)
+
+    state["stk_log"] = log[-100:]
+    state["upbit_prev"] = {"krw": upbit_krw, "spot": {c: v[0] for c, v in coins.items()},
+                           "avg": {c: v[1] for c, v in coins.items()}}
+    return {c: {"qty": T["qty"], "avg": T.get("avg")} for c, T in trk.items() if c in cfg_st}, adj
+
+
 # ───────────────────────── 수집 ─────────────────────────
 def collect_live(cfg, state):
     toss = Toss(os.environ["TOSS_CLIENT_ID"], os.environ["TOSS_CLIENT_SECRET"])
@@ -230,11 +291,12 @@ def collect_live(cfg, state):
             upbit_krw = bal
         elif a.get("unit_currency") == "KRW" and bal > 0:
             coins[a["currency"]] = [bal, f(a.get("avg_buy_price"))]
-    # 스테이킹 중인 코인은 업비트 잔고 API에 안 잡혀서 config.json의 staked 수량을 더함
-    staked = {k: (v if isinstance(v, dict) else {"qty": v}) for k, v in (cfg.get("staked") or {}).items()}
-    for c in staked:
+    # 스테이킹 중인 코인은 업비트 잔고 API에 안 잡힘 → track_staking 이 수량을 따라감
+    #   (config.json 의 staked 에 적힌 코인만 대상)
+    for c in (cfg.get("staked") or {}):
         coins.setdefault(c, [0.0, 0.0])
     tick = Upbit.ticker([f"KRW-{c}" for c in coins])
+    staked, stk_adj = track_staking(cfg, state, coins, upbit_krw, tick)
     for c, (bal, avg) in coins.items():
         t = tick.get(f"KRW-{c}")
         if not t:
@@ -252,7 +314,7 @@ def collect_live(cfg, state):
 
     ov = cfg.get("cash_override") or {}
     return {
-        "fx": fx, "rows": rows, "bench": toss.bench(),
+        "fx": fx, "rows": rows, "bench": toss.bench(), "stk_adj": stk_adj,
         "cash": {
             "toss_krw": cash["KRW"] if cash["KRW"] is not None else f(ov.get("toss_krw")),
             "toss_usd": cash["USD"] if cash["USD"] is not None else f(ov.get("toss_usd")),
@@ -373,6 +435,7 @@ def compute(raw, cfg, state, ts):
             if s in px_now:
                 mkt += q * (px_now[s] - p)
         mkt += prev.get("usd_cash", 0) * (fx - prev.get("fx", fx))
+        mkt += f(raw.get("stk_adj"))   # 스테이킹 보상(수량 맞춤 차이)은 입금이 아니라 수익
         flow = (total - prev["total"]) - mkt
         if abs(flow) < cfg.get("flow_threshold_krw", 3000):
             flow = 0.0  # 수수료·반올림 수준은 성과로 처리
