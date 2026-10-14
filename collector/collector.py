@@ -351,11 +351,79 @@ def collect_mock(cfg, state):
             "cash": {"toss_krw": 412_000, "toss_usd": 318.4, "upbit_krw": 96_500}}
 
 
+# ───────────────────────── 실현손익 ─────────────────────────
+def rebuy_qty(q, a0, a1, p):
+    """수량은 그대로인데 평단만 a0→a1로 바뀜 = 15분 안에 k주 팔고 k주 다시 산 것.
+    이동평균이면 a1 = ((q-k)·a0 + k·p) / q → k = q·(a1-a0)/(p-a0). p(재매수가)는 지금 가격으로 봐요."""
+    if not q or not a0 or abs(a1 / a0 - 1) <= 0.001:
+        return 0.0
+    if abs(p - a0) / a0 < 0.003:
+        return q            # 지금 가격이 평단과 거의 같으면 알 수 없음 → 전량으로 봄
+    return max(0.0, min(q, q * (a1 - a0) / (p - a0)))
+
+
+def track_realized(raw, cfg, state, ts):
+    """15분 전 스냅샷(rz_prev)과 비교해 매도를 찾아 실현손익을 state["realized"]에 쌓아요.
+    compute 가 lots(원화 원금)를 고치기 전에 불러요. 반환: 이번 창에서 사고판 금액(원) — 수수료 보정용.
+    - 일부 매도: 원화 원금을 수량 비례로 덜어냄(이동평균) → 실현 = 판 수량 × 지금 가격 × 지금 환율 − 덜어낸 원금
+    - 전량 매도: 종목이 사라지면 직전 시세(최대 15분 전)로 추정
+    - 15분 안에 전량 팔고 같은 수량 재매수: 수량은 같고 평단만 바뀜 → 전량 매도로 봄
+    - 코인은 업비트 원화가 실제로 늘었을 때만 매도로 봐요(스테이킹 이동 오인 방지)"""
+    prev = state.get("rz_prev")
+    fx = raw["fx"]["rate"]
+    rows = {r["sym"]: r for r in raw["rows"]}
+    rz = state.setdefault("realized", [])
+    traded = 0.0
+    if prev:
+        d_upkrw = f(raw["cash"].get("upbit_krw")) - f(state.get("rz_upkrw"), f(raw["cash"].get("upbit_krw")))
+        for s, p in prev.items():
+            r, usd = rows.get(s), p.get("ccy") == "USD"
+            q0, q1 = f(p.get("qty")), (f(r["qty"]) if r else 0.0)
+            px_now = (f(r["price"]) if r else f(p.get("price")))
+            k = fx if usd else 1.0
+            if q1 > q0 + 1e-9:
+                traded += (q1 - q0) * px_now * k
+            sold, how = 0.0, ""
+            if q1 < q0 - 1e-9:
+                sold, how = q0 - q1, ("전량" if not r else "일부")
+            elif r and abs(q1 - q0) <= 1e-9:
+                sold = rebuy_qty(q0, f(p.get("avg")), f(r["avg"]), px_now)
+                how = "재매수"
+            if sold <= 1e-9 or q0 <= 0:
+                continue
+            proceeds = sold * px_now * k
+            if not usd and how != "재매수" and d_upkrw < 0.5 * proceeds:
+                continue   # 원화가 안 늘었으면 매도가 아님(스테이킹 이동·출고 등)
+            cost = f(p.get("cost_krw")) * sold / q0
+            traded += proceeds * (2 if how == "재매수" else 1)
+            rz.append({"t": ts.isoformat(timespec="minutes"), "sym": s, "q": round(sold, 8),
+                       "px": round(px_now, 4 if usd else 0), "fx": round(fx, 2) if usd else None,
+                       "a": round(proceeds), "c": round(cost), "pl": round(proceeds - cost),
+                       "pool": "us" if usd else "coin", "how": how})
+            print(f"  🧾 {s} {sold:g}{'주' if usd else '개'} 매도 감지({how}) → 실현 {proceeds - cost:+,.0f}원")
+    state["realized"] = rz[-600:]
+    state["rz_upkrw"] = f(raw["cash"].get("upbit_krw"))
+    return traded
+
+
+def realized_summary(state, cfg, ts):
+    """연도별 합계(해외주식 / 코인) + 기록 시작 전 실현분(config realized_seed)"""
+    by = {}
+    for x in state.get("realized", []):
+        y = x["t"][:4]
+        b = by.setdefault(y, {"us": 0, "coin": 0, "n": 0})
+        b[x.get("pool", "us")] += x["pl"]; b["n"] += 1
+    seed = {str(k): f(v) for k, v in (cfg.get("realized_seed") or {}).items()}
+    return {"years": by, "seed": seed, "since": state.setdefault("rz_since", ts.isoformat(timespec="minutes"))}
+
+
 # ───────────────────────── 계산 ─────────────────────────
 def compute(raw, cfg, state, ts):
     fx = raw["fx"]["rate"]
     seeds = {k: v for k, v in (cfg.get("krw_cost_seed") or {}).items() if f(v) > 0}
     lots = state.setdefault("lots", {})  # sym -> {qty, cost_usd, cost_krw, seeded}
+    traded = track_realized(raw, cfg, state, ts)
+    seed_used = set(state.setdefault("seed_used", []))   # 한 번 다 팔았던 종목은 시드(옛 원화 원금)를 다시 쓰지 않음
 
     holds = []
     for r in raw["rows"]:
@@ -369,18 +437,24 @@ def compute(raw, cfg, state, ts):
             # 원화 원금 추적: 처음엔 config 시드(토스 앱 '원화 기준' 원금), 이후 추가매수는 그날 환율로 누적
             L = lots.get(s)
             if L is None:
-                if s in seeds:
+                if s in seeds and s not in seed_used:
                     L = {"qty": r["qty"], "cost_usd": cost_ccy, "cost_krw": f(seeds[s]), "seeded": True}
                 else:
-                    L = {"qty": r["qty"], "cost_usd": cost_ccy, "cost_krw": cost_ccy * fx, "seeded": False}
+                    L = {"qty": r["qty"], "cost_usd": cost_ccy, "cost_krw": cost_ccy * fx, "seeded": s in seed_used}
             else:
-                if s in seeds and not L.get("seeded"):  # 나중에 시드를 채워 넣은 경우
+                if s in seeds and not L.get("seeded") and s not in seed_used:  # 나중에 시드를 채워 넣은 경우
                     L.update(cost_krw=f(seeds[s]), seeded=True)
                 dq = r["qty"] - L["qty"]
                 if dq > 1e-9:  # 추가 매수
                     L["cost_krw"] += max(cost_ccy - L["cost_usd"], 0) * fx
                 elif dq < -1e-9 and L["qty"] > 0:  # 일부 매도 → 비례 차감
                     L["cost_krw"] *= r["qty"] / L["qty"]
+                elif L["qty"] > 0 and (k := rebuy_qty(L["qty"], L["cost_usd"] / L["qty"], r["avg"], r["price"])) > 0:
+                    # 15분 안에 k주 팔고 k주 재매수 → 판 만큼 옛 원금을 덜고 새로 산 만큼 지금 환율로 더함
+                    L["cost_krw"] = L["cost_krw"] * (1 - k / L["qty"]) + k * r["price"] * fx
+                    if k >= L["qty"] - 1e-9:
+                        L["seeded"] = True
+                        seed_used.add(s)
                 L["qty"], L["cost_usd"] = r["qty"], cost_ccy
             lots[s] = L
             cost_krw = L["cost_krw"]
@@ -414,6 +488,10 @@ def compute(raw, cfg, state, ts):
     for s in list(lots):
         if s not in {h["sym"] for h in holds}:
             lots.pop(s)
+            seed_used.add(s)
+    state["seed_used"] = sorted(seed_used)
+    state["rz_prev"] = {h["sym"]: {"qty": h["qty"], "avg": h["avg"], "price": h["price"], "ccy": h["ccy"],
+                                   "cost_krw": h["cost_krw"]} for h in holds}
 
     c = raw["cash"]
     cash_krw = f(c["toss_krw"]) + f(c["toss_usd"]) * fx + f(c["upbit_krw"])
@@ -439,6 +517,8 @@ def compute(raw, cfg, state, ts):
         flow = (total - prev["total"]) - mkt
         if abs(flow) < cfg.get("flow_threshold_krw", 3000):
             flow = 0.0  # 수수료·반올림 수준은 성과로 처리
+        elif flow < 0 and traded > 0 and -flow <= traded * 0.004 + cfg.get("flow_threshold_krw", 3000):
+            flow = 0.0  # 사고판 창의 수수료·시세 차이는 출금이 아니라 비용(성과)으로
         # 배당: 원화 입금 없이 달러 예수금만 늘었으면 입금이 아니라 배당(=수익)으로 봄 → 기준가에 반영
         if flow > 0 and prev.get("krw_cash") is not None:
             d_krw = krw_cash - prev["krw_cash"]
@@ -526,6 +606,8 @@ def compute(raw, cfg, state, ts):
                 "peak": round(peak, 4), "peak_date": peak_d, "dd": unit / peak - 1 if peak else 0,
                 "principal0": nav.get("principal0")},
         "trades": {k: trades[k] for k in sorted(trades)[-180:]},
+        "realized": state.get("realized", [])[-300:],
+        "realized_sum": realized_summary(state, cfg, ts),
         "fx_hist": state.get("fx_hist", []),
         "flows": state.get("flows", [])[-400:],
         "divs": state.get("divs", []) + [x for x in (cfg.get("dividends_extra") or []) if isinstance(x, dict) and x.get("t")],
