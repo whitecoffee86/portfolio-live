@@ -1605,7 +1605,7 @@ function setTab(v, push=true){
   VIEW=v; store.set('wc_view',v); if(push) try{ history.replaceState(null,'','#'+v); }catch(e){}
   $$('#tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
   $$('.view').forEach(x=>{ const on = x.id==='v-'+v; x.hidden=!on; if(on){ x.style.animation='none'; void x.offsetWidth; x.style.animation=''; } });
-  movePill(); RENDER[v](true); if(push) window.scrollTo({top:0,behavior:RM?'auto':'smooth'});
+  movePill(); RENDER[v](true); if(push) window.scrollTo({top:0,behavior:'auto'});   // 다른 탭으로 가면 바로 맨 위에서 시작
 }
 function movePill(){ const b=$(`#tabbar [data-v="${VIEW}"]`), bar=$('#tabbar'); if(!b||!bar.offsetWidth) return; const r=b.getBoundingClientRect(), br=bar.getBoundingClientRect();
   const z=bar.offsetWidth/br.width||1;   // 큰 모니터 확대(zoom) 보정
@@ -2843,7 +2843,7 @@ $('#lockForm').addEventListener('submit', async e=>{
 $('#demoBtn').addEventListener('click', ()=>openDash('demo',DEMO_ENC,true));
 $('#lockBtn').addEventListener('click', ()=>{ store.del('wc_pw'); location.reload(); });
 $('#castBtn').addEventListener('click', ()=>{ CAST=!CAST; store.set('wc_cast',CAST?'1':'0'); renderAll(false); });
-$('#tabbar').addEventListener('click', e=>{ const b=e.target.closest('[data-v]'); if(b && b.dataset.v!==VIEW) setTab(b.dataset.v); });
+$('#tabbar').addEventListener('click', e=>{ const b=e.target.closest('[data-v]'); if(!b) return; if(b.dataset.v!==VIEW) setTab(b.dataset.v); else window.scrollTo({top:0,behavior:RM?'auto':'smooth'}); });   // 지금 탭을 한 번 더 누르면 맨 위로
 $('#tabbar').addEventListener('keydown', e=>{ if(!['ArrowLeft','ArrowRight'].includes(e.key)) return; const t=$$('#tabbar [role=tab]'), i=t.findIndex(b=>b.dataset.v===VIEW), n=t[(i+(e.key==='ArrowRight'?1:t.length-1))%t.length]; n.focus(); setTab(n.dataset.v); });
 $('#rangeTabs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; RANGE=b.dataset.r; store.set('wc_range2',RANGE); drawSpark(true); });
 $('#farmer').addEventListener('click', ()=>setTab('rebal'));
