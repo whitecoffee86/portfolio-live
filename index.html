@@ -993,6 +993,9 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 .tx-detail{display:grid;gap:14px;padding-top:12px}
 .tx-notes{margin:0;padding:0 0 0 2px;list-style:none;display:grid;gap:5px;font-size:12.5px;color:var(--muted);line-height:1.5}
 @media (max-width:720px){.tx-big{gap:6px}.tx-big>div{padding:10px}.tx-big b{font-size:18px}.tx-steps li{padding:11px 12px;gap:10px}.tx-steps b.t{font-size:14px}}
+@media (max-width:560px){.tx-big{grid-template-columns:minmax(0,1fr);gap:6px}.tx-big>div{grid-template-columns:auto 1fr;align-items:baseline;column-gap:10px;padding:10px 12px}.tx-big b{text-align:right;font-size:19px}.tx-big small{grid-column:1/-1}.tx-verdict{grid-template-columns:minmax(0,1fr)}.tx-verdict .ic{display:none}.tx-verdict h3{font-size:16px}.tx-steps li{grid-template-columns:24px minmax(0,1fr);padding:10px}.tx-steps li::before{width:24px;height:24px;font-size:12px}.tx-steps b.t{font-size:13.5px}}
+.tx-steps b.t,.tx-steps small,.tx-verdict h3,.tx-verdict p{overflow-wrap:anywhere;word-break:keep-all}
+.tx-steps li>div{min-width:0}
 .tx-go{border:0;cursor:pointer;font:inherit}
 @media (max-width:900px){.tx-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:720px){.tx-pc{grid-template-columns:minmax(0,1fr)}.tx-meters{grid-template-columns:minmax(0,1fr)}.tx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.tx-verdict{padding:14px;gap:10px}.tx-verdict .ic{font-size:26px;align-self:start}.tx-kpi .box:last-child:nth-child(odd){grid-column:1/-1}}
@@ -2320,7 +2323,8 @@ function txPlan(mode){
     const use=Math.min(amt,tot); cands.forEach((x,i)=>x.buy+=use*need[i]/tot); return amt-use; };
   const left={}, moves=[], brs=[...new Set(R.map(x=>x.br))];
   brs.forEach(b=>{ const p=R.filter(x=>x.br===b).reduce((s,x)=>s+x.sell*(1-txFee(b)),0); left[b]=fill(R.filter(x=>x.br===b&&x.v<x.tv),p); });
-  if(mode==='full') brs.forEach(b=>{ if(left[b]<1e4) return; brs.filter(o=>o!==b).forEach(o=>{ const a0=left[b]; left[b]=fill(R.filter(x=>x.br===o&&x.v<x.tv),a0); if(a0-left[b]>=1e4) moves.push({from:b,to:o,a:a0-left[b]}); }); });
+  // 판 돈이 남는 계좌 → 모자란 종목이 있는 계좌로 옮겨서 사기(현금으로 놀리지 않게)
+  brs.forEach(b=>{ if(left[b]<1e4) return; brs.filter(o=>o!==b).forEach(o=>{ const a0=left[b]; left[b]=fill(R.filter(x=>x.br===o&&x.v<x.tv),a0); if(a0-left[b]>=1e4) moves.push({from:b,to:o,a:a0-left[b]}); }); });
   // 4) 🔄 공제 채우기: 남은 공제만큼 이익 종목을 팔고 바로 다시 사서 취득가를 올려요
   //    목표보다 많은 종목부터 → 그 몫은 다시 사지 않고 같은 계좌의 모자란 종목으로(세금 0원 리밸런싱 보너스)
   if(room.us>=1e5) R.filter(x=>x.pool==='us'&&x.g>0).sort((a,b)=>((b.v-b.sell>b.tv)-(a.v-a.sell>a.tv))||b.g-a.g).forEach(x=>{ if(room.us<1e5) return;
@@ -2390,8 +2394,10 @@ function renderTaxPlan(){
     const P=mode==='full'?Pfull:Pf, R=P.R;
     $('#txBig').innerHTML=big('✂️ 파는 돈',mw(P.sold),'목표보다 많은 만큼')+big('🛒 사는 돈',mw(P.bought),'모자란 종목에')+big('🧾 늘어나는 세금',mw(P.tax),P.tax>0?'공제 넘는 이익 × 22%':'공제 250만 안이라',P.tax>0?'up':'down');
     Object.keys(BRN).forEach(b=>{ const s=R.filter(x=>x.br===b&&x.sell>0).map(x=>[x,x.sell]); if(s.length) st(`${BRN[b]}에서 ${list(s)} <span class="sell">팔아요</span>`, s.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')+(b==='toss'?' · 달러로 받아요':'')); });
-    P.moves.forEach(m=>st(`💱 ${BRN[m.from]} → ${BRN[m.to]}로 <span class="k">${man(m.a)}원</span> 옮겨요`,'계좌가 달라서 옮겨야 살 수 있어요 (이체·환전 비용 약 0.1%)'));
-    Object.keys(BRN).forEach(b=>{ const u=R.filter(x=>x.br===b&&x.buy>0).map(x=>[x,x.buy]), l=P.left[b]||0; if(u.length) st(`${BRN[b]}에서 ${list(u)} <span class="buy">사요</span>`, u.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')+(l>=1e4?` · 남는 ${man(l)}은 다음 적립에 써요`:'')); });
+    P.moves.forEach(m=>st(`💱 ${BRN[m.from]}에서 <span class="k">${man(m.a)}원</span> 출금해서 ${BRN[m.to]}로 옮겨요`, m.to==='toss'?'토스에서 달러로 바꿔서 아래 종목을 사요 (환전 비용 약 0.1%)':'업비트에 원화로 입금해서 아래 코인을 사요'));
+    Object.keys(BRN).forEach(b=>{ const u=R.filter(x=>x.br===b&&x.buy>0).map(x=>[x,x.buy]), l=P.left[b]||0; if(u.length) st(`${BRN[b]}에서 ${list(u)} <span class="buy">사요</span>`, u.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')); });
+    Object.keys(BRN).forEach(b=>{ const l=P.left[b]||0; if(l<1e4) return; const daily=Object.entries(dailyBase()).filter(([k])=>(R.find(x=>x.sym===k)||{}).br===b).reduce((a,[,v])=>a+v,0), n=daily?Math.max(1,Math.round(l/daily)):0;
+      st(`💵 ${BRN[b]}에 남는 <span class="k">${man(l)}원</span>은 현금으로 둬요`, `모자란 종목을 다 채우고도 남는 돈이에요${n?` · 이 돈으로 ${BRN[b]} 매일 적립 약 ${n}일치를 대신해요(그동안 새로 입금 안 해도 돼요)`:''}`); });
     const H=R.filter(x=>x.harv>0); if(H.length) st(`🍂 ${H.map(E).join(' · ')}는 전부 팔고 바로 다시 사요`, `원화 손실 <span class="k sell">${man(P.loss)}원</span>을 확정해서 같은 해 이익과 상계해요 · 보유 수량은 그대로`);
     const Z=R.filter(x=>x.reset>0); if(Z.length) st(`🔄 ${Z.map(x=>`${E(x)} <span class="k">${man(x.reset)}</span>`).join(' · ')} 팔고 바로 다시 사요`, `이익 ${man(Z.reduce((a,x)=>a+x.reset*x.g,0))}원을 세금 없이 실현 → 나중 세금이 줄어요 · <b>12월 중순</b>에 하는 게 안전`, 'later');
     if(!steps.length) st('✅ 지금은 할 일이 없어요','팔 종목도, 정리할 손실도 없어요');
