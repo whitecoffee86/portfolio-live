@@ -996,6 +996,19 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 @media (max-width:560px){.tx-big{grid-template-columns:minmax(0,1fr);gap:6px}.tx-big>div{grid-template-columns:auto 1fr;align-items:baseline;column-gap:10px;padding:10px 12px}.tx-big b{text-align:right;font-size:19px}.tx-big small{grid-column:1/-1}.tx-verdict{grid-template-columns:minmax(0,1fr)}.tx-verdict .ic{display:none}.tx-verdict h3{font-size:16px}.tx-steps li{grid-template-columns:24px minmax(0,1fr);padding:10px}.tx-steps li::before{width:24px;height:24px;font-size:12px}.tx-steps b.t{font-size:13.5px}}
 .tx-steps b.t,.tx-steps small,.tx-verdict h3,.tx-verdict p{overflow-wrap:anywhere;word-break:keep-all}
 .tx-steps li>div{min-width:0}
+@media (max-width:560px){
+  #txRows .ds-r.tx-r.h{display:none}
+  #txRows .ds-r.tx-r{grid-template-columns:minmax(0,1fr) max-content;grid-template-areas:"s a" "w g";row-gap:5px;padding:10px 4px}
+  #txRows .ds-r.tx-r>span:nth-child(1){grid-area:s;overflow:visible}
+  #txRows .ds-r.tx-r>span:nth-child(2){grid-area:w;text-align:left;font-size:12px;white-space:normal}
+  #txRows .ds-r.tx-r>span:nth-child(3){grid-area:a}
+  #txRows .ds-r.tx-r>span:nth-child(5){grid-area:g;align-self:center}
+  #txRows .ds-r.tx-r>span:nth-child(5)::before{content:'실현 ';font-family:var(--f-body);font-size:11px;color:var(--faint);font-weight:500}
+  .tx-pick{gap:6px}.tx-pick>span{display:none}
+  .tx-pick .seg{width:100%}.tx-pick .seg button{flex:1;padding:5px 6px;font-size:12px}
+  .tx-pick .seg button[data-rec]::after{margin-left:3px;font-size:9px;padding:1px 4px}
+  .tx-in label{flex-wrap:wrap}.tx-in input[type=text]{width:150px}
+}
 .tx-go{border:0;cursor:pointer;font:inherit}
 @media (max-width:900px){.tx-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:720px){.tx-pc{grid-template-columns:minmax(0,1fr)}.tx-meters{grid-template-columns:minmax(0,1fr)}.tx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.tx-verdict{padding:14px;gap:10px}.tx-verdict .ic{font-size:26px;align-self:start}.tx-kpi .box:last-child:nth-child(odd){grid-column:1/-1}}
@@ -2367,7 +2380,7 @@ function txVerdict(P0, Pf, Pfull, d0, d1){
   const big=off.length && dev>=band*1.6, mo=new Date(S.asof).getMonth()+1, usGain=B.some(x=>x.pool==='us'&&x.g>0);
   if(!off.length) return {c:'g', ic:'🟢', h:'지금은 리밸런싱 안 해도 돼요', p:'모든 종목이 목표 범위 안이에요.'+(usGain?' 12월에 <b>250만 원 공제 채우기</b>만 챙기세요.':''), mode:'free'};
   if(d1.days!=null && d1.days<=90) return {c:'y', ic:'🟡', h:'팔지 말고 적립 방향만 바꾸세요', p:`많은 종목 적립을 잠깐 쉬고 모자란 종목을 더 사면 <b>약 ${d1.days}일</b>이면 맞춰져요. 세금 0원.`, mode:'dca'};
-  if(Pf.allIn) return {c:'o', ic:'🟠', h:'세금 0원으로 맞출 수 있어요 — 해볼 만해요', p:`공제 250만 원${Pf.loss>0?'과 손실 확정':''} 안에서 팔고 사면 전 종목이 밴드 안으로 들어와요. 수수료 약 ${man(Pf.fee)}원.`, mode:'free'};
+  if(Pf.allIn) return {c:'o', ic:'🟠', h:'세금 0원으로 맞출 수 있어요 — 해볼 만해요', p:(txRy()>=TAX.ded?`올해 공제는 이미 찼지만, 이익 종목은 팔지 않고 ${B.some(x=>x.cr&&x.st==='over')&&!coinTaxed()?'코인(올해 비과세)·':''}손실 종목만 움직여서 맞출 수 있어요.`:`공제 250만 원${Pf.loss>0?'과 손실 확정':''} 안에서 팔고 사면 전 종목이 범위 안으로 들어와요.`)+` 수수료 약 ${man(Pf.fee)}원.`, mode:'free'};
   if(big) return {c:'r', ic:'🔴', h:'세금을 조금 내더라도 일부는 덜어내는 게 좋아요', p:`목표보다 ${Math.round(dev*100)}% 넘게 벗어난 종목이 있어 원래 계획보다 위험이 커졌어요. 세금 0원 플랜만큼 먼저 팔고, 나머지는 적립으로 채우세요${Pfull.tax>0?` (목표까지 한 번에 맞추면 세금 약 ${man(Pfull.tax)}원)`:''}.`, mode:'free'};
   return {c:'y', ic:'🟡', h:'세금 0원만큼만 팔고, 나머지는 적립으로', p:`공제 안에서 덜어내면 많이 가까워지고, 남은 차이는 적립으로 ${d1.days!=null?'약 '+d1.days+'일':'천천히'} 맞춰져요. 한 번에 다 맞출 정도로 벗어나진 않았어요.`, mode:'free'};
 }
@@ -2395,7 +2408,7 @@ function renderTaxPlan(){
     if(Pf.loss>0||Pf.R.some(x=>x.reset>0)) st('🎁 12월 중순엔 세금 정리만 따로 해요','손실 확정 + 250만 공제 채우기 · 비중은 그대로','later',`<button type="button" data-txm="free">세금 0원 방법 보기 ›</button>`);
   } else {
     const P=mode==='full'?Pfull:Pf, R=P.R;
-    $('#txBig').innerHTML=big('✂️ 파는 돈',mw(P.sold),'목표보다 많은 만큼')+big('🛒 사는 돈',mw(P.bought),'모자란 종목에')+big('🧾 늘어나는 세금',mw(P.tax),P.tax>0?'공제 넘는 이익 × 22%':'공제 250만 안이라',P.tax>0?'up':'down');
+    $('#txBig').innerHTML=big('✂️ 파는 돈',mw(P.sold),'목표보다 많은 만큼')+big('🛒 사는 돈',mw(P.bought),'모자란 종목에')+(P.tax<-5e3?big('🧾 줄어드는 세금','−'+mw(-P.tax),'손실 확정으로 올해 세금이 줄어요','down'):big('🧾 늘어나는 세금',mw(P.tax),P.tax>5e3?'공제 넘는 이익 × 22%':txRy()>=TAX.ded?'이익 종목은 안 팔아서':'공제 250만 안이라',P.tax>5e3?'up':'down'));
     Object.keys(BRN).forEach(b=>{ const s=R.filter(x=>x.br===b&&x.sell>0).map(x=>[x,x.sell]); if(s.length) st(`${BRN[b]}에서 ${list(s)} <span class="sell">팔아요</span>`, s.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')+(b==='toss'?' · 달러로 받아요':'')); });
     P.moves.forEach(m=>st(`💱 ${BRN[m.from]}에서 <span class="k">${man(m.a)}원</span> 출금해서 ${BRN[m.to]}로 옮겨요`, m.to==='toss'?'토스에서 달러로 바꿔서 아래 종목을 사요 (환전 비용 약 0.1%)':'업비트에 원화로 입금해서 아래 코인을 사요'));
     Object.keys(BRN).forEach(b=>{ const u=R.filter(x=>x.br===b&&x.buy>0).map(x=>[x,x.buy]), l=P.left[b]||0; if(u.length) st(`${BRN[b]}에서 ${list(u)} <span class="buy">사요</span>`, u.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')); });
