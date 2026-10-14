@@ -2291,7 +2291,9 @@ function dsAlloc(M){
    원화 손익(평단·매입 환율 기준) 추정. 해외주식 양도세 = (같은 해 이익 − 손실 − 250만) × 22%. 코인은 2027년부터 과세 예정이라 그 전엔 수수료만.
    같은 계좌 안에서 팔고 사요(토스는 달러로 팔고 달러로 사면 환전 비용 없음). 팔아도 남는 돈은 그 계좌의 매일 적립을 대신해요. */
 const TAX={ded:2.5e6, rate:.22};
-const TX={mode:store.get('wc_tx_mode')};
+/* 직접 고른 방법은 그때의 추천(rec)과 같이 기억 → 추천이 바뀌면 고른 방법은 풀리고 새 추천을 따라가요 */
+const TX={mode:store.get('wc_tx_mode'), rec:store.get('wc_tx_rec'), cur:null};
+function txPick(m){ TX.mode=m; TX.rec=TX.cur; store.set('wc_tx_mode',m); store.set('wc_tx_rec',TX.cur||''); renderTaxPlan(); }
 const txYear=()=>new Date(S.asof).getFullYear();
 const coinTaxed=()=>txYear()>=2027;
 const txFee=b=>b==='upbit'?(S.config.fee_upbit??.0005):(S.config.fee_toss??.001);
@@ -2372,6 +2374,7 @@ function txVerdict(P0, Pf, Pfull, d0, d1){
 function renderTaxPlan(){
   const card=$('#taxCard'); if(!card) return; card.hidden=!!CAST; if(CAST) return;
   const Pf=txPlan('free'), Pfull=txPlan('full'), d0=txDcaSim(false), d1=txDcaSim(true), V=txVerdict(null,Pf,Pfull,d0,d1), B=txBase(), band=S.config.band_rel??.25;
+  TX.cur=V.mode; if(TX.mode && TX.rec!==V.mode){ TX.mode=null; store.del('wc_tx_mode'); store.del('wc_tx_rec'); }
   const dev=Math.max(...B.map(x=>Math.abs(x.ratio-1))), mode=TX.mode||V.mode;
   $('#taxNote').textContent=txYear()+'년 · 원화 기준 추정';
   const dd=d=>d==null?'2년 넘게':d===0?'지금 OK':'약 '+d+'일';
@@ -2782,8 +2785,8 @@ $('#orchard').addEventListener('click', e=>{ const t=e.target.closest('.tree'); 
 $('#badges').addEventListener('click', e=>{ const b=e.target.closest('.medal.got'); if(b) confetti([b.querySelector('.ic').textContent,'✨','🎉']); });
 $('#wkAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderWeekPlan(); });
 $('#wkPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#wkAmt').max); renderWeekPlan(); });
-$('#txMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; TX.mode=b.dataset.m; store.set('wc_tx_mode',TX.mode); renderTaxPlan(); });
-document.addEventListener('click', e=>{ const b=e.target.closest('[data-txm]'); if(!b) return; TX.mode=b.dataset.txm; store.set('wc_tx_mode',TX.mode); renderTaxPlan(); });
+$('#txMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; txPick(b.dataset.m); });
+document.addEventListener('click', e=>{ const b=e.target.closest('[data-txm]'); if(!b) return; txPick(b.dataset.txm); });
 $('#txRy').addEventListener('change', e=>{ const v=Math.round(+String(e.target.value).replace(/[^0-9-]/g,'')||0); store.set('wc_tx_ry_'+txYear(),String(v)); renderTaxPlan(); });
 $('#txHl').addEventListener('change', e=>{ store.set('wc_tx_hl',e.target.checked?'1':'0'); renderTaxPlan(); });
 document.addEventListener('click', e=>{ const g=e.target.closest('[data-go]'); if(!g) return; const t=document.getElementById(g.dataset.go); if(t) t.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); });
