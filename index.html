@@ -1018,6 +1018,23 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
 @media (max-width:900px){.tx-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:720px){.tx-pc{grid-template-columns:minmax(0,1fr)}.tx-meters{grid-template-columns:minmax(0,1fr)}.tx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.tx-verdict{padding:14px;gap:10px}.tx-verdict .ic{font-size:26px;align-self:start}.tx-kpi .box:last-child:nth-child(odd){grid-column:1/-1}}
 @media (max-width:560px){.ds-r.tx-r{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,.75fr)}.ds-r.tx-r>.m{display:none!important}.ds-r.tx-r .sym small{display:none}}
+
+/* ── 📐 카드 끝선 맞추기(2026-10-14): 같은 줄 카드는 같은 높이, 두 기둥(stack)은 마지막 카드가 늘어나 아래 끝선이 맞아요 ── */
+@media (min-width:880px){
+  .view{align-items:stretch}
+  .view > .stack{display:flex;flex-direction:column}
+  .view > .stack > .card:last-child{flex:1 1 auto}
+  .orch-card{grid-template-rows:auto minmax(0,1fr)}
+  .orch-card .orchard{align-self:center}
+  /* 리밸런싱: 레이더 | 적립 플랜 한 줄, 영수증은 아래 전체 폭 */
+  #v-rebal > .rb-rcpt{grid-column:1 / -1!important}
+  #v-rebal > .rb-radar{grid-row:auto!important}
+  #v-rebal .rc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:center}
+  /* 기록: 긴 일지 옆 FAQ는 늘리지 않고 스크롤 따라오게 */
+  #v-log > .faq-card{align-self:start;position:sticky;top:calc(var(--tbh,64px) + 14px)}
+}
+@media (min-width:1200px){ #v-rebal > .rb-plan{grid-column:8 / -1!important} #v-rebal > .rb-radar{grid-column:1 / span 7!important} }
+@media (min-width:1700px){ #v-rebal > .rb-plan{grid-column:7 / -1!important} #v-rebal > .rb-radar{grid-column:1 / span 6!important} }
 </style>
 </head>
 <body>
@@ -1116,10 +1133,10 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
           </div>
           <div class="acc" id="hold"></div>
         </section>
-        <section class="card">
-          <div class="card-h"><h2><span class="hi">🌳</span>내 과수원</h2><span class="note">크기 = 평가금액 · 🍎 수익 · 🍂 손실</span></div>
-          <svg class="orchard" id="orchard" viewBox="0 0 700 270" aria-label="종목별 과수원"></svg>
-        </section>
+      <section class="card farm-card">
+        <div class="card-h"><h2><span class="hi">🏆</span>업적 진열장</h2><span class="note" id="badgeNote"></span></div>
+        <div class="badges" id="badges"></div>
+      </section>
         </div>
         <div class="stack c6">
         <section class="card" id="divCard" data-qk="cash">
@@ -1131,10 +1148,10 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
           <div class="dvl" id="divList"></div>
           <div class="ins" id="divIns"></div>
         </section>
-      <section class="card farm-card">
-        <div class="card-h"><h2><span class="hi">🏆</span>업적 진열장</h2><span class="note" id="badgeNote"></span></div>
-        <div class="badges" id="badges"></div>
-      </section>
+        <section class="card orch-card">
+          <div class="card-h"><h2><span class="hi">🌳</span>내 과수원</h2><span class="note">크기 = 평가금액 · 🍎 수익 · 🍂 손실</span></div>
+          <svg class="orchard" id="orchard" viewBox="0 0 700 270" aria-label="종목별 과수원"></svg>
+        </section>
         </div>
     </section>
 
@@ -1317,7 +1334,7 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
         </div>
         <div class="tl" id="tl"></div>
       </section>
-      <section class="card c5">
+      <section class="card faq-card c5">
         <div class="card-h"><h2><span class="hi">❓</span>계산은 이렇게 해요</h2></div>
         <div class="acc faq" id="faq"></div>
       </section>
