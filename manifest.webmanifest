@@ -1,9 +1,9 @@
 {
- "id": "./?app=portfolio-live-v2",
+ "id": "./?app=portfolio-live-v3",
  "name": "장기포트 라이브",
  "short_name": "장기포트",
  "description": "토스증권·업비트 장기 포트폴리오 대시보드",
- "start_url": "./?app=portfolio-live-v2",
+ "start_url": "./?app=portfolio-live-v3",
  "scope": "./",
  "display": "standalone",
  "orientation": "any",
