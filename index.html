@@ -1163,7 +1163,7 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
             <div class="tx-pc" id="txPC"></div>
             <div class="ds-tbl" id="txRows"></div>
             <div class="tx-gauge" id="txGauge"></div>
-            <div class="tx-in"><label>💼 올해 이미 실현한 해외주식 손익 <input type="text" id="txRy" inputmode="numeric" placeholder="0">원</label><label><input type="checkbox" id="txHl"> 🍂 원화 손실 종목은 팔고 바로 다시 사기</label></div>
+            <div class="tx-in"><label>💼 올해 이미 실현한 해외주식 손익 <input type="text" id="txRy" inputmode="numeric" enterkeyhint="done" autocomplete="off" placeholder="0">원 <small id="txRyOk" style="color:var(--leaf);font-weight:700"></small></label><label><input type="checkbox" id="txHl"> 🍂 원화 손실 종목은 팔고 바로 다시 사기</label></div>
             <ul class="tx-notes">
               <li>📅 세금은 <b>결제일</b> 기준이라 12월 마지막 거래일보다 며칠 앞서 하세요.</li>
               <li>💵 토스는 달러로 팔고 달러로 사면 환전 비용이 없어요. 팔고 바로 다시 사도 돼요.</li>
@@ -2429,7 +2429,7 @@ function renderTaxPlan(){
       const w2=mode==='dca'?x.w:x.w2, s2=mode==='dca'?x.st:x.st2, rg=mode==='dca'?0:x.rg;
       return `<div class="ds-r tx-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${E(x)}</span><span><span class="st ${x.st}">${x.w.toFixed(1)}</span> → <b class="st ${s2}">${w2.toFixed(1)}%</b></span><span class="tx-acts">${a.join(' ')||'<span style="color:var(--faint)">—</span>'}</span><span class="m">${x.t}%</span><span class="${rg>500?'up':rg<-500?'down':''}">${Math.abs(rg)<500?'—':(rg>0?'+':'-')+man(Math.abs(rg))}</span></div>`; }).join('');
   $('#txGauge').innerHTML=gaugeHtml(txRy(), mode==='dca'?0:P.usG);
-  $('#txRy').value=txRy()?txRy().toLocaleString('ko-KR'):''; $('#txHl').checked=txHl();
+  const ri=$('#txRy'); if(document.activeElement!==ri) ri.value=txRy()?txRy().toLocaleString('ko-KR'):''; $('#txHl').checked=txHl();   // 입력 중엔 시세 갱신이 덮어쓰지 않게
   const rl=$('#radarLede'); if(rl && !rl.querySelector('.tx-go')) rl.insertAdjacentHTML('beforeend',`<button type="button" class="chip tx-go" data-go="taxCard">${V.ic} ${V.h} ›</button>`);
   grow(card);
 }
@@ -2787,7 +2787,11 @@ $('#wkAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.
 $('#wkPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#wkAmt').max); renderWeekPlan(); });
 $('#txMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; txPick(b.dataset.m); });
 document.addEventListener('click', e=>{ const b=e.target.closest('[data-txm]'); if(!b) return; txPick(b.dataset.txm); });
-$('#txRy').addEventListener('change', e=>{ const v=Math.round(+String(e.target.value).replace(/[^0-9-]/g,'')||0); store.set('wc_tx_ry_'+txYear(),String(v)); renderTaxPlan(); });
+/* 올해 실현 손익: 글자 칠 때마다 바로 저장(모바일에서 다른 곳을 눌러도 안 사라지게), 손을 떼면 콤마 정리 + 다시 계산 */
+const txRySave=el=>{ const t=String(el.value).trim(), neg=/^-/.test(t), d=t.replace(/[^0-9]/g,''); const v=d?(neg?-1:1)*Math.round(+d):0; store.set('wc_tx_ry_'+txYear(),String(v)); const ok=$('#txRyOk'); if(ok){ ok.textContent=v?'✓ 저장됨':''; } return v; };
+$('#txRy').addEventListener('input', e=>txRySave(e.target));
+['change','blur'].forEach(ev=>$('#txRy').addEventListener(ev, e=>{ const v=txRySave(e.target); e.target.value=v?v.toLocaleString('ko-KR'):''; renderTaxPlan(); }));
+$('#txRy').addEventListener('keydown', e=>{ if(e.key==='Enter') e.target.blur(); });
 $('#txHl').addEventListener('change', e=>{ store.set('wc_tx_hl',e.target.checked?'1':'0'); renderTaxPlan(); });
 document.addEventListener('click', e=>{ const g=e.target.closest('[data-go]'); if(!g) return; const t=document.getElementById(g.dataset.go); if(t) t.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); });
 $('#wkMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderWeekPlan(); });
