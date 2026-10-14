@@ -913,6 +913,66 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
   .wrap{padding-left:max(env(safe-area-inset-left,0px),12px);padding-right:max(env(safe-area-inset-right,0px),12px);padding-bottom:64px}
   .mascot{height:120px!important;width:90px!important}
 }
+
+/* 🧾 세금 계산 리밸런싱 */
+#v-rebal > .rb-tax{grid-column:1 / -1}
+.rb-tax{display:grid;gap:16px}
+.tx-verdict{display:grid;gap:12px 16px;grid-template-columns:auto minmax(0,1fr);align-items:center;padding:16px 18px;border-radius:18px;background:var(--tv-bg);border:1px solid var(--tv-bd)}
+.tx-verdict .ic{font-size:38px;line-height:1}
+.tx-verdict h3{margin:0;font-size:clamp(17px,2.1vw,21px);letter-spacing:-.02em}
+.tx-verdict p{margin:4px 0 0;font-size:13.5px;color:var(--muted);line-height:1.55}
+.tx-verdict p b{color:var(--ink)}
+.tx-verdict.g{--tv-bg:var(--leaf-soft);--tv-bd:color-mix(in srgb,var(--leaf) 30%,transparent)}
+.tx-verdict.y{--tv-bg:var(--sky-soft);--tv-bd:color-mix(in srgb,var(--sky) 30%,transparent)}
+.tx-verdict.o{--tv-bg:var(--warn-soft);--tv-bd:color-mix(in srgb,var(--warn) 32%,transparent)}
+.tx-verdict.r{--tv-bg:var(--up-soft);--tv-bd:color-mix(in srgb,var(--up) 30%,transparent)}
+.tx-meters{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tx-m{background:var(--surface);border-radius:12px;padding:10px 12px;display:grid;gap:5px;min-width:0}
+.tx-m span{font-size:12px;color:var(--muted);font-weight:600}
+.tx-m b{font-family:var(--f-num);font-size:17px;white-space:nowrap}
+.tx-m small{font-size:11px;color:var(--faint)}
+.tx-m .bar{height:6px;border-radius:999px;background:var(--sunk);overflow:hidden}
+.tx-m .bar i{display:block;height:100%;border-radius:inherit}
+.tx-pc{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.tx-pc>div{border-radius:14px;padding:12px 14px;background:var(--sunk);display:grid;gap:8px;align-content:start;border-top:3px solid var(--leaf)}
+.tx-pc>.con{border-top-color:var(--warn)}
+.tx-pc h4{margin:0;font-size:14px}
+.tx-pc ul{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:13px;line-height:1.5}
+.tx-pc li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:4px}
+.tx-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.tx-kpi .box small{font-size:11px;color:var(--faint)}
+.tx-flow{display:grid;gap:8px}
+.tx-lane{display:flex;align-items:center;gap:7px 8px;flex-wrap:wrap;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:13px;line-height:1.45}
+.tx-lane>b{font-size:13px;margin-right:2px}
+.tx-lane>b small{font-weight:500;color:var(--faint);font-size:11px;margin-left:4px}
+.tx-lane small{color:var(--faint)}
+.tx-lane.soft{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.tx-lane.harv{border-left:4px solid var(--down)} .tx-lane.reset{border-left:4px solid var(--leaf)}
+.tx-pill{display:inline-flex;gap:4px;align-items:center;padding:4px 10px;border-radius:999px;font-weight:700;font-size:12.5px;background:color-mix(in srgb,var(--c) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 45%,transparent);white-space:nowrap}
+.tx-arrow{color:var(--faint);font-weight:800;font-size:15px}
+.ds-r.tx-r{grid-template-columns:minmax(0,1.2fr) minmax(0,1.15fr) minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.9fr)}
+.ds-r.tx-r .st{font-size:12px;padding:1px 7px;border-radius:999px}
+.ds-r.tx-r .st small{opacity:.7}
+.tx-acts{display:flex!important;gap:4px;justify-content:flex-end;flex-wrap:wrap;white-space:normal!important}
+.tx-act{font-size:12px;font-weight:700;padding:1px 7px;border-radius:7px;background:var(--sunk)}
+.tx-act.sell{color:var(--down);background:var(--down-soft)} .tx-act.buy{color:var(--up);background:var(--up-soft)}
+.tx-gauge{display:grid;gap:7px;padding:12px 14px;border-radius:14px;background:var(--sunk)}
+.tx-glbl{display:flex;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;font-size:13px;color:var(--muted);align-items:center}
+.tx-glbl>b{color:var(--ink)} .tx-glbl.sm{font-size:11.5px}
+.tx-glbl .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+.tx-gbar{height:14px;border-radius:999px;background:var(--surface);display:flex;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.tx-gbar i{display:block;height:100%}
+.tx-gbar.ov{box-shadow:inset 0 0 0 2px var(--up)}
+.tx-in{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px;color:var(--muted)}
+.tx-in label{display:inline-flex;align-items:center;gap:7px}
+.tx-in input[type=text]{width:140px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px var(--f-num);text-align:right}
+.tx-in input[type=checkbox]{width:17px;height:17px;accent-color:var(--leaf)}
+.tx-tips{display:flex;flex-wrap:wrap;gap:6px}
+.tx-tips .chip{white-space:normal;display:block;line-height:1.45}
+.tx-go{border:0;cursor:pointer;font:inherit}
+@media (max-width:900px){.tx-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:720px){.tx-pc{grid-template-columns:minmax(0,1fr)}.tx-meters{grid-template-columns:minmax(0,1fr)}.tx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.tx-verdict{padding:14px;gap:10px}.tx-verdict .ic{font-size:26px;align-self:start}.tx-kpi .box:last-child:nth-child(odd){grid-column:1/-1}}
+@media (max-width:560px){.ds-r.tx-r{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,.75fr)}.ds-r.tx-r>.m{display:none!important}.ds-r.tx-r .sym small{display:none}}
 </style>
 </head>
 <body>
@@ -1061,6 +1121,25 @@ h2{display:flex;align-items:center;gap:.5em;font-size:23px}
           <div class="receipt" id="receipt"></div>
           <div class="rc-bars"><div class="eyebrow">📊 최근 2주 매수 금액 (만원)</div>
           <svg class="chart race" id="buyBars" viewBox="0 0 600 130" aria-label="최근 2주 하루 매수 금액"></svg></div>
+        </div>
+      </section>
+      <section class="card rb-card rb-tax" id="taxCard" data-qk="receipt">
+        <div class="card-h"><h2><span class="hi">🧾</span>세금 계산 리밸런싱</h2><span class="note" id="taxNote"></span></div>
+        <div class="tx-verdict" id="txVerdict"></div>
+        <div class="tx-pc" id="txPC"></div>
+        <div class="ds-ah"><b>🛒 이렇게 팔고 사요</b><div class="seg" role="tablist" id="txMode"><button role="tab" data-m="free">🎁 세금 0원 플랜</button><button role="tab" data-m="full">🎯 목표까지 한 번에</button><button role="tab" data-m="dca">💧 팔지 않고 적립만</button></div></div>
+        <div class="tx-kpi" id="txKpi"></div>
+        <div class="tx-flow" id="txFlow"></div>
+        <div class="ds-tbl" id="txRows"></div>
+        <div class="tx-gauge" id="txGauge"></div>
+        <div class="tx-in"><label>💼 올해 이미 실현한 해외주식 손익 <input type="text" id="txRy" inputmode="numeric" placeholder="0">원</label><label><input type="checkbox" id="txHl"> 🍂 원화 손실 종목은 팔고 바로 다시 사기(손익통산)</label></div>
+        <div class="tx-tips">
+          <span class="chip">📅 세금은 <b>결제일</b> 기준 · 12월 마지막 거래일보다 며칠 앞서 하기</span>
+          <span class="chip">💵 토스는 달러로 팔고 달러로 사면 환전 비용 없음</span>
+          <span class="chip">⚡ 팔고 바로 다시 사도 OK (한국엔 워시세일 규정 없음)</span>
+          <span class="chip">🧮 최종 금액은 증권사 해외주식 양도세 계산 화면으로 확인</span>
+          <span class="chip">🧩 다른 증권사 해외주식 손익도 같은 해면 합산 → 위 칸에 적어 주세요</span>
+          <span class="chip">🪙 코인은 2027년부터 과세 예정(그 전엔 수수료만) · 이동평균·선입선출 차이로 실제 손익은 조금 달라질 수 있어요</span>
         </div>
       </section>
       <section class="card rb-card rb-week" id="wkCard" data-qk="clipboard">
@@ -2103,6 +2182,7 @@ function renderRebal(anim){
   renderDaily();
   renderWeekPlan();
   renderReceipt();
+  renderTaxPlan();
   grow($('#v-rebal'));
 }
 function renderDaily(){
@@ -2177,6 +2257,166 @@ function dsAlloc(M){
   const curM=Object.fromEntries(syms.map(k=>[k,(base[k]||0)*dd(k)])), curTot=Object.values(curM).reduce((a,b)=>a+b,0)||1, tT=syms.reduce((a,k)=>a+(T[k]||0),0)||1;
   return syms.map(k=>{ const w=UI.dsm==='cur'?curM[k]/curTot:(T[k]||0)/tT, m=M*w; return {sym:k, w, m, d:m/dd(k), cd:base[k]||0, cr:CRYPTO.has(k)}; });
 }
+/* 🧾 세금 계산 리밸런싱 (2026-10-14)
+   원화 손익(평단·매입 환율 기준) 추정. 해외주식 양도세 = (같은 해 이익 − 손실 − 250만) × 22%. 코인은 2027년부터 과세 예정이라 그 전엔 수수료만.
+   같은 계좌 안에서 팔고 사요(토스는 달러로 팔고 달러로 사면 환전 비용 없음). 팔아도 남는 돈은 그 계좌의 매일 적립을 대신해요. */
+const TAX={ded:2.5e6, rate:.22};
+const TX={mode:store.get('wc_tx_mode')};
+const txYear=()=>new Date(S.asof).getFullYear();
+const coinTaxed=()=>txYear()>=2027;
+const txFee=b=>b==='upbit'?(S.config.fee_upbit??.0005):(S.config.fee_toss??.001);
+const txRy=()=>+(store.get('wc_tx_ry_'+txYear())||0);
+const txHl=()=>store.get('wc_tx_hl')!=='0';
+const mw=v=>Math.abs(v)<5e3?'0원':man(v)+'원';
+const txQty=(x,a)=>x.px?(x.cr?(a/x.px).toFixed(5)+'개':(a/x.px).toFixed(2)+'주'):'';
+const BRN={toss:'🏦 토스', upbit:'🪙 업비트'};
+function txBase(){
+  const W=weights(), inv=S.invest_krw, by=Object.fromEntries(S.holdings.map(h=>[h.sym,h]));
+  return W.map(x=>{ const h=by[x.sym]||{}, cr=CRYPTO.has(x.sym), px=h.price_krw||x.price||0, val=h.value_krw||0;
+    return {...x, h, cr, br:h.broker||(cr?'upbit':'toss'), px, val, pl:h.pl_krw||0, g:val?(h.pl_krw||0)/val:0,
+      sellable:Math.max(0,val-(h.stk||0)*px), tv:x.t/100*inv, pool:cr?'coin':'us'}; });
+}
+function txPlan(mode){
+  const R=txBase().map(x=>({...x, sell:0, buy:0, harv:0, reset:0, rg:0})), ry=txRy(), hl=txHl(), band=S.config.band_rel??.25;
+  const taxed=x=>x.pool==='us'||coinTaxed();
+  const room={us:TAX.ded-ry, coin:coinTaxed()?TAX.ded:Infinity};
+  // 1) 🍂 손실 확정: 원화 기준 손실 종목을 팔고 바로 다시 사요(해외주식만)
+  if(hl) R.forEach(x=>{ if(x.pool==='us' && x.pl<0 && x.sellable>0){ x.harv=x.sellable; x.rg+=x.g*x.sellable; x.g=0; } });
+  R.forEach(x=>{ if(x.rg<0) room[x.pool]-=x.rg; });
+  // 2) ✂️ 초과분 덜어내기: 이익률 낮은 종목부터(같은 세금으로 더 많이 맞춤)
+  R.filter(x=>x.v>x.tv && (mode==='full'||x.st==='over')).sort((a,b)=>a.g-b.g).forEach(x=>{
+    let s=Math.min(x.v-x.tv, x.sellable);
+    if(mode==='free' && taxed(x) && x.g>0) s=Math.min(s, Math.max(room[x.pool],0)/x.g);
+    if(s<1e4) return; x.sell=s; x.rg+=s*x.g; if(taxed(x)) room[x.pool]-=s*x.g; });
+  // 3) 🛒 판 돈으로 같은 계좌의 모자란 종목 채우기
+  const fill=(cands,amt)=>{ const need=cands.map(x=>Math.max(0,x.tv-x.v-x.buy)), tot=need.reduce((a,b)=>a+b,0); if(tot<=0||amt<=0) return amt;
+    const use=Math.min(amt,tot); cands.forEach((x,i)=>x.buy+=use*need[i]/tot); return amt-use; };
+  const left={}, moves=[], brs=[...new Set(R.map(x=>x.br))];
+  brs.forEach(b=>{ const p=R.filter(x=>x.br===b).reduce((s,x)=>s+x.sell*(1-txFee(b)),0); left[b]=fill(R.filter(x=>x.br===b&&x.v<x.tv),p); });
+  if(mode==='full') brs.forEach(b=>{ if(left[b]<1e4) return; brs.filter(o=>o!==b).forEach(o=>{ const a0=left[b]; left[b]=fill(R.filter(x=>x.br===o&&x.v<x.tv),a0); if(a0-left[b]>=1e4) moves.push({from:b,to:o,a:a0-left[b]}); }); });
+  // 4) 🔄 공제 채우기: 남은 공제만큼 이익 종목을 팔고 바로 다시 사서 취득가를 올려요
+  //    목표보다 많은 종목부터 → 그 몫은 다시 사지 않고 같은 계좌의 모자란 종목으로(세금 0원 리밸런싱 보너스)
+  if(room.us>=1e5) R.filter(x=>x.pool==='us'&&x.g>0).sort((a,b)=>((b.v-b.sell>b.tv)-(a.v-a.sell>a.tv))||b.g-a.g).forEach(x=>{ if(room.us<1e5) return;
+    const can=Math.max(0,x.sellable-x.sell), s=Math.min(can, room.us/x.g); if(s<1e4) return; x.rg+=s*x.g; room.us-=s*x.g;
+    const cands=R.filter(y=>y!==x&&y.br===x.br&&y.v+y.buy<y.tv), need=cands.reduce((a,y)=>a+(y.tv-y.v-y.buy),0), f=txFee(x.br);
+    let trim=Math.min(s, Math.max(0,x.v-x.sell-x.tv), need/(1-f)); if(trim<1e4) trim=0;
+    if(trim){ x.sell+=trim; left[x.br]=(left[x.br]||0)+fill(cands, trim*(1-f)); }
+    x.reset=s-trim; });
+  // 5) 세금·수수료
+  const sumP=p=>R.filter(x=>x.pool===p).reduce((s,x)=>s+x.rg,0), usG=sumP('us'), cG=sumP('coin');
+  const taxOf=(g,base)=>Math.max(0,g+base-TAX.ded)*TAX.rate;
+  const tax=taxOf(usG,ry)-taxOf(0,ry)+(coinTaxed()?taxOf(cG,0):0);
+  const fee=R.reduce((s,x)=>s+(x.sell+x.buy+2*x.harv+2*x.reset)*txFee(x.br),0)+moves.reduce((s,m)=>s+m.a*.001,0);
+  const after=R.map(x=>x.v-x.sell+x.buy), at=after.reduce((a,b)=>a+b,0)||1;
+  R.forEach((x,i)=>{ x.w2=after[i]/at*100; x.st2=x.w2<x.t*(1-band)?'under':x.w2>x.t*(1+band)?'over':'ok'; });
+  const loss=-R.reduce((s,x)=>s+Math.min(0,x.harv?x.harv*(x.pl/(x.val||1)):0),0);
+  return {R, ry, usG, cG, tax, fee, left, moves, loss, room:room.us, allIn:R.every(x=>x.st2==='ok'),
+    sold:R.reduce((s,x)=>s+x.sell,0), bought:R.reduce((s,x)=>s+x.buy,0), gain:R.reduce((s,x)=>s+Math.max(0,x.rg),0)};
+}
+/* 💧 팔지 않고 적립만: 초과 종목은 쉬고 그 계좌 돈을 모자란 종목에. ETF는 평일만(달력일 5/7), 코인은 매일 */
+function txDcaSim(redirect){
+  const B=txBase(), base=dailyBase(), band=S.config.band_rel??.25, v=Object.fromEntries(B.map(x=>[x.sym,x.v])), brs=[...new Set(B.map(x=>x.br))];
+  const ok=()=>{ const t=Object.values(v).reduce((a,c)=>a+c,0); return B.every(x=>{ const w=v[x.sym]/t*100; return w>=x.t*(1-band)-1e-9 && w<=x.t*(1+band)+1e-9; }); };
+  let first=null;
+  for(let d=0; d<=730; d++){
+    if(ok()) return {days:d, first:first||Object.fromEntries(B.map(x=>[x.sym,base[x.sym]||0]))};
+    const tot=Object.values(v).reduce((a,c)=>a+c,0), day={};
+    brs.forEach(b=>{ const xs=B.filter(x=>x.br===b), bud=xs.reduce((s,x)=>s+(base[x.sym]||0),0);
+      const need=xs.map(x=>Math.max(0,x.t/100*tot-v[x.sym])), nt=need.reduce((a,c)=>a+c,0);
+      xs.forEach((x,i)=>day[x.sym]= redirect&&nt>0 ? bud*need[i]/nt : (base[x.sym]||0)); });
+    if(!first) first={...day};
+    B.forEach(x=>v[x.sym]+=day[x.sym]*(x.cr?1:5/7));
+  }
+  return {days:null, first};
+}
+function txVerdict(P0, Pf, Pfull, d0, d1){
+  const B=txBase(), band=S.config.band_rel??.25, off=B.filter(x=>x.st!=='ok'), dev=Math.max(...B.map(x=>Math.abs(x.ratio-1)));
+  const big=off.length && dev>=band*1.6, mo=new Date(S.asof).getMonth()+1, usGain=B.some(x=>x.pool==='us'&&x.g>0);
+  if(!off.length) return {c:'g', ic:'🟢', h:'지금은 리밸런싱 안 해도 돼요', p:'모든 종목이 밴드 안이에요. 지금 팔면 효과는 작고 수수료만 나가요.'+(usGain?` ${mo>=11?'12월에':'연말(12월)에'} <b>250만 원 공제 채우기</b>만 챙기세요.`:''), mode:'free'};
+  if(d1.days!=null && d1.days<=90) return {c:'y', ic:'🟡', h:'팔지 말고 적립 방향만 바꾸세요', p:`초과 종목 적립을 잠깐 쉬고 그 돈을 모자란 종목에 넣으면 <b>약 ${d1.days}일</b>이면 밴드 안으로 돌아와요. 세금 0원, 수수료 거의 0원.`, mode:'dca'};
+  if(Pf.allIn) return {c:'o', ic:'🟠', h:'세금 0원으로 맞출 수 있어요 — 해볼 만해요', p:`공제 250만 원${Pf.loss>0?'과 손실 확정':''} 안에서 팔고 사면 전 종목이 밴드 안으로 들어와요. 수수료 약 ${man(Pf.fee)}원.`, mode:'free'};
+  if(big) return {c:'r', ic:'🔴', h:'세금을 조금 내더라도 일부는 덜어내는 게 좋아요', p:`목표보다 ${Math.round(dev*100)}% 넘게 벗어난 종목이 있어 원래 계획보다 위험이 커졌어요. 세금 0원 플랜만큼 먼저 팔고, 나머지는 적립으로 채우세요${Pfull.tax>0?` (목표까지 한 번에 맞추면 세금 약 ${man(Pfull.tax)}원)`:''}.`, mode:'free'};
+  return {c:'y', ic:'🟡', h:'세금 0원만큼만 팔고, 나머지는 적립으로', p:`공제 안에서 덜어내면 많이 가까워지고, 남은 차이는 적립으로 ${d1.days!=null?'약 '+d1.days+'일':'천천히'} 맞춰져요. 한 번에 다 맞출 정도로 벗어나진 않았어요.`, mode:'free'};
+}
+function renderTaxPlan(){
+  const card=$('#taxCard'); if(!card) return; card.hidden=!!CAST; if(CAST) return;
+  const Pf=txPlan('free'), Pfull=txPlan('full'), d0=txDcaSim(false), d1=txDcaSim(true), V=txVerdict(null,Pf,Pfull,d0,d1), B=txBase(), band=S.config.band_rel??.25;
+  const dev=Math.max(...B.map(x=>Math.abs(x.ratio-1))), mode=TX.mode||V.mode;
+  $('#taxNote').textContent=txYear()+'년 · 원화 손익 기준 추정';
+  const dd=d=>d==null?'2년+':d===0?'지금 OK':'약 '+d+'일';
+  const met=(k,v,f,c,t)=>`<div class="tx-m"><span>${k}</span><b>${v}</b><div class="bar"><i class="grow" data-w="${Math.min(f*100,100).toFixed(0)}%" style="background:${c}"></i></div><small>${t}</small></div>`;
+  $('#txVerdict').className='tx-verdict '+V.c;
+  $('#txVerdict').innerHTML=`<span class="ic">${V.ic}</span><div><h3>${V.h}</h3><p>${V.p}</p></div>
+    <div class="tx-meters">${met('🎯 가장 많이 벗어난 정도', Math.round(dev*100)+'%', dev/(band*2), dev>band?'var(--warn)':'var(--leaf)', `밴드 ±${Math.round(band*100)}% · 2배 넘으면 위험`)}
+    ${met('💸 목표까지 한 번에 맞추면', Pfull.tax>0?'세금 '+man(Pfull.tax)+'원':'세금 0원', Math.min(Pfull.tax/(TAX.ded*TAX.rate),1), Pfull.tax>0?'var(--up)':'var(--leaf)', '수수료 약 '+man(Pfull.fee)+'원 별도')}
+    ${met('⏳ 팔지 않고 적립만', dd(d1.days), d1.days==null?1:Math.min(d1.days/365,1), d1.days!=null&&d1.days<=90?'var(--leaf)':'var(--sky)', `지금 적립 그대로면 ${dd(d0.days)}`)}</div>`;
+  // 👍 / 👎
+  const over=B.filter(x=>x.st==='over'), under=B.filter(x=>x.st==='under'), nm=a=>a.map(x=>(EMO[x.sym]||'')+x.sym).join(' · ');
+  const pro=[], con=[];
+  if(over.length) pro.push(['🛡️',`${nm(over)} 비중을 목표로 되돌려 한 종목이 크게 빠질 때 손실을 줄여요`]);
+  if(under.length) pro.push(['🧺',`${nm(under)}을 채워 ${under.some(x=>['TLT','IAU'].includes(x.sym))?'주식이 빠질 때 쿠션이 다시 두꺼워져요':'목표한 분산이 회복돼요'}`]);
+  if(Pf.R.some(x=>x.reset>0)) pro.push(['🔄',`공제 250만 원을 쓰면 나중에 낼 세금이 최대 ${man(TAX.ded*TAX.rate)}원 줄어요 (안 쓰면 올해로 사라짐)`]);
+  if(Pf.loss>0) pro.push(['🍂',`손실 ${man(Pf.loss)}원을 확정하면 그만큼 이익을 세금 없이 실현할 수 있어요`]);
+  if(!coinTaxed() && B.some(x=>x.cr&&x.st!=='ok')) pro.push(['🪙','코인은 올해까지 세금 없이 비중을 맞출 수 있어요 (2027년 과세 예정)']);
+  if(!pro.length) pro.push(['✅','지금 비중이 계획대로라 얻을 게 거의 없어요']);
+  if(Pfull.tax>0) con.push(['🧾',`목표까지 한 번에 맞추면 세금 약 ${man(Pfull.tax)}원 — 세금 0원 플랜은 ${man(Pf.sold)}원까지만 팔아요`]);
+  con.push(['💳',`수수료 약 ${man(mode==='full'?Pfull.fee:Pf.fee)}원 (토스 ${(txFee('toss')*100).toFixed(2)}% · 업비트 ${(txFee('upbit')*100).toFixed(2)}% 가정)`]);
+  if(over.length) con.push(['📈',`${nm(over)}처럼 많이 오른 종목은 추세가 이어지면 일찍 판 만큼 덜 벌 수 있어요`]);
+  if(!B.some(x=>x.st!=='ok')) con.push(['🌀','밴드 안에서 사고팔면 위험은 거의 그대로인데 비용만 나가요']);
+  if(Pf.R.some(x=>x.reset>0)) con.push(['📅','공제를 지금 다 쓰면 올해 남은 기간에 파는 이익엔 세금이 붙어요 → 12월에 하는 게 안전']);
+  const li=a=>a.map(([e,t])=>`<li><span>${e}</span><span>${t}</span></li>`).join('');
+  $('#txPC').innerHTML=`<div class="pro"><h4>👍 하면 좋은 점</h4><ul>${li(pro)}</ul></div><div class="con"><h4>👎 아쉬운 점</h4><ul>${li(con)}</ul></div>`;
+  segSel('txMode','m',mode);
+  // 플랜 본문
+  const pill=(x,a,pre)=>`<span class="tx-pill" style="--c:${acol(x.sym)}">${EMO[x.sym]||''} ${x.sym} ${pre||''}${man(a)}</span>`;
+  const box=(k,v,t,c)=>`<div class="box lift"><span>${k}</span><b class="${c||''}">${v}</b><small>${t}</small></div>`;
+  if(mode==='dca'){
+    const base=dailyBase(), F=d1.first||{};
+    const rows=B.map(x=>{ const a=base[x.sym]||0, b=F[x.sym]??a; return {x,a,b}; });
+    $('#txKpi').innerHTML=box('✂️ 팔기','0원','매도 없음')+box('🧾 세금','0원','실현 이익 없음','down')+box('💳 수수료','≈ 0원','원래 사던 돈')+box('⏳ 밴드 복귀',dd(d1.days),'바꾼 적립 기준')+box('🐢 그대로면',dd(d0.days),'지금 적립 그대로');
+    const rest=rows.filter(r=>r.b<r.a*.5), more=rows.filter(r=>r.b>r.a*1.05);
+    $('#txFlow').innerHTML=`<div class="tx-lane"><b>⏸️ 쉬기·줄이기</b>${rest.length?rest.map(r=>pill(r.x,r.b,'하루 ')).join(''):'<span class="chip">없음</span>'}<span class="tx-arrow">→</span><b>💧 더 사기</b>${more.length?more.map(r=>pill(r.x,r.b,'하루 ')).join(''):'<span class="chip">없음</span>'}</div>
+      <div class="tx-lane soft">🏦 토스 적립은 토스 안에서, 🪙 업비트 적립은 업비트 안에서만 옮겨요 · 비중은 매일 다시 계산되니 밴드에 들어오면 원래 금액으로</div>`;
+    $('#txRows').innerHTML=`<div class="ds-r tx-r h"><span class="sym">종목</span><span>지금 비중</span><span class="m">지금 하루</span><span>바꾼 하루</span><span>차이</span></div>`+
+      rows.map(({x,a,b})=>`<div class="ds-r tx-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${EMO[x.sym]||''} ${x.sym}<small>${BRN[x.br]||''}</small></span><span class="st ${x.st}">${x.w.toFixed(1)}% <small>/ ${x.t}%</small></span><span class="m">${man(a)}</span><span><b>${man(b)}</b></span><span class="${b>a+500?'up':b<a-500?'down':''}">${Math.abs(b-a)<500?'그대로':(b>a?'+':'-')+man(Math.abs(b-a))}</span></div>`).join('');
+    $('#txGauge').innerHTML=gaugeHtml(txRy(),0);
+  } else {
+    const P=mode==='full'?Pfull:Pf, R=P.R;
+    $('#txKpi').innerHTML=box('✂️ 팔기',mw(P.sold),'초과분 덜어내기')+box('🛒 사기',mw(P.bought),'모자란 종목 채우기')+
+      box('📈 실현 손익',(P.usG+P.cG>5e3?'+':'')+mw(P.usG+P.cG),P.loss>0?'손실 확정 -'+man(P.loss)+' 포함':'원화 기준',P.usG+P.cG>=0?'up':'down')+
+      box('🧾 늘어나는 세금',mw(P.tax),P.tax>0?'공제 넘는 이익 × 22%':'공제 안이라 0원',P.tax>0?'up':'down')+box('💳 수수료',mw(P.fee),'매도·매수 합계');
+    const lanes=[];
+    Object.keys(BRN).forEach(b=>{ const s=R.filter(x=>x.br===b&&x.sell>0), u=R.filter(x=>x.br===b&&x.buy>0), l=P.left[b]||0;
+      if(!s.length&&!u.length) return; const daily=Object.entries(dailyBase()).filter(([k])=>(R.find(x=>x.sym===k)||{}).br===b).reduce((a,[,v])=>a+v,0);
+      lanes.push(`<div class="tx-lane"><b>${BRN[b]}${b==='toss'?' <small>달러로 팔고 달러로 사기</small>':''}</b>${s.map(x=>pill(x,x.sell,'팔기 ')).join('')}<span class="tx-arrow">→</span>${u.length?u.map(x=>pill(x,x.buy,'사기 ')).join(''):''}${l>=1e4?`<span class="tx-pill" style="--c:var(--faint)">💵 남는 돈 ${man(l)}${daily?' → 적립 약 '+Math.max(1,Math.round(l/daily))+'일치 대신':''}</span>`:''}</div>`); });
+    P.moves.forEach(m=>lanes.push(`<div class="tx-lane"><b>💱 계좌 이동</b><span>${BRN[m.from]} → ${BRN[m.to]} <b>${man(m.a)}원</b> 옮겨서 위 종목 사기 <small>(환전·이체 비용 약 0.1% 가정)</small></span></div>`));
+    R.filter(x=>x.harv>0).forEach(x=>lanes.push(`<div class="tx-lane harv"><b>🍂 손실 확정</b>${pill(x,x.harv,'팔고 바로 다시 사기 ')}<span>원화 손실 <b class="down">-${man(-x.harv*x.pl/(x.val||1))}원</b> 확정 · 보유 수량은 그대로</span></div>`));
+    R.filter(x=>x.reset>0).forEach(x=>lanes.push(`<div class="tx-lane reset"><b>🔄 공제 채우기</b>${pill(x,x.reset,'팔고 바로 다시 사기 ')}<span>이익 <b class="up">+${man(x.reset*x.g)}원</b> 세금 없이 실현 → 취득가가 올라가 나중 세금이 줄어요</span></div>`));
+    if(!lanes.length) lanes.push('<div class="tx-lane soft">✅ 지금 할 매도·매수가 없어요. 손실 종목도, 쓸 공제도 없어요.</div>');
+    $('#txFlow').innerHTML=lanes.join('');
+    const act=x=>{ const a=[]; if(x.sell>0) a.push(`<span class="tx-act sell">팔기 ${man(x.sell)}</span>`); if(x.buy>0) a.push(`<span class="tx-act buy">사기 ${man(x.buy)}</span>`);
+      if(x.harv>0) a.push('<span class="tx-act">🍂 확정</span>'); if(x.reset>0) a.push('<span class="tx-act">🔄 재매수</span>'); return a.length?a.join(' '):'<span style="color:var(--faint)">—</span>'; };
+    const q=x=>x.sell>0?'-'+txQty(x,x.sell):x.buy>0?'+'+txQty(x,x.buy):x.harv>0?txQty(x,x.harv):x.reset>0?txQty(x,x.reset):'';
+    $('#txRows').innerHTML=`<div class="ds-r tx-r h"><span class="sym">종목</span><span>비중 지금 → 후</span><span>할 일</span><span class="m">수량</span><span>실현 손익</span></div>`+
+      R.map(x=>`<div class="ds-r tx-r"><span class="sym"><i style="background:${acol(x.sym)}"></i>${EMO[x.sym]||''} ${x.sym}<small>${x.cr&&!coinTaxed()?'비과세':''}</small></span>
+        <span><span class="st ${x.st}">${x.w.toFixed(1)}</span> → <b class="st ${x.st2}">${x.w2.toFixed(1)}%</b></span><span class="tx-acts">${act(x)}</span><span class="m">${q(x)}</span>
+        <span class="${x.rg>500?'up':x.rg<-500?'down':''}">${Math.abs(x.rg)<500?'—':(x.rg>0?'+':'-')+man(Math.abs(x.rg))}</span></div>`).join('');
+    $('#txGauge').innerHTML=gaugeHtml(P.ry,P.usG);
+  }
+  $('#txRy').value=txRy()?txRy().toLocaleString('ko-KR'):''; $('#txHl').checked=txHl();
+  // radar 판정 칩
+  const rl=$('#radarLede'); if(rl && !rl.querySelector('.tx-go')) rl.insertAdjacentHTML('beforeend',`<button type="button" class="chip tx-go" data-go="taxCard">${V.ic} ${V.h} ›</button>`);
+  grow(card);
+}
+function gaugeHtml(ry, plan){
+  const net=ry+plan, D=TAX.ded, f=v=>Math.max(0,Math.min(v/D,1))*100, ryP=f(Math.max(ry,0)), plP=Math.max(0,f(net)-ryP);
+  const over=net-D, msg = net<0 ? `손실이 <b>${man(-net)}원</b> 더 많아요 → 이익 <b>${man(D-net)}원</b>까지 더 실현해도 세금 0원`
+    : over>0 ? `공제를 <b class="up">${man(over)}원</b> 넘어요 → 세금 약 <b class="up">${man(over*TAX.rate)}원</b> (5월 신고)` : `공제 250만 중 <b>${man(net)}원</b> 사용 · 남은 공제 <b>${man(D-net)}원</b>`;
+  return `<div class="tx-glbl"><b>🎁 올해 해외주식 공제 250만 원</b><span>${msg}</span></div>
+    <div class="tx-gbar ${over>0?'ov':''}"><i style="width:${ryP.toFixed(1)}%;background:var(--faint)" title="이미 실현"></i><i class="grow" data-w="${plP.toFixed(1)}%" style="background:var(--leaf)" title="이번 플랜"></i></div>
+    <div class="tx-glbl sm"><span><i class="dot" style="background:var(--faint)"></i>이미 실현 ${man(ry)} · <i class="dot" style="background:var(--leaf)"></i>이번 플랜 ${(plan>=0?'+':'-')+man(Math.abs(plan))}</span><span>250만</span></div>`;
+}
+
 function renderWeekPlan(){
   const card=$('#wkCard'); card.hidden=!!CAST; if(CAST) return;
   const act=monthlyFlow(), sel=goalDca(), sl=$('#wkAmt'), MIN=+sl.min, MAX=+sl.max;
@@ -2520,6 +2760,10 @@ $('#orchard').addEventListener('click', e=>{ const t=e.target.closest('.tree'); 
 $('#badges').addEventListener('click', e=>{ const b=e.target.closest('.medal.got'); if(b) confetti([b.querySelector('.ic').textContent,'✨','🎉']); });
 $('#wkAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderWeekPlan(); });
 $('#wkPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#wkAmt').max); renderWeekPlan(); });
+$('#txMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; TX.mode=b.dataset.m; store.set('wc_tx_mode',TX.mode); renderTaxPlan(); });
+$('#txRy').addEventListener('change', e=>{ const v=Math.round(+String(e.target.value).replace(/[^0-9-]/g,'')||0); store.set('wc_tx_ry_'+txYear(),String(v)); renderTaxPlan(); });
+$('#txHl').addEventListener('change', e=>{ store.set('wc_tx_hl',e.target.checked?'1':'0'); renderTaxPlan(); });
+document.addEventListener('click', e=>{ const g=e.target.closest('[data-go]'); if(!g) return; const t=document.getElementById(g.dataset.go); if(t) t.scrollIntoView({behavior:RM?'auto':'smooth',block:'start'}); });
 $('#wkMode').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; UI.dsm=b.dataset.m; store.set('wc_dsmode',UI.dsm); renderWeekPlan(); });
 $('#dsAmt').addEventListener('input', e=>{ const v=+e.target.value; UI.dca=Math.abs(v-monthlyFlow())<5e4?null:v; renderGoal(false); });
 $('#dsPre').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; const v=b.dataset.v; UI.dca=v===''?null:Math.min(Math.round(+v/1e5)*1e5,+$('#dsAmt').max); renderGoal(false); });
