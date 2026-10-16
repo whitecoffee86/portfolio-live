@@ -2399,8 +2399,8 @@ function txBase(){
     return {...x, h, cr, br:h.broker||(cr?'upbit':'toss'), px, val, pl:h.pl_krw||0, g:val?(h.pl_krw||0)/val:0,
       sellable:Math.max(0,val-(h.stk||0)*px), tv:x.t/100*inv, pool:cr?'coin':'us'}; });
 }
-function txPlan(mode){
-  const R=txBase().map(x=>({...x, sell:0, buy:0, harv:0, reset:0, rg:0})), ry=txRy(), hl=txHl(), band=S.config.band_rel??.25;
+function txPlanRaw(mode, hl){
+  const R=txBase().map(x=>({...x, sell:0, buy:0, harv:0, reset:0, rg:0})), ry=txRy(), band=S.config.band_rel??.25;
   const taxed=x=>x.pool==='us'||coinTaxed();
   const room={us:TAX.ded-ry, coin:coinTaxed()?TAX.ded:Infinity};
   // 1) 🍂 손실 확정: 원화 기준 손실 종목을 팔고 바로 다시 사요(해외주식만)
@@ -2430,12 +2430,25 @@ function txPlan(mode){
   const sumP=p=>R.filter(x=>x.pool===p).reduce((s,x)=>s+x.rg,0), usG=sumP('us'), cG=sumP('coin');
   const taxOf=(g,base)=>Math.max(0,g+base-TAX.ded)*TAX.rate;
   const tax=taxOf(usG,ry)-taxOf(0,ry)+(coinTaxed()?taxOf(cG,0):0);
-  const fee=R.reduce((s,x)=>s+(x.sell+x.buy+2*x.harv+2*x.reset)*txFee(x.br),0)+moves.reduce((s,m)=>s+m.a*.001,0);
+  const fee=R.reduce((s,x)=>s+(x.sell+x.buy+(x.harv?2*x.harv-2*x.sell:0)+2*x.reset)*txFee(x.br),0)+moves.reduce((s,m)=>s+m.a*.001,0);
   const after=R.map(x=>x.v-x.sell+x.buy), at=after.reduce((a,b)=>a+b,0)||1;
   R.forEach((x,i)=>{ x.w2=after[i]/at*100; x.st2=x.w2<x.t*(1-band)?'under':x.w2>x.t*(1+band)?'over':'ok'; });
   const loss=-R.reduce((s,x)=>s+Math.min(0,x.harv?x.harv*(x.pl/(x.val||1)):0),0);
   return {R, ry, usG, cG, tax, fee, left, moves, loss, room:room.us, allIn:R.every(x=>x.st2==='ok'),
     sold:R.reduce((s,x)=>s+x.sell,0), bought:R.reduce((s,x)=>s+x.buy,0), gain:R.reduce((s,x)=>s+Math.max(0,x.rg),0)};
+}
+/* 🍂 손실 확정은 이득일 때만 (2026-10-16)
+   손실 확정(전부 팔고 다시 사기)으로 줄어드는 세금 = 올해 세금 감소 + 늘어난 공제로 더 실현하는 이익(🔄)×22%.
+   이게 수수료(팔기+다시 사기)보다 작으면 하지 않아요. 올해 세금이 바로 줄면 지금, 🔄 공제 채우기에만 쓰이면 12월 중순에. */
+function txPlan(mode){
+  if(!txHl()) return txPlanRaw(mode,false);
+  const H=txPlanRaw(mode,true), N=txPlanRaw(mode,false), hv=H.R.filter(x=>x.harv>0);
+  if(!hv.length) return N;
+  const rg=P=>P.R.reduce((a,x)=>a+x.reset*Math.max(0,x.g),0);
+  const fee=hv.reduce((a,x)=>a+(2*x.harv-2*x.sell)*txFee(x.br),0), save=Math.max(0,N.tax-H.tax), extra=Math.max(0,rg(H)-rg(N))*TAX.rate;
+  const info={xs:hv, loss:H.loss, save, extra, fee};
+  if(save+extra-fee<=0) return {...N, hvSkip:info};
+  return {...H, hvInfo:info, hvLater:save-fee<=0};
 }
 /* 💧 팔지 않고 적립만: 초과 종목은 쉬고 그 계좌 돈을 모자란 종목에. ETF는 평일만(달력일 5/7), 코인은 매일 */
 function txDcaSim(redirect){
@@ -2494,13 +2507,24 @@ function renderTaxPlan(){
   } else {
     const P=mode==='full'?Pfull:Pf, R=P.R;
     $('#txBig').innerHTML=big('✂️ 파는 돈',mw(P.sold),'목표보다 많은 만큼')+big('🛒 사는 돈',mw(P.bought),'모자란 종목에')+taxBig(P.tax);
-    Object.keys(BRN).forEach(b=>{ const s=R.filter(x=>x.br===b&&x.sell>0).map(x=>[x,x.sell]); if(s.length) st(`${BRN[b]}에서 ${list(s)} <span class="sell">팔아요</span>`, s.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')+(b==='toss'?' · 달러로 받아요':'')); });
+    const HV=P.hvLater?[]:R.filter(x=>x.harv>0), isH=x=>HV.includes(x), lossOf=x=>Math.max(0,-x.harv*x.pl/(x.val||1));
+    // 1) 팔기 — 손실 확정 종목도 여기서 전부 팔아요(다시 사는 건 아래 사기 단계에서 한 번에)
+    Object.keys(BRN).forEach(b=>{ const s=R.filter(x=>x.br===b&&x.sell>0&&!isH(x)), h=HV.filter(x=>x.br===b); if(!s.length&&!h.length) return;
+      const head=[...s.map(x=>`${E(x)} <span class="k">${man(x.sell)}</span>`), ...h.map(x=>`${E(x)} <span class="k">전부</span>`)].join(' · ');
+      const sub=[...s.map(x=>`${E(x)} 약 ${txQty(x,x.sell)}`), ...h.map(x=>`${E(x)} ${txQty(x,x.harv)} 전부 → 원화 손실 <span class="k sell">${man(lossOf(x))}원</span> 확정`)].join(' · ');
+      st(`${BRN[b]}에서 ${head} <span class="sell">팔아요</span>`, sub+(b==='toss'?' · 달러로 받아요':'')+(h.length?' · 다시 사는 건 아래 사기 단계에서 한 번에':'')); });
     P.moves.forEach(m=>st(`💱 ${BRN[m.from]}에서 <span class="k">${man(m.a)}원</span> 출금해서 ${BRN[m.to]}로 옮겨요`, m.to==='toss'?'토스에서 달러로 바꿔서 아래 종목을 사요 (환전 비용 약 0.1%)':'업비트에 원화로 입금해서 아래 코인을 사요'));
-    Object.keys(BRN).forEach(b=>{ const u=R.filter(x=>x.br===b&&x.buy>0).map(x=>[x,x.buy]), l=P.left[b]||0; if(u.length) st(`${BRN[b]}에서 ${list(u)} <span class="buy">사요</span>`, u.map(([x,v])=>`${E(x)} 약 ${txQty(x,v)}`).join(' · ')); });
+    // 3) 사기 — 손실 확정한 종목은 (판 수량 + 추가 수량)을 한 주문으로
+    Object.keys(BRN).forEach(b=>{ const u=R.filter(x=>x.br===b&&(x.buy>0||isH(x))).map(x=>{ const re=isH(x)?Math.max(0,x.harv-x.sell):0; return {x,re,a:re+x.buy}; }).filter(o=>o.a>=1e4); if(!u.length) return;
+      const sub=u.map(o=>!o.re?`${E(o.x)} 약 ${txQty(o.x,o.a)}`:o.x.buy>=1e4?`${E(o.x)} 약 ${txQty(o.x,o.a)} <b>한 번에</b> (판 ${txQty(o.x,o.re)} + 추가 ${txQty(o.x,o.x.buy)})`:`${E(o.x)} 판 수량 그대로 약 ${txQty(o.x,o.re)}`).join(' · ');
+      st(`${BRN[b]}에서 ${u.map(o=>`${E(o.x)} <span class="k">${man(o.a)}</span>`).join(' · ')} <span class="buy">사요</span>`, sub+(u.some(o=>o.re)?' · 판 달러로 바로 다시 사서 환전 없음':'')); });
     Object.keys(BRN).forEach(b=>{ const l=P.left[b]||0; if(l<1e4) return; const daily=Object.entries(dailyBase()).filter(([k])=>(R.find(x=>x.sym===k)||{}).br===b).reduce((a,[,v])=>a+v,0), n=daily?Math.max(1,Math.round(l/daily)):0;
       st(`💵 ${BRN[b]}에 남는 <span class="k">${man(l)}원</span>은 현금으로 둬요`, `모자란 종목을 다 채우고도 남는 돈이에요${n?` · 이 돈으로 ${BRN[b]} 매일 적립 약 ${n}일치를 대신해요(그동안 새로 입금 안 해도 돼요)`:''}`); });
-    const H=R.filter(x=>x.harv>0); if(H.length) st(`🍂 ${H.map(E).join(' · ')}는 전부 팔고 바로 다시 사요`, `원화 손실 <span class="k sell">${man(P.loss)}원</span>을 확정해서 같은 해 이익과 상계해요 · 보유 수량은 그대로`);
+    // 5) 12월 중순에 할 일
+    if(P.hvLater){ const h=R.filter(x=>x.harv>0); st(`🍂 12월 중순에 ${h.map(E).join(' · ')} 전부 팔고 바로 다시 사요`, `손실 약 <span class="k sell">${man(P.loss)}원</span> 확정 → 공제가 그만큼 늘어 아래 🔄 단계에서 이익을 더 세금 없이 실현해요 · 지금은 안 해도 돼요`, 'later'); }
     const Z=R.filter(x=>x.reset>0); if(Z.length) st(`🔄 ${Z.map(x=>`${E(x)} <span class="k">${man(x.reset)}</span>`).join(' · ')} 팔고 바로 다시 사요`, `이익 ${man(Z.reduce((a,x)=>a+x.reset*x.g,0))}원을 세금 없이 실현 → 나중 세금이 줄어요 · <b>12월 중순</b>에 하는 게 안전`, 'later');
+    // 6) 하지 않을 일 — 손실 확정이 수수료보다 손해
+    if(P.hvSkip){ const k=P.hvSkip, gain=k.save+k.extra; st(`⏭️ ${k.xs.map(E).join(' · ')} 손실 확정(전부 팔고 다시 사기)은 하지 마세요`, (gain<5e3?'올해 확정한 해외주식 이익이 250만 공제 안이라 손실을 확정해도 줄어드는 세금이 없어요':`줄어드는 세금 약 ${man(gain)}원보다 수수료가 더 커요`)+` · 수수료 약 <b>${man(k.fee)}원</b> 아껴요 · 이익이 공제를 넘으면 대시보드가 다시 알려줘요`, 'later'); }
     if(!steps.length) st('✅ 지금은 할 일이 없어요','팔 종목도, 정리할 손실도 없어요');
   }
   $('#txSteps').innerHTML=steps.join('');
