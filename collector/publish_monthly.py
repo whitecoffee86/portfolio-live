@@ -150,6 +150,8 @@ def summarize_month(m, hist, trades, cfg, pxlog, past_info):
     gaps = []
     for s, t in targets.items():
         n = now_w.get(s, 0.0)
+        if f(t) <= 0 and n <= 0:
+            continue   # 목표 0%·보유 없음(정리한 종목, 예: MCHI) → 영상 비중 장면에서 빼기
         gaps.append({"sym": s, "name": NAMES.get(s, s), "target": f(t), "now": n,
                      "out": abs(n - f(t)) > f(t) * band})
 

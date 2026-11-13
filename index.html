@@ -2371,7 +2371,7 @@ const goalDca = () => UI.dca ?? monthlyFlow();
 function reachM(r, goal, v0, dca, cap=480){ let v=v0; for(let m=0;m<=cap;m++){ if(v>=goal) return m; v=v*Math.pow(1+r,1/12)+dca; } return null; }
 function dsAlloc(M){
   const base=dailyBase(), days=dcaDays(), T=S.config.targets||{}, dd=k=>CRYPTO.has(k)?days.crypto:days.stock;
-  const syms=[...DORD.filter(k=>T[k]!=null||base[k]), ...Object.keys(T).filter(k=>!DORD.includes(k))];
+  const syms=[...DORD.filter(k=>(T[k]||0)>0||base[k]>0), ...Object.keys(T).filter(k=>!DORD.includes(k)&&((T[k]||0)>0||base[k]>0))];
   const curM=Object.fromEntries(syms.map(k=>[k,(base[k]||0)*dd(k)])), curTot=Object.values(curM).reduce((a,b)=>a+b,0)||1, tT=syms.reduce((a,k)=>a+(T[k]||0),0)||1;
   return syms.map(k=>{ const w=UI.dsm==='cur'?curM[k]/curTot:(T[k]||0)/tT, m=M*w; return {sym:k, w, m, d:m/dd(k), cd:base[k]||0, cr:CRYPTO.has(k)}; });
 }
