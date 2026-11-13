@@ -60,10 +60,12 @@ def jsave(p, obj):
 # ── 서버 config.json 원격 변경 (한 번씩만 적용)
 # 서버는 15분마다 이 저장소 코드를 받아 오니까, 여기에 적으면 다음 실행 때 config.json 이 바뀌어요.
 # 적용한 id 는 config.json 의 _patches_applied 에 남아서 다시 덮어쓰지 않아요(그 뒤 손으로 바꾼 값 유지).
-# ⚠️ 공개 저장소라 비중(%)처럼 공개해도 되는 값만. 금액(적립금·원금·배당)은 절대 넣지 않기.
+# ⚠️ 공개 저장소예요. 비중·적립 금액은 공개해도 된다고 함(2026-11-13). 원금·잔고·배당·키는 절대 넣지 않기.
 CONFIG_PATCHES = [
     {"id": "2026-11-13-targets",   # 정수 목표 비중 + MCHI 정리 (QQQM 40·SCHD 20·TLT 10·IAU 15·BTC 13·ETH 2)
      "set": {"targets": {"QQQM": 40, "SCHD": 20, "TLT": 10, "IAU": 15, "MCHI": 0, "BTC": 13, "ETH": 2}}},
+    {"id": "2026-11-13-dca-stage1",  # 적립 1단계: 한 달 105만 → 대시보드가 ⚖️ 규칙·실제 주기로 나눔(종목별 고정 금액 daily_dca는 끔)
+     "set": {"monthly_dca": 1050000, "daily_dca": None}},
 ]
 
 

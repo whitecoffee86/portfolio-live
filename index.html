@@ -2094,15 +2094,15 @@ function drawContrib(anim){
 /* 매수 하루 = 한국 09:00 ~ 다음날 09:00 ('오늘' 손익과 같은 기준) → 밤사이 미국장 체결분이 그날 영수증에 들어가요 */
 const tday = ms => kday(ms-9*36e5);
 function renderReceipt(){
-  const today=tday(Date.parse(S._liveT||S.asof)), tr=(S.trades||{})[today]||{}, P=dailyPlan(), wk=wday(today)%6===0;
+  const today=tday(Date.parse(S._liveT||S.asof)), tr=(S.trades||{})[today]||{}, P=todayBuys().P.filter(x=>x.t>0||tr[x.sym]), wk=wday(today)%6===0;
   const rows=P.map(x=>{ const t=tr[x.sym], got=t?Math.max(t[1],0):0, isC=CRYPTO.has(x.sym);
-    const st= got>=x.a*.9 ? '✅' : got>0 ? '🟡' : (wk&&!isC ? '🌙' : '⏳');
+    const st= x.a===0 ? (got>0?'✅':'💤') : got>=x.a*.9 ? '✅' : got>0 ? '🟡' : (wk&&!isC ? '🌙' : '⏳');
     return `<div class="rc-row"><span>${st}</span><span>${EMO[x.sym]||''} ${x.sym}${t&&t[0]>0?` <span class="pl">+${isC?t[0].toFixed(5):t[0].toFixed(2)}</span>`:''}</span><span class="pl">계획 ${man(x.a)}</span><b>${got?man(got):'—'}</b></div>`; }).join('');
   const got=Object.values(tr).reduce((s,v)=>s+Math.max(v[1],0),0), plan=P.reduce((s,x)=>s+x.a,0);
   const md2=d=>(+d.slice(5,7))+'/'+(+d.slice(8));
   $('#rcptNote').innerHTML=md2(today)+' ('+WD[wday(today)]+')'+`<br><small>${md2(today)} 09:00 ~ ${md2(addDay(today,1))} 09:00</small>`;
   $('#receipt').innerHTML=`${rows}<div class="rc-tot"><span>합계</span><span>${man(got)} / 계획 ${man(plan)}</span></div>
-    <div class="rc-empty">${got?'✅ 계획대로 · 🟡 일부만 · ⏳ 아직 · 🌙 주말 휴장':'아직 오늘 매수가 감지되지 않았어요. 체결되면 15분 안에 여기 찍혀요.'}<br>🇺🇸 ETF는 그날 밤 미국장(한국 ${hm(usOpenBefore(Date.now())+864e5)} 개장) 체결분까지 다음날 09:00 전에 찍혀요</div>`;
+    <div class="rc-empty">${got?'✅ 계획대로 · 🟡 일부만 · ⏳ 아직 · 🌙 주말 휴장 · 💤 오늘 안 사는 날':'아직 오늘 매수가 감지되지 않았어요. 체결되면 15분 안에 여기 찍혀요.'}<br>🇺🇸 ETF는 그날 밤 미국장(한국 ${hm(usOpenBefore(Date.now())+864e5)} 개장) 체결분까지 다음날 09:00 전에 찍혀요</div>`;
   // 최근 2주 막대
   const el=$('#buyBars'), [W,Hh]=box(el,.34,140,230), L=8,R=8,T=20,B=24, days=[...Array(14)].map((_,i)=>addDay(today,i-13));
   const vals=days.map(d=>Object.values((S.trades||{})[d]||{}).reduce((s,v)=>s+Math.max(v[1],0),0)), mx=Math.max(...vals,1), bw=(W-L-R)/14;
@@ -2286,25 +2286,42 @@ function renderRebal(anim){
   renderTaxPlan();
   grow($('#v-rebal'));
 }
+/* 💸 오늘의 적립 플랜 (2026-11-13): 한 달 적립 예산(monthlyFlow)을 매수표와 같은 ⚖️ 규칙·실제 주기로 나눠 '오늘' 사는 것만 보여줘요.
+   ETF 월~금 · 코인 매일 / 매주는 일요일 / 매월은 1일. (config.daily_dca가 있으면 그 비율로 시작) */
+function todayBuys(){
+  const M=monthlyFlow(), P=wkSplit(M,'bal'), kd=kday(S.asof), wd=wday(kd), dom=+kd.slice(8,10), we=wd===0||wd===6;
+  const nextTxt=x=>x.cad==='w'?'일요일':x.cad==='m'?'매월 1일':(!x.cr&&we)?'월요일':'';
+  return {M, P:P.map(x=>{ const on=x.per>0&&((x.cad==='d'&&(x.cr||!we))||(x.cad==='w'&&wd===0)||(x.cad==='m'&&dom===1));
+    const h=S.holdings.find(h=>h.sym===x.sym), px=h?h.price_krw:0, a=on?x.per:0;
+    return {...x, a, on, nx:on?'':nextTxt(x), sh:px&&a?a/px:0}; })};
+}
 function renderDaily(){
-  const P=dailyPlan(), mx=Math.max(...P.map(x=>x.a),1), baseTot=P.reduce((s,x)=>s+x.b,0), recTot=P.reduce((s,x)=>s+x.a,0), n2=P.filter(x=>x.x2);
-  $('#dailyNote').textContent='하루 기본 '+man(baseTot)+'원';
-  $('#dailyLede').innerHTML = `<span class="chip hl">오늘 합계 <b>${man(recTot)}원</b></span>`+(n2.length?`<span class="chip sky">×2 <b>${n2.map(x=>x.sym).join(' · ')}</b> (+${man(recTot-baseTot)})</span>`:'<span class="chip">정해진 금액 그대로</span>');
-  $('#dgrid').innerHTML=P.map(x=>`<div class="dcell lift ${x.x2?'x2':''}"><div class="s"><span>${EMO[x.sym]||''} ${x.sym}</span>${x.x2?'<em>×2</em>':''}</div>
-    <b>${x.x2?`<span class="was">${man(x.b)}</span>`:''}${man(x.a)}원</b><span>${CRYPTO.has(x.sym)?'≈ '+x.sh.toFixed(5)+'개':'≈ '+x.sh.toFixed(2)+'주'} · 지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%</span>
-    <div class="db"><i class="grow" data-w="${(x.a/mx*100).toFixed(1)}%"></i></div></div>`).join('');
+  const {M,P}=todayBuys(), show=P.filter(x=>x.t>0||x.tag==='stop'), mx=Math.max(...show.map(x=>x.a||x.per),1), tot=show.reduce((s,x)=>s+x.a,0);
+  const stops=show.filter(x=>x.tag==='stop'), plus=show.filter(x=>x.tag==='plus'&&x.add>=500);
+  $('#dailyNote').textContent='한 달 '+short(M)+'원 · ⚖️ 비중 보고';
+  $('#dailyLede').innerHTML=`<span class="chip hl">오늘 합계 <b>${won(tot)}</b></span>`
+    +(stops.length?`<span class="chip warn">✋ 멈춤 <b>${stops.map(x=>x.sym).join(' · ')}</b></span>`:'')
+    +(plus.length?`<span class="chip sky">➕ 더 사요 <b>${plus.map(x=>x.sym).join(' · ')}</b></span>`:'')
+    +(!stops.length&&!plus.length?'<span class="chip">목표 비중대로</span>':'');
+  $('#dgrid').innerHTML=show.map(x=>{ const tag=x.tag==='stop'?'<em style="color:var(--warn)">✋</em>':x.tag==='plus'&&x.add>=500?'<em>➕</em>':'';
+    const amt=x.on?`${won(x.a)}`:x.tag==='stop'?'멈춤':x.tiny?'쉼':'오늘 쉼';
+    const sub=x.on?`${CRYPTO.has(x.sym)?'≈ '+x.sh.toFixed(5)+'개':'≈ '+x.sh.toFixed(2)+'주'} · 지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%`
+      : x.per>0?`다음 ${x.nx} ${won(x.per)} · 지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%`:`지금 ${x.w.toFixed(1)}% / 목표 ${x.t}%`;
+    return `<div class="dcell lift ${x.tag==='plus'&&x.add>=500?'x2':''}"><div class="s"><span>${EMO[x.sym]||''} ${x.sym}</span>${tag}</div>
+    <b ${x.on?'':'style="color:var(--faint)"'}>${amt}</b><span>${sub}</span>
+    <div class="db"><i class="grow" data-w="${((x.on?x.a:0)/mx*100).toFixed(1)}%"></i></div></div>`; }).join('');
   // 밴드 복귀 예상
   const R=bandReturnDays(), keys=Object.keys(R);
   $('#returnList').innerHTML = keys.length ? keys.map(k=>{ const d=R[k], W=weights().find(x=>x.sym===k);
       return `<span class="chip ${d==null?'stale':''}">🧭 ${EMO[k]||''} ${k} ${W.st==='under'?'↑':'↓'} 밴드 복귀 ${d==null?'2년 넘게 걸려요':'약 '+d+'일'}</span>`; }).join('')
     : '<span class="chip live">🧭 모든 종목이 밴드 안이에요</span>';
-  // 적립 비율 vs 목표 (아코디언)
-  const base=dailyBase(), T=S.config.targets, bt=Object.values(base).reduce((a,b)=>a+b,0)||1;
-  const rows=Object.keys(T).map(k=>({k, d:(base[k]||0)/bt*100, t:T[k]})), bad=rows.filter(r=>Math.abs(r.d-r.t)>=1.5), mxw=Math.max(...rows.flatMap(r=>[r.d,r.t]))*1.1;
+  // 이번 달 적립 비율 vs 목표 (아코디언)
+  const T=S.config.targets||{}, mt=show.reduce((a,x)=>a+x.mm,0)||1;
+  const rows=show.map(x=>({k:x.sym, d:x.mm/mt*100, t:T[x.sym]||0})), bad=rows.filter(r=>Math.abs(r.d-r.t)>=1.5), mxw=Math.max(...rows.flatMap(r=>[r.d,r.t]),1)*1.1;
   const open=$('#mixAcc .acc-item')?.classList.contains('open');
-  $('#mixAcc').innerHTML=`<div class="acc-item ${open?'open':''}"><button class="acc-head" aria-expanded="${!!open}"><span class="nm"><b>⚖️ 적립 비율 vs 목표</b><small>${bad.length?bad.map(r=>r.k+' '+(r.d>r.t?'많이':'적게')).join(' · ')+' 사는 중':'적립 비율이 목표와 거의 같아요'}</small></span><span></span><span class="pchip ${bad.length?'down':'flat'}">${bad.length?bad.length+'개 차이':'OK'}</span><span class="chev">▾</span></button>
+  $('#mixAcc').innerHTML=`<div class="acc-item ${open?'open':''}"><button class="acc-head" aria-expanded="${!!open}"><span class="nm"><b>⚖️ 이번 달 적립 비율 vs 목표</b><small>${bad.length?bad.map(r=>r.k+' '+(r.d>r.t?'많이':'적게')).join(' · ')+' 사는 중':'적립 비율이 목표와 거의 같아요'}</small></span><span></span><span class="pchip ${bad.length?'down':'flat'}">${bad.length?bad.length+'개 조정':'OK'}</span><span class="chev">▾</span></button>
     <div class="acc-body"><div><div style="display:grid;gap:4px;padding:2px 0 14px">${rows.map(r=>`<div class="mixrow"><b>${EMO[r.k]||''} ${r.k}</b><div class="mixbar"><i class="t grow" data-w="${(r.t/mxw*100).toFixed(1)}%"></i><i class="d grow" data-w="${(r.d/mxw*100).toFixed(1)}%"></i></div><span class="num gap ${r.d-r.t>=1.5?'up':r.t-r.d>=1.5?'down':''}" style="white-space:nowrap;font-size:12px">${r.d.toFixed(1)} / ${r.t}%</span></div>`).join('')}
-    <p class="lede" style="font-size:12px;margin:6px 4px 0">진한 막대·앞 숫자 = 매일 적립 비율, 연한 막대·뒤 숫자 = 목표 비중. 차이가 크면 시간이 갈수록 비중이 그쪽으로 끌려가요.</p></div></div></div></div>`;
+    <p class="lede" style="font-size:12px;margin:6px 4px 0">진한 막대·앞 숫자 = 이번 달 적립 비율(넘친 종목 멈춤·모자란 종목 얹음 반영), 연한 막대·뒤 숫자 = 목표 비중. 넘친 종목을 덜 사서 비중을 천천히 되돌려요.</p></div></div></div></div>`;
   grow($('#v-rebal'));
 }
 /* 🍩 도넛: 바깥 고리 = 지금 비중, 안쪽 고리 = 목표 비중. 색은 종목에 고정(순위·필터와 무관) */
@@ -2586,17 +2603,17 @@ function wkCad(x){
   per=r(x.m0,1000); if(per>=COIN_MIN) return Object.assign(o,{cad:'m',per,mm:per,d:per/days.crypto});
   o.tiny=true; return o;
 }
-function wkSplit(M){
+function wkSplit(M, mode=UI.wkm){
   const T=S.config.targets||{}, base=dailyBase(), days=dcaDays(), dd=k=>CRYPTO.has(k)?days.crypto:days.stock;
   const W=Object.fromEntries(weights().map(x=>[x.sym,x]));
-  const syms=[...DORD, ...Object.keys(T).filter(k=>!DORD.includes(k))].filter(k=>(T[k]||0)>0 || (W[k]&&W[k].v>0) || (UI.wkm==='cur'&&base[k]>0));
+  const syms=[...DORD, ...Object.keys(T).filter(k=>!DORD.includes(k))].filter(k=>(T[k]||0)>0 || (W[k]&&W[k].v>0) || (mode==='cur'&&base[k]>0));
   const tT=syms.reduce((a,k)=>a+(T[k]||0),0)||1, m={}, tag={}, add={};
-  if(UI.wkm==='cur'){
+  if(mode==='cur'){
     const cm=Object.fromEntries(syms.map(k=>[k,(base[k]||0)*dd(k)])), ct=Object.values(cm).reduce((a,b)=>a+b,0)||1;
     syms.forEach(k=>m[k]=M*cm[k]/ct);
   } else {
     syms.forEach(k=>m[k]=M*(T[k]||0)/tT);
-    if(UI.wkm==='bal'){
+    if(mode==='bal'){
       let freed=0; syms.forEach(k=>{ if(W[k]&&W[k].st==='over'){ freed+=m[k]; m[k]=0; tag[k]='stop'; } });
       const cand=syms.filter(k=>tag[k]!=='stop'&&(T[k]||0)>0);
       if(freed>0&&cand.length){
@@ -2905,7 +2922,7 @@ function renderLog(anim){
     ['📊 과거 월말 기록은 어떻게 이어 붙여요?','실시간 수집 전의 월말 자산·입출금 기록을 같은 좌수법으로 계산해요. 그달 입출금은 전월말 기준가로 좌수를 사고, 첫 달을 기준가 1,000으로 놓아요. 마지막 월말 자산과 실시간 첫 총액의 차이는 그 며칠의 운용 성과로 보고 이어 붙여요. 과거 구간은 월말 값만 있어서 그래프에서 점으로 표시되고, 월 중간에 있었던 낙폭은 보이지 않아요.'],
     ['🧮 원금 vs 시장은 무엇을 기준으로 해요?','넣은 돈은 첫 달 자산에 그 뒤 입출금을 모두 더한 금액이에요. 시장 몫은 지금 자산에서 넣은 돈을 뺀 값이라, 종목별 평단으로 계산하는 평가 손익과는 다를 수 있어요.'],
     ['🛒 금액별 매수표 ⚖️ 비중 보고는 어떻게 나눠요?','매달 넣을 돈을 목표 비중대로 나눈 뒤, 밴드 위로 넘친 종목은 그달 0원으로 멈추고 그 돈을 목표보다 모자란 종목에 모자란 금액 비율로 얹어요. 한 달 총액은 그대로예요. 금액은 실제로 설정할 수 있게 맞춰요. 토스 주식 모으기는 1회 최소 1천 원(500원 단위), 업비트 코인 모으기는 1회 최소 1만 원이라 매일이 안 되면 매주, 매주도 안 되면 매월로 바꾸고, 그것도 안 되면 그달은 쉬어요. 1·2·3단계 버튼은 한 달 105만·235만·470만 원이에요.'],
-    ['💸 적립 플랜과 밴드 복귀일','매일 정해진 적립 금액 그대로예요(목표 미달 종목도 2배로 사지 않아요). 주수와 밴드 복귀일은 오늘 가격이 그대로라고 가정한 참고치예요.'],
+    ['💸 오늘의 적립 플랜과 밴드 복귀일','한 달 적립 예산(서버 config의 monthly_dca)을 금액별 매수표와 같은 ⚖️ 규칙으로 나눈 뒤, 오늘 실제로 사는 것만 보여줘요. ETF는 월~금, 코인은 1회 최소 1만 원이라 매일·매주(일요일)·매월(1일) 중 되는 주기로 사요. 밴드 위로 넘친 종목은 멈추고 그 돈을 모자란 종목에 얹어요(2배로 사지는 않아요). 주수와 밴드 복귀일은 오늘 가격이 그대로라고 가정한 참고치예요.'],
     ['🌡️ 환율 온도계는 어떻게 봐요?','최근 1년 또는 2년 환율 중 지금 환율이 어디쯤인지 보여줘요. 매일 적립은 환율을 고르지 않고 평균을 사는 방법이라 참고로만 보세요.'],
     ['🎲 만약에 시뮬레이터 계산','미국 ETF는 달러 가격에 주가 변화를 곱한 뒤 바꾼 환율로 원화 환산하고, 코인은 원화 가격에 변화율을 곱해요. 달러 예수금도 바꾼 환율을 따라가요.'],
   ];
