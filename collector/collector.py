@@ -57,6 +57,35 @@ def jsave(p, obj):
     tmp.replace(p)
 
 
+# ── 서버 config.json 원격 변경 (한 번씩만 적용)
+# 서버는 15분마다 이 저장소 코드를 받아 오니까, 여기에 적으면 다음 실행 때 config.json 이 바뀌어요.
+# 적용한 id 는 config.json 의 _patches_applied 에 남아서 다시 덮어쓰지 않아요(그 뒤 손으로 바꾼 값 유지).
+# ⚠️ 공개 저장소라 비중(%)처럼 공개해도 되는 값만. 금액(적립금·원금·배당)은 절대 넣지 않기.
+CONFIG_PATCHES = [
+    {"id": "2026-11-13-targets",   # 정수 목표 비중 + MCHI 정리 (QQQM 40·SCHD 20·TLT 10·IAU 15·BTC 13·ETH 2)
+     "set": {"targets": {"QQQM": 40, "SCHD": 20, "TLT": 10, "IAU": 15, "MCHI": 0, "BTC": 13, "ETH": 2}}},
+]
+
+
+def apply_config_patches(path):
+    cfg = jload(path, None)
+    if not isinstance(cfg, dict):
+        return   # config.json 이 없으면(예시 파일로 도는 중) 건드리지 않음
+    done = list(cfg.get("_patches_applied") or [])
+    todo = [p for p in CONFIG_PATCHES if p["id"] not in done]
+    if not todo:
+        return
+    for p in todo:
+        cfg.update(p["set"])
+        done.append(p["id"])
+        print(f"  ⚙️ config.json 변경 적용: {p['id']} → {', '.join(p['set'])}")
+    cfg["_patches_applied"] = done
+    p = Path(path)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(p)
+
+
 def f(x, d=0.0):
     try:
         return float(x)
@@ -716,6 +745,11 @@ def main():
     a = ap.parse_args()
 
     load_env()
+    if not a.mock:
+        try:
+            apply_config_patches(ROOT / "config.json")
+        except Exception as e:   # 변경 실패해도 수집은 그대로
+            print(f"  ⚠️ config 변경 건너뜀: {e}", file=sys.stderr)
     cfg = jload(ROOT / "config.json", None) or jload(ROOT / "config.example.json", {})
     STATE.mkdir(exist_ok=True)
     state_path = STATE / ("state.mock.json" if a.mock else "state.json")
