@@ -607,6 +607,19 @@ def compute(raw, cfg, state, ts):
                 q0, k0 = day.get(sym, [0, 0])
                 day[sym] = [round(q0 + dq, 8), round(k0 + dq * px_krw.get(sym, 0))]
     state["qty"], state["stk_q"] = curq, curs
+    # 매수한 날 요약(영구 보관): {날짜: [ETF 매수 원화, 코인 매수 원화]} — trades는 400일만 남기지만
+    # 업적 진열장(월간 출석·최장 연속 적립)과 농부 레벨은 처음부터의 기록이 필요해서 따로 남김
+    try:
+        blog = state.setdefault("buy_log", {})
+        for bday, bt in trades.items():
+            b_etf = sum(max(v[1], 0) for s_, v in bt.items() if s_ not in ("BTC", "ETH") and v[0] > 0)
+            b_coin = sum(max(v[1], 0) for s_, v in bt.items() if s_ in ("BTC", "ETH") and v[0] > 0)
+            if b_etf or b_coin:
+                blog[bday] = [round(b_etf), round(b_coin)]
+            else:
+                blog.pop(bday, None)
+    except Exception as ex:  # 요약이 깨져도 수집은 계속
+        print("⚠️ buy_log 건너뜀:", ex)
     for k in sorted(trades)[:-400]:
         trades.pop(k)
 
@@ -637,6 +650,7 @@ def compute(raw, cfg, state, ts):
                 "peak": round(peak, 4), "peak_date": peak_d, "dd": unit / peak - 1 if peak else 0,
                 "principal0": nav.get("principal0")},
         "trades": {k: trades[k] for k in sorted(trades)[-180:]},
+        "buy_log": state.get("buy_log", {}),
         "realized": state.get("realized", [])[-300:],
         "realized_sum": realized_summary(state, cfg, ts),
         "fx_hist": state.get("fx_hist", []),
