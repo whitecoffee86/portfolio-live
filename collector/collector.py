@@ -69,6 +69,15 @@ CONFIG_PATCHES = [
 ]
 
 
+# ── 서버 기록(state.json) 한 번만 다시 계산 (id 로 한 번씩, 실패하면 3번까지 다음 실행에 재시도)
+# 공개 저장소라 수량·금액은 적지 않고 '언제부터'만 적어요. 서버가 그 직전에 올렸던 암호화 기록(git 이력)을 풀어
+# 그 시점부터 지금 규칙(usd_window)으로 다시 돌려 실현손익·원화 원금·수수료 출금 오인을 고쳐요.
+STATE_REPAIRS = [
+    {"id": "2026-11-17-rebuy-split", "since": "2026-11-13T09:00:00+09:00",
+     "why": "15분 안에 팔고 다른 수량으로 다시 산 리밸런싱(QQQM 등)이 '1주 매도'로 잡힘"},
+]
+
+
 def apply_config_patches(path):
     cfg = jload(path, None)
     if not isinstance(cfg, dict):
@@ -195,6 +204,40 @@ class Toss:
                 out[c] = None
         return out
 
+    def orders(self, status, frm):
+        out, cur = [], None
+        for _ in range(20):
+            p = {"status": status, "from": frm}
+            if status == "CLOSED":
+                p["limit"] = 100
+                if cur:
+                    p["cursor"] = cur
+            r = self.get("/api/v1/orders", p, account=True) or {}
+            out += r.get("orders") or []
+            if status != "CLOSED" or not r.get("hasNext") or not r.get("nextCursor"):
+                break
+            cur = r["nextCursor"]
+        return out
+
+    def fills(self, days=4):
+        """최근 며칠 주문의 체결 누계 {orderId: {...}} — 앱에서 낸 주문도 들어와요(지정가·시장가·LOC).
+        15분 창마다 '새로 체결된 양'만 골라 판 수량·산 수량을 정확히 나누는 데 써요."""
+        frm = (now_kst() - timedelta(days=days)).date().isoformat()
+        out = {}
+        for st in ("CLOSED", "OPEN"):
+            for o in self.orders(st, frm):
+                ex = o.get("execution") or {}
+                q = f(ex.get("filledQuantity"))
+                if q <= 0 or o.get("side") not in ("BUY", "SELL") or not o.get("orderId"):
+                    continue
+                px = f(ex.get("averageFilledPrice"))
+                out[o["orderId"]] = {"sym": o.get("symbol"), "side": o["side"], "q": q,
+                                     "amt": f(ex.get("filledAmount")) or q * px,
+                                     "fee": f(ex.get("commission")) + f(ex.get("tax")),
+                                     "ccy": o.get("currency") or "USD",
+                                     "at": ex.get("filledAt") or o.get("orderedAt")}
+        return out
+
 
 # ───────────────────────── 업비트 ─────────────────────────
 class Upbit:
@@ -301,6 +344,16 @@ def collect_live(cfg, state):
         print("  · 환율 기록 2년치 처음 채우는 중(약 1분, 한 번만)…")
         state["fx_hist"] = toss.fx_history()
         state["fx_hist_done"] = True
+    # 체결 내역은 보유보다 '먼저' 받아요. 그 사이 체결이 끼면 이번 창은 평단 추정, 다음 창에선 '보유 그대로'라 무시 → 두 번 안 셈
+    days = 4
+    for rp in STATE_REPAIRS:   # 아직 안 끝난 기록 보정이 있으면 그 시작일까지 넉넉히
+        if not ((state.get("_repairs") or {}).get(rp["id"]) or {}).get("ok"):
+            days = max(days, (now_kst() - datetime.fromisoformat(rp["since"])).days + 2)
+    try:
+        fills = toss.fills(days)
+    except Exception as e:
+        fills = None
+        print(f"  ! 토스 체결 내역 조회 실패({e}) → 수량·평단 변화로 추정", file=sys.stderr)
     H = toss.holdings()
     cash = toss.cash()
     rows = []
@@ -345,7 +398,7 @@ def collect_live(cfg, state):
 
     ov = cfg.get("cash_override") or {}
     return {
-        "fx": fx, "rows": rows, "bench": toss.bench(), "stk_adj": stk_adj,
+        "fx": fx, "rows": rows, "bench": toss.bench(), "stk_adj": stk_adj, "fills": fills,
         "cash": {
             "toss_krw": cash["KRW"] if cash["KRW"] is not None else f(ov.get("toss_krw")),
             "toss_usd": cash["USD"] if cash["USD"] is not None else f(ov.get("toss_usd")),
@@ -383,28 +436,137 @@ def collect_mock(cfg, state):
 
 
 # ───────────────────────── 실현손익 ─────────────────────────
-def rebuy_qty(q, a0, a1, p):
-    """수량은 그대로인데 평단만 a0→a1로 바뀜 = 15분 안에 k주 팔고 k주 다시 산 것.
-    이동평균이면 a1 = ((q-k)·a0 + k·p) / q → k = q·(a1-a0)/(p-a0). p(재매수가)는 지금 가격으로 봐요."""
-    if not q or not a0 or abs(a1 / a0 - 1) <= 0.001:
-        return 0.0
-    if abs(p - a0) / a0 < 0.003:
-        return q            # 지금 가격이 평단과 거의 같으면 알 수 없음 → 전량으로 봄
-    return max(0.0, min(q, q * (a1 - a0) / (p - a0)))
+def _fill_add(agg, sym, side, q, amt, fee):
+    a = agg.setdefault(sym, {"sq": 0.0, "samt": 0.0, "sfee": 0.0, "bq": 0.0, "bamt": 0.0, "bfee": 0.0})
+    k = "s" if side == "SELL" else "b"
+    a[k + "q"] += q
+    a[k + "amt"] += amt
+    a[k + "fee"] += fee
+
+
+def fill_deltas(raw, state):
+    """이번 창(직전 실행 이후)에 새로 체결된 양 {종목: 합계}. 체결 내역을 못 받았거나 처음이면 None(→ 평단 추정)."""
+    F = raw.get("fills")
+    if F is None:
+        return None
+    seen = state.get("fills_seen")
+    state["fills_seen"] = {oid: [x["q"], x["amt"], x["fee"]] for oid, x in F.items()}
+    if seen is None:
+        return None   # 처음엔 기준만 잡음(이미 반영된 옛 체결을 이번 창 것으로 착각하지 않게)
+    agg = {}
+    for oid, x in F.items():
+        q0, a0, e0 = (seen.get(oid) or [0.0, 0.0, 0.0])
+        if x["q"] - q0 > 1e-9:
+            _fill_add(agg, x["sym"], x["side"], x["q"] - q0, x["amt"] - a0, x["fee"] - e0)
+    return agg
+
+
+def window_fills(F, t0, t1):
+    """보정용: 체결 시각이 (t0, t1] 안인 주문 합계 {종목: 합계}"""
+    agg = {}
+    for x in (F or {}).values():
+        try:
+            at = datetime.fromisoformat(str(x["at"]).replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if t0 < at <= t1:
+            _fill_add(agg, x["sym"], x["side"], x["q"], x["amt"], x["fee"])
+    return agg
+
+
+def usd_window(q0, a0, q1, a1, px, fl=None, fx=1.0):
+    """15분 창 하나의 변화(q0주@a0 → q1주@a1)를 '판 수량'과 '산 수량'으로 나눠요.
+    ① 토스 체결 내역(fl)이 수량 변화와 맞으면 그대로 써요 → 판 가격·수수료까지 정확.
+    ② 없거나 안 맞으면 평단으로 풀어요. 토스 평단은 이동평균이라 팔 땐 그대로, 살 땐 섞여요:
+         a1·q1 = (q0−s)·a0 + b·p,  b = q1−q0+s   →   s = (a1·q1 − a0·q0 − (q1−q0)·p) / (p − a0)
+       p(산 가격)는 지금 가격으로 대신해서 생기는 작은 오차는 '거의 전부(98%↑)'면 전부로 맞춰요.
+       예) 417주 전량 팔고 416주 재매수 → 순변화는 −1주지만 평단이 새 가격으로 바뀌어서 417주 매도로 잡혀요.
+    반환: {sold, bought, spx(판 가격 $), sfee·bfee($), src}"""
+    out = {"sold": 0.0, "bought": 0.0, "spx": px, "sfee": 0.0, "bfee": 0.0, "src": "추정"}
+    dq = q1 - q0
+    if fl and (fl["sq"] > 0 or fl["bq"] > 0):
+        resid = q1 - (q0 - fl["sq"] + fl["bq"])          # 체결 내역으로 설명 안 되는 수량(주식 모으기가 목록에 없으면 +)
+        tol = max(0.02, 0.002 * max(q0, q1))
+        stale = fl["sq"] > 0 and abs(dq) <= 1e-9 and (a0 <= 0 or abs(a1 / a0 - 1) <= 1e-7)   # 체결은 됐는데 보유가 아직 그대로
+        if not stale and fl["sq"] <= q0 + tol and (abs(resid) <= tol or (fl["sq"] <= 0 and resid > 0)):
+            s = min(fl["sq"], q0)
+            spx = fl["samt"] / fl["sq"] if fl["sq"] > 0 else px
+            ref = spx if fl["sq"] > 0 else (fl["bamt"] / fl["bq"] if fl["bq"] > 0 else px)
+            krw = px > 0 and abs(ref / px - 1) > 0.15        # 원화로 찍힌 주문이면 달러로 못 씀 → 지금 가격
+            out.update(sold=s, bought=q1 - q0 + s, spx=px if krw else spx, src="체결",
+                       sfee=fl["sfee"] / (fx if krw else 1), bfee=fl["bfee"] / (fx if krw else 1))
+            return out
+    if q0 <= 1e-12:
+        out["bought"] = max(q1, 0.0)
+        return out
+    if q1 <= 1e-12:
+        out["sold"] = q0
+        return out
+    if a0 <= 0 or abs(a1 / a0 - 1) <= 0.001:          # 평단 그대로 → 줄었으면 판 것, 늘었으면 산 것
+        s = max(-dq, 0.0)
+    elif dq > 1e-9 and px > 0 and abs((a1 * q1 - a0 * q0) / dq / px - 1) <= 0.03:
+        s = 0.0                                        # 늘어난 만큼을 지금 가격 근처에서 산 것 → 그냥 매수
+    elif abs(px - a0) / a0 < 0.003:
+        s = q0                                         # 지금 가격이 평단과 거의 같으면 판 수량을 알 수 없음 → 전량으로
+    else:
+        s = (a1 * q1 - a0 * q0 - dq * px) / (px - a0)
+        s = min(max(s, max(-dq, 0.0)), q0)
+        if s >= 0.98 * q0:
+            s = q0
+    out.update(sold=s, bought=q1 - q0 + s)
+    return out
+
+
+def rz_entry(t, sym, mv, q0, cost0, fx, usd=True):
+    """실현손익 한 줄. 원금은 이동평균(판 수량 비례), 수수료를 알면 뺌"""
+    sold = mv["sold"]
+    k = fx if usd else 1.0
+    proceeds = sold * mv["spx"] * k
+    cost = cost0 * sold / q0 if q0 else 0.0
+    fee = mv.get("sfee", 0.0) * k
+    how = "재매수" if mv.get("bought", 0) > 1e-6 else ("전량" if sold >= q0 - 1e-9 else "일부")
+    e = {"t": t, "sym": sym, "q": round(sold, 8), "px": round(mv["spx"], 4 if usd else 0),
+         "fx": round(fx, 2) if usd else None, "a": round(proceeds), "c": round(cost),
+         "pl": round(proceeds - cost - fee), "pool": "us" if usd else "coin", "how": how}
+    if fee:
+        e["fee"] = round(fee)
+    if mv.get("src") == "체결":
+        e["src"] = "체결"
+    return e
+
+
+def lot_apply(L, sold, qty, avg, fx):
+    """원화 원금(lot) 갱신: 판 수량만큼 옛 원금을 비례로 덜고, 달러 매입금이 늘어난 만큼(=새로 산 몫)은 지금 환율로 더해요.
+    반환: 옛 수량을 전부 팔았는지(→ 시드 원금은 다시 안 씀)"""
+    q0 = L.get("qty") or 0.0
+    keep = max(q0 - sold, 0.0)
+    if q0 > 0:
+        old_usd = L["cost_usd"] * keep / q0
+        L["cost_krw"] *= keep / q0
+    else:
+        old_usd, L["cost_krw"] = 0.0, 0.0
+    add = qty * avg - old_usd
+    if add > 1e-6:
+        L["cost_krw"] += add * fx
+    L["qty"], L["cost_usd"] = qty, qty * avg
+    return q0 > 0 and sold >= q0 - 1e-9
 
 
 def track_realized(raw, cfg, state, ts):
     """15분 전 스냅샷(rz_prev)과 비교해 매도를 찾아 실현손익을 state["realized"]에 쌓아요.
-    compute 가 lots(원화 원금)를 고치기 전에 불러요. 반환: 이번 창에서 사고판 금액(원) — 수수료 보정용.
-    - 일부 매도: 원화 원금을 수량 비례로 덜어냄(이동평균) → 실현 = 판 수량 × 지금 가격 × 지금 환율 − 덜어낸 원금
+    compute 가 lots(원화 원금)를 고치기 전에 불러요.
+    반환: (사고판 금액 원, 아는 수수료 원, {미국 종목: 판 수량}) — 앞의 둘은 수수료를 출금으로 착각하지 않게,
+          판 수량은 compute 의 원화 원금 갱신에 그대로 씀
+    - 미국 ETF: usd_window 로 판 수량·산 수량을 나눔(토스 체결 내역 우선, 없으면 평단 역산)
+      → 15분 안에 팔고 '다른 수량'으로 다시 사도(리밸런싱) 순변화가 아니라 실제 판 수량으로 잡혀요
     - 전량 매도: 종목이 사라지면 직전 시세(최대 15분 전)로 추정
-    - 15분 안에 전량 팔고 같은 수량 재매수: 수량은 같고 평단만 바뀜 → 전량 매도로 봄
     - 코인은 업비트 원화가 실제로 늘었을 때만 매도로 봐요(스테이킹 이동 오인 방지)"""
     prev = state.get("rz_prev")
     fx = raw["fx"]["rate"]
     rows = {r["sym"]: r for r in raw["rows"]}
     rz = state.setdefault("realized", [])
-    traded = 0.0
+    fl = fill_deltas(raw, state)
+    traded, fees, moves = 0.0, 0.0, {}
     if prev:
         d_upkrw = f(raw["cash"].get("upbit_krw")) - f(state.get("rz_upkrw"), f(raw["cash"].get("upbit_krw")))
         for s, p in prev.items():
@@ -412,29 +574,39 @@ def track_realized(raw, cfg, state, ts):
             q0, q1 = f(p.get("qty")), (f(r["qty"]) if r else 0.0)
             px_now = (f(r["price"]) if r else f(p.get("price")))
             k = fx if usd else 1.0
+            t = ts.isoformat(timespec="minutes")
+            if usd:
+                mv = usd_window(q0, f(p.get("avg")), q1, f(r["avg"]) if r else 0.0, px_now,
+                                (fl or {}).get(s) if fl is not None else None, fx)
+                moves[s] = mv["sold"]
+                traded += (mv["sold"] * mv["spx"] + max(mv["bought"], 0.0) * px_now) * fx
+                fees += (mv["sfee"] + mv["bfee"]) * fx
+                if mv["sold"] > 1e-9 and q0 > 0:
+                    e = rz_entry(t, s, mv, q0, f(p.get("cost_krw")), fx)
+                    rz.append(e)
+                    print(f"  🧾 {s} {mv['sold']:g}주 매도 감지({e['how']}·{mv['src']}"
+                          + (f", 재매수 {mv['bought']:g}주" if e["how"] == "재매수" else "") + f") → 실현 {e['pl']:+,}원")
+                continue
             if q1 > q0 + 1e-9:
                 traded += (q1 - q0) * px_now * k
             sold, how = 0.0, ""
             if q1 < q0 - 1e-9:
                 sold, how = q0 - q1, ("전량" if not r else "일부")
-            elif r and abs(q1 - q0) <= 1e-9:
-                sold = rebuy_qty(q0, f(p.get("avg")), f(r["avg"]), px_now)
-                how = "재매수"
+            elif r and abs(q1 - q0) <= 1e-9:   # 같은 수량인데 평단만 바뀜 = 팔고 같은 수량 재매수
+                sold, how = usd_window(q0, f(p.get("avg")), q1, f(r["avg"]), px_now)["sold"], "재매수"
             if sold <= 1e-9 or q0 <= 0:
                 continue
             proceeds = sold * px_now * k
-            if not usd and how != "재매수" and d_upkrw < 0.5 * proceeds:
+            if how != "재매수" and d_upkrw < 0.5 * proceeds:
                 continue   # 원화가 안 늘었으면 매도가 아님(스테이킹 이동·출고 등)
-            cost = f(p.get("cost_krw")) * sold / q0
             traded += proceeds * (2 if how == "재매수" else 1)
-            rz.append({"t": ts.isoformat(timespec="minutes"), "sym": s, "q": round(sold, 8),
-                       "px": round(px_now, 4 if usd else 0), "fx": round(fx, 2) if usd else None,
-                       "a": round(proceeds), "c": round(cost), "pl": round(proceeds - cost),
-                       "pool": "us" if usd else "coin", "how": how})
-            print(f"  🧾 {s} {sold:g}{'주' if usd else '개'} 매도 감지({how}) → 실현 {proceeds - cost:+,.0f}원")
+            e = rz_entry(t, s, {"sold": sold, "spx": px_now, "bought": 0.0}, q0, f(p.get("cost_krw")), fx, usd=False)
+            e["how"] = how
+            rz.append(e)
+            print(f"  🧾 {s} {sold:g}개 매도 감지({how}) → 실현 {e['pl']:+,}원")
     state["realized"] = rz[-600:]
     state["rz_upkrw"] = f(raw["cash"].get("upbit_krw"))
-    return traded
+    return traded, fees, moves
 
 
 def realized_summary(state, cfg, ts):
@@ -448,12 +620,155 @@ def realized_summary(state, cfg, ts):
     return {"years": by, "seed": seed, "since": state.setdefault("rz_since", ts.isoformat(timespec="minutes"))}
 
 
+# ───────────────────────── 기록 다시 계산 (STATE_REPAIRS) ─────────────────────────
+def decrypt(enc, pw):
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    b = base64.b64decode
+    key = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), b(enc["salt"]), int(enc.get("iter", 210_000)), 32)
+    return json.loads(AESGCM(key).decrypt(b(enc["iv"]), b(enc["ct"]), None))
+
+
+def _dt(x):
+    return datetime.fromisoformat(str(x).replace("Z", "+00:00"))
+
+
+def past_snaps(since, pw, repo=None):
+    """서버 git 이력의 암호화 기록 중 since 직전 1개 + 그 뒤 전부를 풀어 시간순으로.
+    다시 계산에 필요한 것(시각·환율·총액·미국 종목 수량/평단/가격/원화 원금)만 남겨 메모리를 아껴요."""
+    import subprocess
+    repo, path = (repo or ROOT.parent), "data/portfolio.enc.json"
+    git = lambda *a: subprocess.run(["git", "-C", str(repo), *a], capture_output=True, text=True,
+                                    timeout=120, check=True).stdout
+    shas = git("log", "--format=%H", f"--since={(since - timedelta(hours=3)).isoformat()}", "--", path).split()[::-1]
+    snaps = {}
+    for h in shas:
+        try:
+            p = decrypt(json.loads(git("show", f"{h}:{path}")), pw)
+        except Exception:
+            continue   # 비밀번호가 바뀌기 전 기록 등
+        snaps[p["asof"]] = {"asof": p["asof"], "fx": f(p["fx"]["rate"]), "total": f(p.get("total_krw")),
+                            "h": {x["sym"]: {k: x.get(k) for k in ("qty", "avg", "price", "cost_krw", "fx_seeded")}
+                                  for x in p.get("holdings", []) if x.get("ccy") == "USD"}}
+    out = sorted(snaps.values(), key=lambda x: _dt(x["asof"]))
+    before = [x for x in out if _dt(x["asof"]) < since]
+    if not before:
+        raise RuntimeError("시작 시각 직전 기록을 git 이력에서 못 찾았어요")
+    return [before[-1]] + [x for x in out if _dt(x["asof"]) >= since]
+
+
+def repair_replay(rp, cfg, state, raw, snaps=None):
+    """since 직전 기록의 원화 원금에서 출발해, 그 뒤 15분 기록들을 차례로 usd_window 로 다시 나눠요.
+    바꾸는 것: 그 구간 미국 종목 실현손익(realized) · 원화 원금(lots, rz_prev) · 수수료가 출금으로 잡힌 건(flows + 기준가)"""
+    since = _dt(rp["since"])
+    if snaps is None:
+        pw = os.environ.get("DASH_PASSPHRASE")
+        if not pw:
+            raise RuntimeError("DASH_PASSPHRASE 가 없어요")
+        snaps = past_snaps(since, pw)
+    if len(snaps) < 2:
+        raise RuntimeError("다시 계산할 기록이 없어요")
+    base, last = snaps[0], snaps[-1]
+    rzp = state.get("rz_prev") or {}
+    for s_, h in last["h"].items():   # 마지막 기록 = 직전 실행이어야 이어 붙일 수 있음(업로드 실패 직후면 다음에)
+        if abs(f((rzp.get(s_) or {}).get("qty")) - f(h["qty"])) > 1e-6:
+            raise RuntimeError(f"마지막 기록과 서버 상태가 달라요({s_}) → 다음 실행 때 다시")
+    F = raw.get("fills")
+    thr = cfg.get("flow_threshold_krw", 3000)
+    seed_used = set(state.get("seed_used", []))
+    lots = {s_: {"qty": f(h["qty"]), "cost_usd": f(h["qty"]) * f(h["avg"]), "cost_krw": f(h["cost_krw"]),
+                 "seeded": bool(h.get("fx_seeded", True))} for s_, h in base["h"].items()}
+    new_rz, drop, logs = [], [], []
+    flows = state.get("flows", [])
+    for prev, cur in zip(snaps, snaps[1:]):
+        t0, t1, fx = _dt(prev["asof"]), _dt(cur["asof"]), cur["fx"]
+        wf = window_fills(F, t0, t1) if F else None
+        traded = fees = 0.0
+        for s_ in sorted(set(prev["h"]) | set(cur["h"])):
+            p, c = prev["h"].get(s_), cur["h"].get(s_)
+            q0, q1 = (f(p["qty"]) if p else 0.0), (f(c["qty"]) if c else 0.0)
+            a0, a1 = (f(p["avg"]) if p else 0.0), (f(c["avg"]) if c else 0.0)
+            px = f((c or p)["price"])
+            mv = usd_window(q0, a0, q1, a1, px, (wf or {}).get(s_) if wf is not None else None, fx)
+            traded += (mv["sold"] * mv["spx"] + max(mv["bought"], 0.0) * px) * fx
+            fees += (mv["sfee"] + mv["bfee"]) * fx
+            L = lots.setdefault(s_, {"qty": 0.0, "cost_usd": 0.0, "cost_krw": 0.0, "seeded": s_ in seed_used})
+            if mv["sold"] > 1e-9 and q0 > 0:
+                e = rz_entry(t1.isoformat(timespec="minutes"), s_, mv, q0, L["cost_krw"], fx)
+                new_rz.append(e)
+                logs.append(f"{e['t'][5:16]} {s_} {e['q']:g}주 {e['how']}({mv['src']}) 실현 {e['pl']:+,}")
+            if c is None:
+                lots.pop(s_, None)
+                seed_used.add(s_)
+                continue
+            if lot_apply(L, mv["sold"], q1, a1, fx):
+                L["seeded"] = True
+                seed_used.add(s_)
+        tm = t1.replace(second=0, microsecond=0)
+        for x in flows:
+            if (traded > 0 and f(x.get("a")) < 0 and _dt(x["t"]) == tm
+                    and -f(x["a"]) <= traded * 0.004 + fees + thr):
+                drop.append((x, cur["total"]))
+
+    # ── 반영 (여기까지 오면 한꺼번에)
+    old = state.get("realized", [])
+    keep = [x for x in old if not ((x.get("pool") or "us") == "us" and _dt(x["t"]) > _dt(base["asof"]))]
+    n_old = len(old) - len(keep)
+    state["realized"] = sorted(keep + new_rz, key=lambda x: _dt(x["t"]))[-600:]
+    st_lots = state.setdefault("lots", {})
+    for s_ in list(st_lots):
+        if s_ not in last["h"]:
+            st_lots.pop(s_)
+    for s_ in last["h"]:
+        st_lots[s_] = lots[s_]
+        if s_ in rzp:
+            rzp[s_]["cost_krw"] = round(lots[s_]["cost_krw"])
+    state["seed_used"] = sorted(seed_used)
+    nav = state.get("nav") or {}
+    for x, T in sorted(drop, key=lambda z: _dt(z[0]["t"])):
+        a, tx = -f(x["a"]), _dt(x["t"])
+        r = T / (T + a) if T > 0 else 1.0       # 수수료를 출금 대신 비용으로: 좌수는 그대로, 그 뒤 기준가만 수수료만큼 낮아짐
+        if nav.get("units"):
+            nav["units"] /= r
+        for it in state.get("intraday", []):
+            if _dt(it["t"]) >= tx:
+                it["u"] = round(it["u"] * r, 4)
+        d = tx.astimezone(KST).date().isoformat()
+        for hh in state.get("history", []):
+            if hh["d"] >= d:
+                hh["u"] = round(hh["u"] * r, 4)
+            if hh["d"] == d:
+                hh["f"] = hh.get("f", 0) + round(a)
+        flows.remove(x)
+        logs.append(f"{x['t'][5:16]} 출금 {round(-a):,}원 → 사고판 수수료(비용)로")
+    for l in logs:
+        print("     ·", l)
+    return (f"{len(snaps) - 1}개 창 다시 계산 · 미국 실현 {n_old}건 → {len(new_rz)}건"
+            f" · 수수료 출금 오인 {len(drop)}건 정리")
+
+
+def run_repairs(cfg, state, raw, ts):
+    done = state.setdefault("_repairs", {})
+    for rp in STATE_REPAIRS:
+        st = done.get(rp["id"]) or {}
+        if st.get("ok") or st.get("tries", 0) >= 3:
+            continue
+        try:
+            msg = repair_replay(rp, cfg, state, raw)
+            done[rp["id"]] = {"ok": True, "at": ts.isoformat(timespec="minutes"), "msg": msg}
+            print(f"  🛠️ 기록 다시 계산 {rp['id']}: {msg}")
+        except Exception as e:
+            st["tries"] = st.get("tries", 0) + 1
+            st["err"] = str(e)[:200]
+            done[rp["id"]] = st
+            print(f"  ⚠️ 기록 다시 계산 {rp['id']} 실패({st['tries']}/3): {e}", file=sys.stderr)
+
+
 # ───────────────────────── 계산 ─────────────────────────
 def compute(raw, cfg, state, ts):
     fx = raw["fx"]["rate"]
     seeds = {k: v for k, v in (cfg.get("krw_cost_seed") or {}).items() if f(v) > 0}
     lots = state.setdefault("lots", {})  # sym -> {qty, cost_usd, cost_krw, seeded}
-    traded = track_realized(raw, cfg, state, ts)
+    traded, fees, moves = track_realized(raw, cfg, state, ts)
     seed_used = set(state.setdefault("seed_used", []))   # 한 번 다 팔았던 종목은 시드(옛 원화 원금)를 다시 쓰지 않음
 
     holds = []
@@ -475,18 +790,13 @@ def compute(raw, cfg, state, ts):
             else:
                 if s in seeds and not L.get("seeded") and s not in seed_used:  # 나중에 시드를 채워 넣은 경우
                     L.update(cost_krw=f(seeds[s]), seeded=True)
-                dq = r["qty"] - L["qty"]
-                if dq > 1e-9:  # 추가 매수
-                    L["cost_krw"] += max(cost_ccy - L["cost_usd"], 0) * fx
-                elif dq < -1e-9 and L["qty"] > 0:  # 일부 매도 → 비례 차감
-                    L["cost_krw"] *= r["qty"] / L["qty"]
-                elif L["qty"] > 0 and (k := rebuy_qty(L["qty"], L["cost_usd"] / L["qty"], r["avg"], r["price"])) > 0:
-                    # 15분 안에 k주 팔고 k주 재매수 → 판 만큼 옛 원금을 덜고 새로 산 만큼 지금 환율로 더함
-                    L["cost_krw"] = L["cost_krw"] * (1 - k / L["qty"]) + k * r["price"] * fx
-                    if k >= L["qty"] - 1e-9:
-                        L["seeded"] = True
-                        seed_used.add(s)
-                L["qty"], L["cost_usd"] = r["qty"], cost_ccy
+                sold = moves.get(s)   # track_realized 가 나눈 판 수량(직전 스냅샷이 없을 때만 여기서 평단으로 추정)
+                if sold is None:
+                    sold = usd_window(L["qty"], L["cost_usd"] / L["qty"] if L["qty"] else 0.0,
+                                      r["qty"], r["avg"], r["price"])["sold"]
+                if lot_apply(L, sold, r["qty"], r["avg"], fx):   # 옛 수량을 다 팔았음 → 원금이 전부 새 환율 기준
+                    L["seeded"] = True
+                    seed_used.add(s)
             lots[s] = L
             cost_krw = L["cost_krw"]
             buy_fx = cost_krw / cost_ccy if cost_ccy else fx
@@ -548,8 +858,8 @@ def compute(raw, cfg, state, ts):
         flow = (total - prev["total"]) - mkt
         if abs(flow) < cfg.get("flow_threshold_krw", 3000):
             flow = 0.0  # 수수료·반올림 수준은 성과로 처리
-        elif flow < 0 and traded > 0 and -flow <= traded * 0.004 + cfg.get("flow_threshold_krw", 3000):
-            flow = 0.0  # 사고판 창의 수수료·시세 차이는 출금이 아니라 비용(성과)으로
+        elif flow < 0 and traded > 0 and -flow <= traded * 0.004 + fees + cfg.get("flow_threshold_krw", 3000):
+            flow = 0.0  # 사고판 창의 수수료·시세 차이는 출금이 아니라 비용(성과)으로(사고판 금액 = 판 쪽 + 산 쪽 둘 다)
         # 배당: 원화 입금 없이 달러 예수금만 늘었으면 입금이 아니라 배당(=수익)으로 봄 → 기준가에 반영
         if flow > 0 and prev.get("krw_cash") is not None:
             d_krw = krw_cash - prev["krw_cash"]
@@ -783,6 +1093,8 @@ def main():
         return
 
     raw = collect_mock(cfg, state) if a.mock else collect_live(cfg, state)
+    if not a.mock:
+        run_repairs(cfg, state, raw, ts)   # 실패해도 수집은 그대로(상태는 다 계산한 뒤에만 바꿈)
     snap = compute(raw, cfg, state, ts)
     jsave(state_path, state)
     os.chmod(state_path, 0o600)
